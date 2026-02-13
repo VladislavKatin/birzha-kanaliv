@@ -9,6 +9,7 @@ import ChannelsPage from './pages/ChannelsPage';
 import OffersModerationPage from './pages/OffersModerationPage';
 import MatchesPage from './pages/MatchesPage';
 import ExchangeHistoryPage from './pages/ExchangeHistoryPage';
+import SystemInsightsPage from './pages/SystemInsightsPage';
 
 function LoadingScreen() {
     return <div className="app-loader">Завантаження...</div>;
@@ -41,6 +42,7 @@ function AppRoutes() {
                 <Route path="/offers" element={<OffersModerationPage />} />
                 <Route path="/matches" element={<MatchesPage />} />
                 <Route path="/history" element={<ExchangeHistoryPage />} />
+                <Route path="/system" element={<SystemInsightsPage />} />
                 <Route path="/support" element={<SupportPage />} />
             </Route>
             <Route path="*" element={<Navigate to={user && isAdmin ? '/dashboard' : '/auth'} replace />} />

@@ -1058,4 +1058,284 @@ router.post('/support/threads/:userId/messages', auth, admin, async (req, res) =
     }
 });
 
+/**
+ * @route GET /api/admin/users/:id/details
+ * @description Detailed user profile for admin review.
+ * @access Private (admin)
+ */
+router.get('/users/:id/details', auth, admin, async (req, res) => {
+    try {
+        const payload = await sequelize.transaction(async (transaction) => {
+            const target = await User.findByPk(req.params.id, {
+                attributes: ['id', 'firebaseUid', 'email', 'displayName', 'photoURL', 'role', 'createdAt', 'updatedAt'],
+                transaction,
+            });
+            if (!target) {
+                return null;
+            }
+
+            const channels = await YouTubeAccount.findAll({
+                where: { userId: target.id },
+                attributes: [
+                    'id',
+                    'channelId',
+                    'channelTitle',
+                    'subscribers',
+                    'avgViews30d',
+                    'niche',
+                    'language',
+                    'isActive',
+                    'isFlagged',
+                    'flagReason',
+                    'lastAnalyticsUpdate',
+                    'createdAt',
+                ],
+                order: [['createdAt', 'DESC']],
+                transaction,
+            });
+
+            const channelIds = channels.map((channel) => channel.id);
+            const offers = channelIds.length
+                ? await TrafficOffer.findAll({
+                    where: { channelId: { [Op.in]: channelIds } },
+                    attributes: ['id', 'channelId', 'type', 'status', 'description', 'createdAt'],
+                    order: [['createdAt', 'DESC']],
+                    limit: 30,
+                    transaction,
+                })
+                : [];
+
+            const matches = channelIds.length
+                ? await TrafficMatch.findAll({
+                    where: {
+                        [Op.or]: [
+                            { initiatorChannelId: { [Op.in]: channelIds } },
+                            { targetChannelId: { [Op.in]: channelIds } },
+                        ],
+                    },
+                    attributes: [
+                        'id',
+                        'offerId',
+                        'initiatorChannelId',
+                        'targetChannelId',
+                        'status',
+                        'initiatorConfirmed',
+                        'targetConfirmed',
+                        'completedAt',
+                        'createdAt',
+                        'updatedAt',
+                    ],
+                    include: [
+                        { model: YouTubeAccount, as: 'initiatorChannel', attributes: ['id', 'channelTitle'] },
+                        { model: YouTubeAccount, as: 'targetChannel', attributes: ['id', 'channelTitle'] },
+                    ],
+                    order: [['updatedAt', 'DESC']],
+                    limit: 40,
+                    transaction,
+                })
+                : [];
+
+            const matchIds = matches.map((match) => match.id);
+            const reviews = matchIds.length
+                ? await Review.findAll({
+                    where: { matchId: { [Op.in]: matchIds } },
+                    attributes: ['id', 'matchId', 'rating', 'comment', 'isPublished', 'createdAt'],
+                    order: [['createdAt', 'DESC']],
+                    limit: 40,
+                    transaction,
+                })
+                : [];
+
+            const supportMessages = await ActionLog.count({
+                where: {
+                    action: 'support_chat_message',
+                    userId: target.id,
+                },
+                transaction,
+            });
+
+            const recentActions = await ActionLog.findAll({
+                where: { userId: target.id },
+                attributes: ['id', 'action', 'details', 'ip', 'createdAt'],
+                order: [['createdAt', 'DESC']],
+                limit: 50,
+                transaction,
+            });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_user_details_opened',
+                details: { targetUserId: target.id },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                user: target,
+                summary: {
+                    channels: channels.length,
+                    offers: offers.length,
+                    matches: matches.length,
+                    reviews: reviews.length,
+                    supportMessages,
+                },
+                channels,
+                offers,
+                matches,
+                reviews,
+                recentActions,
+            };
+        });
+
+        if (!payload) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin user details error:', error);
+        res.status(500).json({ error: 'Failed to load user details' });
+    }
+});
+
+/**
+ * @route GET /api/admin/system/insights
+ * @description Platform-level operational insights for admins.
+ * @access Private (admin)
+ */
+router.get('/system/insights', auth, admin, async (req, res) => {
+    try {
+        const now = new Date();
+        const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const [
+                usersTotal,
+                suspendedUsers,
+                channelsTotal,
+                flaggedChannels,
+                inactiveChannels30d,
+                offersOpen,
+                matchesPending,
+                supportMessages24h,
+                adminActions24h,
+            ] = await Promise.all([
+                User.count({ transaction }),
+                User.count({ where: { role: 'suspended' }, transaction }),
+                YouTubeAccount.count({ transaction }),
+                YouTubeAccount.count({ where: { isFlagged: true }, transaction }),
+                YouTubeAccount.count({
+                    where: {
+                        [Op.or]: [
+                            { lastAnalyticsUpdate: { [Op.lt]: monthAgo } },
+                            {
+                                lastAnalyticsUpdate: null,
+                                createdAt: { [Op.lt]: monthAgo },
+                            },
+                        ],
+                    },
+                    transaction,
+                }),
+                TrafficOffer.count({ where: { status: 'open' }, transaction }),
+                TrafficMatch.count({ where: { status: 'pending' }, transaction }),
+                ActionLog.count({
+                    where: {
+                        action: 'support_chat_message',
+                        createdAt: { [Op.gte]: dayAgo },
+                    },
+                    transaction,
+                }),
+                ActionLog.count({
+                    where: {
+                        action: { [Op.iLike]: 'admin_%' },
+                        createdAt: { [Op.gte]: dayAgo },
+                    },
+                    transaction,
+                }),
+            ]);
+
+            const [topActions, topIps, registrations, exchanges] = await Promise.all([
+                ActionLog.findAll({
+                    attributes: ['action', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+                    where: { createdAt: { [Op.gte]: dayAgo } },
+                    group: ['action'],
+                    order: [[sequelize.literal('count'), 'DESC']],
+                    limit: 10,
+                    raw: true,
+                    transaction,
+                }),
+                ActionLog.findAll({
+                    attributes: ['ip', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+                    where: {
+                        createdAt: { [Op.gte]: dayAgo },
+                        ip: { [Op.not]: null },
+                    },
+                    group: ['ip'],
+                    order: [[sequelize.literal('count'), 'DESC']],
+                    limit: 10,
+                    raw: true,
+                    transaction,
+                }),
+                User.findAll({
+                    attributes: [
+                        [sequelize.fn('DATE_TRUNC', 'day', sequelize.col('createdAt')), 'day'],
+                        [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+                    ],
+                    where: { createdAt: { [Op.gte]: weekAgo } },
+                    group: [sequelize.fn('DATE_TRUNC', 'day', sequelize.col('createdAt'))],
+                    order: [[sequelize.fn('DATE_TRUNC', 'day', sequelize.col('createdAt')), 'ASC']],
+                    raw: true,
+                    transaction,
+                }),
+                TrafficMatch.findAll({
+                    attributes: [
+                        [sequelize.fn('DATE_TRUNC', 'day', sequelize.col('updatedAt')), 'day'],
+                        [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+                    ],
+                    where: {
+                        status: 'completed',
+                        updatedAt: { [Op.gte]: weekAgo },
+                    },
+                    group: [sequelize.fn('DATE_TRUNC', 'day', sequelize.col('updatedAt'))],
+                    order: [[sequelize.fn('DATE_TRUNC', 'day', sequelize.col('updatedAt')), 'ASC']],
+                    raw: true,
+                    transaction,
+                }),
+            ]);
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_system_insights_opened',
+                details: { at: now.toISOString() },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                generatedAt: now.toISOString(),
+                summary: {
+                    usersTotal,
+                    suspendedUsers,
+                    channelsTotal,
+                    flaggedChannels,
+                    inactiveChannels30d,
+                    offersOpen,
+                    matchesPending,
+                    supportMessages24h,
+                    adminActions24h,
+                },
+                topActions,
+                topIps,
+                registrations7d: registrations,
+                completedExchanges7d: exchanges,
+            };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin system insights error:', error);
+        res.status(500).json({ error: 'Failed to load system insights' });
+    }
+});
+
 module.exports = router;
