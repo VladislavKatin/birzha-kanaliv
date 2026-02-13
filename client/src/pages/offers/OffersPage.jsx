@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+п»їimport { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
@@ -72,7 +72,7 @@ export default function OffersPage() {
 
     async function handleCreateOffer() {
         if (!selectedChannelId) {
-            toast.error('Спочатку підключіть канал.');
+            toast.error('РЎРїРѕС‡Р°С‚РєСѓ РїС–РґРєР»СЋС‡С–С‚СЊ РєР°РЅР°Р».');
             return;
         }
 
@@ -81,7 +81,7 @@ export default function OffersPage() {
                 channelId: selectedChannelId,
                 ...createForm,
             });
-            toast.success('Пропозицію створено.');
+            toast.success('РџСЂРѕРїРѕР·РёС†С–СЋ СЃС‚РІРѕСЂРµРЅРѕ.');
             setShowCreate(false);
             setCreateForm({
                 type: 'subs',
@@ -92,22 +92,22 @@ export default function OffersPage() {
             });
             loadOffers();
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Не вдалося створити пропозицію.');
+            toast.error(error.response?.data?.error || 'РќРµ РІРґР°Р»РѕСЃСЏ СЃС‚РІРѕСЂРёС‚Рё РїСЂРѕРїРѕР·РёС†С–СЋ.');
         }
     }
 
     async function handleRespond(offerId) {
         if (!selectedChannelId) {
-            toast.error('Спочатку підключіть канал.');
+            toast.error('РЎРїРѕС‡Р°С‚РєСѓ РїС–РґРєР»СЋС‡С–С‚СЊ РєР°РЅР°Р».');
             return;
         }
 
         try {
             await api.post(`/offers/${offerId}/respond`, { channelId: selectedChannelId });
-            toast.success('Відгук надіслано.');
+            toast.success('Р’С–РґРіСѓРє РЅР°РґС–СЃР»Р°РЅРѕ.');
             loadOffers();
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Не вдалося надіслати відгук.');
+            toast.error(error.response?.data?.error || 'РќРµ РІРґР°Р»РѕСЃСЏ РЅР°РґС–СЃР»Р°С‚Рё РІС–РґРіСѓРє.');
         }
     }
 
@@ -115,7 +115,7 @@ export default function OffersPage() {
         return (
             <div className="dashboard-loading">
                 <div className="loading-pulse" />
-                <p>Завантаження пропозицій...</p>
+                <p>Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ РїСЂРѕРїРѕР·РёС†С–Р№...</p>
             </div>
         );
     }
@@ -127,12 +127,12 @@ export default function OffersPage() {
         <div className="offers-page">
             <div className="offers-header">
                 <div>
-                    <h1>Каталог пропозицій</h1>
-                    <p className="offers-subtitle">Знайдіть партнера для обміну аудиторією</p>
+                    <h1>РљР°С‚Р°Р»РѕРі РїСЂРѕРїРѕР·РёС†С–Р№</h1>
+                    <p className="offers-subtitle">Р—РЅР°Р№РґС–С‚СЊ РїР°СЂС‚РЅРµСЂР° РґР»СЏ РѕР±РјС–РЅСѓ Р°СѓРґРёС‚РѕСЂС–С”СЋ</p>
                 </div>
                 {user && (
                     <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
-                        Створити пропозицію
+                        РЎС‚РІРѕСЂРёС‚Рё РїСЂРѕРїРѕР·РёС†С–СЋ
                     </button>
                 )}
             </div>
@@ -141,7 +141,7 @@ export default function OffersPage() {
                 <input
                     type="text"
                     className="filter-input"
-                    placeholder="Фільтр за нішею..."
+                    placeholder="Р¤С–Р»СЊС‚СЂ Р·Р° РЅС–С€РµСЋ..."
                     value={filter.niche}
                     onChange={(event) => setFilter((prev) => ({ ...prev, niche: event.target.value }))}
                 />
@@ -149,9 +149,9 @@ export default function OffersPage() {
 
             {visibleOffers.length === 0 ? (
                 <div className="swaps-empty card">
-                    <span className="swaps-empty-icon">??</span>
-                    <h3>Пропозицій поки немає</h3>
-                    <p>Спробуйте змінити фільтр.</p>
+                    <span className="swaps-empty-icon">!</span>
+                    <h3>РџСЂРѕРїРѕР·РёС†С–Р№ РїРѕРєРё РЅРµРјР°С”</h3>
+                    <p>РЎРїСЂРѕР±СѓР№С‚Рµ Р·РјС–РЅРёС‚Рё С„С–Р»СЊС‚СЂ.</p>
                 </div>
             ) : (
                 <div className="offers-grid">
@@ -161,16 +161,16 @@ export default function OffersPage() {
                                 <img src={offer.channel?.channelAvatar || ''} alt="" className="offer-card-avatar" />
                                 <div className="offer-card-channel">
                                     <span className="offer-card-name">
-                                        {offer.channel?.channelTitle || 'Канал'}
+                                        {offer.channel?.channelTitle || 'РљР°РЅР°Р»'}
                                         {isDemoChannel(offer.channel) && (
-                                            <span className="offer-demo-badge" title="Демо-канал" aria-label="Демо-канал">
+                                            <span className="offer-demo-badge" title="Р”РµРјРѕ-РєР°РЅР°Р»" aria-label="Р”РµРјРѕ-РєР°РЅР°Р»">
                                                 DEMO
                                             </span>
                                         )}
                                     </span>
-                                    <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} підписників</span>
+                                    <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} РїС–РґРїРёСЃРЅРёРєС–РІ</span>
                                 </div>
-                                <span className={`offer-type-badge ${offer.type}`}>{offer.type === 'subs' ? 'Підписники' : 'Перегляди'}</span>
+                                <span className={`offer-type-badge ${offer.type}`}>{offer.type === 'subs' ? 'РџС–РґРїРёСЃРЅРёРєРё' : 'РџРµСЂРµРіР»СЏРґРё'}</span>
                             </div>
 
                             {offer.description && <p className="offer-card-desc">{offer.description}</p>}
@@ -178,21 +178,21 @@ export default function OffersPage() {
                             <div className="offer-card-tags">
                                 {offer.niche && <span className="meta-tag">{offer.niche}</span>}
                                 {offer.language && <span className="meta-tag">{offer.language}</span>}
-                                {offer.minSubscribers > 0 && <span className="meta-tag">від {formatNumber(offer.minSubscribers)} підпис.</span>}
-                                {offer.channel?.totalViews > 0 && <span className="meta-tag">{formatNumber(offer.channel.totalViews)} переглядів</span>}
+                                {offer.minSubscribers > 0 && <span className="meta-tag">РІС–Рґ {formatNumber(offer.minSubscribers)} РїС–РґРїРёСЃ.</span>}
+                                {offer.channel?.totalViews > 0 && <span className="meta-tag">{formatNumber(offer.channel.totalViews)} РїРµСЂРµРіР»СЏРґС–РІ</span>}
                             </div>
 
                             <div className="offer-card-actions">
                                 <button className="btn btn-secondary btn-sm" onClick={() => navigate(buildOfferDetailsPath(offer.id))}>
-                                    Деталі
+                                    Р”РµС‚Р°Р»С–
                                 </button>
                                 {user ? (
                                     <button className="btn btn-primary btn-sm" onClick={() => handleRespond(offer.id)}>
-                                        Відгукнутися
+                                        Р’С–РґРіСѓРєРЅСѓС‚РёСЃСЏ
                                     </button>
                                 ) : (
                                     <button className="btn btn-secondary btn-sm" onClick={() => navigate('/auth')}>
-                                        Увійти для відгуку
+                                        РЈРІС–Р№С‚Рё РґР»СЏ РІС–РґРіСѓРєСѓ
                                     </button>
                                 )}
                             </div>
@@ -204,10 +204,10 @@ export default function OffersPage() {
             {showCreate && (
                 <div className="modal-overlay" onClick={() => setShowCreate(false)}>
                     <div className="modal-content create-offer-modal" onClick={(event) => event.stopPropagation()}>
-                        <h3>Створити пропозицію обміну</h3>
+                        <h3>РЎС‚РІРѕСЂРёС‚Рё РїСЂРѕРїРѕР·РёС†С–СЋ РѕР±РјС–РЅСѓ</h3>
 
                         <div className="form-group">
-                            <label className="form-label">Канал</label>
+                            <label className="form-label">РљР°РЅР°Р»</label>
                             <select className="filter-select full-width" value={selectedChannelId} onChange={(event) => setSelectedChannelId(event.target.value)}>
                                 {myChannels.map((channel) => (
                                     <option key={channel.id} value={channel.id}>
@@ -218,22 +218,22 @@ export default function OffersPage() {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Тип обміну</label>
+                            <label className="form-label">РўРёРї РѕР±РјС–РЅСѓ</label>
                             <select
                                 className="filter-select full-width"
                                 value={createForm.type}
                                 onChange={(event) => setCreateForm((prev) => ({ ...prev, type: event.target.value }))}
                             >
-                                <option value="subs">Підписники</option>
-                                <option value="views">Перегляди</option>
+                                <option value="subs">РџС–РґРїРёСЃРЅРёРєРё</option>
+                                <option value="views">РџРµСЂРµРіР»СЏРґРё</option>
                             </select>
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Опис</label>
+                            <label className="form-label">РћРїРёСЃ</label>
                             <textarea
                                 className="review-textarea"
-                                placeholder="Опишіть, що ви пропонуєте..."
+                                placeholder="РћРїРёС€С–С‚СЊ, С‰Рѕ РІРё РїСЂРѕРїРѕРЅСѓС”С‚Рµ..."
                                 value={createForm.description}
                                 onChange={(event) => setCreateForm((prev) => ({ ...prev, description: event.target.value }))}
                                 rows={3}
@@ -241,11 +241,11 @@ export default function OffersPage() {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Ніша (необов'язково)</label>
+                            <label className="form-label">РќС–С€Р° (РЅРµРѕР±РѕРІ'СЏР·РєРѕРІРѕ)</label>
                             <input
                                 type="text"
                                 className="filter-input full-width"
-                                placeholder="Наприклад: Gaming, Tech, Music..."
+                                placeholder="РќР°РїСЂРёРєР»Р°Рґ: Gaming, Tech, Music..."
                                 value={createForm.niche}
                                 onChange={(event) => setCreateForm((prev) => ({ ...prev, niche: event.target.value }))}
                             />
@@ -253,7 +253,7 @@ export default function OffersPage() {
 
                         <div className="form-row">
                             <div className="form-group">
-                                <label className="form-label">Мін. підписників</label>
+                                <label className="form-label">РњС–РЅ. РїС–РґРїРёСЃРЅРёРєС–РІ</label>
                                 <input
                                     type="number"
                                     className="filter-input full-width"
@@ -264,7 +264,7 @@ export default function OffersPage() {
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Макс. підписників</label>
+                                <label className="form-label">РњР°РєСЃ. РїС–РґРїРёСЃРЅРёРєС–РІ</label>
                                 <input
                                     type="number"
                                     className="filter-input full-width"
@@ -278,10 +278,10 @@ export default function OffersPage() {
 
                         <div className="modal-actions">
                             <button className="btn btn-secondary" onClick={() => setShowCreate(false)}>
-                                Скасувати
+                                РЎРєР°СЃСѓРІР°С‚Рё
                             </button>
                             <button className="btn btn-primary" onClick={handleCreateOffer}>
-                                Створити
+                                РЎС‚РІРѕСЂРёС‚Рё
                             </button>
                         </div>
                     </div>

@@ -22,8 +22,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Rate limiting
 const { apiLimiter, authLimiter } = require('./middleware/rateLimiter');
-app.use('/api', apiLimiter);
-app.use('/api/auth', authLimiter);
+const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction) {
+    app.use('/api', apiLimiter);
+    app.use('/api/auth', authLimiter);
+}
 
 // Routes
 app.use('/api', routes);
