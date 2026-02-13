@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { buildAuthRedirectPath } from '../../services/navigation';
 import './PublicLayout.css';
 
 export default function Footer() {
@@ -11,7 +12,7 @@ export default function Footer() {
                 </div>
                 <div className="footer-links">
                     <Link to="/auth">Увійти</Link>
-                    <Link to="/offers">Пропозиції</Link>
+                    <Link to={buildAuthRedirectPath('/offers')}>Пропозиції</Link>
                 </div>
                 <div className="footer-copy">
                     © {new Date().getFullYear()} Біржа Каналів. Усі права захищені.

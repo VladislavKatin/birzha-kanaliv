@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
+import { resolvePostAuthPath } from '../../services/navigation';
 import './AuthPage.css';
 
 export default function AuthPage() {
     const { user, signInWithGoogle, loading, error } = useAuthStore();
     const navigate = useNavigate();
+    const location = useLocation();
     const [isLoading, setIsLoading] = useState(false);
+    const nextPath = resolvePostAuthPath(location.search, '/dashboard');
 
     // If already logged in, redirect
     if (!loading && user) {
-        navigate('/dashboard', { replace: true });
+        navigate(nextPath, { replace: true });
         return null;
     }
 
@@ -18,7 +21,7 @@ export default function AuthPage() {
         setIsLoading(true);
         try {
             await signInWithGoogle();
-            navigate('/dashboard');
+            navigate(nextPath);
         } catch {
             // Error is handled in AuthContext
         } finally {

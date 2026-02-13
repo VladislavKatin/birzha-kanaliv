@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../../services/firebase';
+import { buildAuthRedirectPath } from '../../services/navigation';
 import './PublicLayout.css';
 
 export default function Navbar() {
@@ -15,7 +16,7 @@ export default function Navbar() {
                 </Link>
 
                 <div className="navbar-links">
-                    <Link to="/offers" className="navbar-link">Пропозиції</Link>
+                    <Link to={buildAuthRedirectPath('/offers')} className="navbar-link">Пропозиції</Link>
                 </div>
 
                 <div className="navbar-actions">

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import PublicLayout from '../../components/layout/PublicLayout';
+import { buildAuthRedirectPath } from '../../services/navigation';
 import './HomePage.css';
 
 const steps = [
@@ -92,7 +93,7 @@ export default function HomePage() {
                             <button className="hero-btn primary" onClick={() => navigate('/auth')}>
                                 Почати безкоштовно
                             </button>
-                            <button className="hero-btn secondary" onClick={() => navigate('/offers')}>
+                            <button className="hero-btn secondary" onClick={() => navigate(buildAuthRedirectPath('/offers'))}>
                                 Переглянути пропозиції
                             </button>
                         </div>

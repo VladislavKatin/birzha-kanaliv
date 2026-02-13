@@ -1,8 +1,10 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
+import { buildAuthRedirectPath } from '../../services/navigation';
 
 export default function ProtectedRoute() {
     const { user, loading } = useAuthStore();
+    const location = useLocation();
 
     if (loading) {
         return (
@@ -18,5 +20,10 @@ export default function ProtectedRoute() {
         );
     }
 
-    return user ? <Outlet /> : <Navigate to="/auth" replace />;
+    if (user) {
+        return <Outlet />;
+    }
+
+    const targetPath = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={buildAuthRedirectPath(targetPath)} replace />;
 }
