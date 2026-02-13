@@ -1,52 +1,45 @@
 const router = require('express').Router();
-const { TrafficMatch, TrafficOffer, YouTubeAccount, User, ActionLog } = require('../models');
+const { sequelize, TrafficMatch, TrafficOffer, YouTubeAccount, User, ActionLog } = require('../models');
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const { emitSwapStatusChanged, emitNotification } = require('../socketSetup');
+const { getUserChannelsByFirebaseUid } = require('../services/channelAccessService');
+const { completeMatchInTransaction } = require('../services/chatCompletionService');
 
-/**
- * Get user and their primary YouTube channel.
- * @param {string} firebaseUid
- * @returns {Object|null} { user, account }
- */
-async function getUserChannel(firebaseUid) {
-    const user = await User.findOne({ where: { firebaseUid } });
-    if (!user) return null;
-    const account = await YouTubeAccount.findOne({ where: { userId: user.id } });
-    return { user, account };
-}
-
-/**
- * @route GET /api/matches
- * @description List all matches for user's channel (all statuses)
- * @access Private
- * @returns {Object} matches[], myChannelId
- */
 router.get('/', auth, async (req, res) => {
     try {
-        const result = await getUserChannel(req.firebaseUser.uid);
-        if (!result?.account) return res.status(404).json({ error: 'No channel connected' });
+        const result = await getUserChannelsByFirebaseUid({
+            User,
+            YouTubeAccount,
+            firebaseUid: req.firebaseUser.uid,
+        });
+
+        if (!result) return res.status(404).json({ error: 'User not found' });
+        if (result.channelIds.length === 0) return res.status(404).json({ error: 'No channel connected' });
 
         const matches = await TrafficMatch.findAll({
             where: {
                 [Op.or]: [
-                    { initiatorChannelId: result.account.id },
-                    { targetChannelId: result.account.id },
+                    { initiatorChannelId: { [Op.in]: result.channelIds } },
+                    { targetChannelId: { [Op.in]: result.channelIds } },
                 ],
             },
             include: [
                 {
-                    model: YouTubeAccount, as: 'initiatorChannel',
+                    model: YouTubeAccount,
+                    as: 'initiatorChannel',
                     attributes: ['id', 'channelTitle', 'channelAvatar', 'subscribers'],
                     include: [{ model: User, as: 'owner', attributes: ['displayName', 'photoURL'] }],
                 },
                 {
-                    model: YouTubeAccount, as: 'targetChannel',
+                    model: YouTubeAccount,
+                    as: 'targetChannel',
                     attributes: ['id', 'channelTitle', 'channelAvatar', 'subscribers'],
                     include: [{ model: User, as: 'owner', attributes: ['displayName', 'photoURL'] }],
                 },
                 {
-                    model: TrafficOffer, as: 'offer',
+                    model: TrafficOffer,
+                    as: 'offer',
                     attributes: ['type', 'description', 'niche'],
                 },
             ],
@@ -55,7 +48,8 @@ router.get('/', auth, async (req, res) => {
 
         res.json({
             matches,
-            myChannelId: result.account.id,
+            myChannelIds: result.channelIds,
+            myChannelId: result.channelIds[0] || null,
         });
     } catch (error) {
         console.error('List matches error:', error);
@@ -63,50 +57,53 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
-/**
- * @route PUT /api/matches/:id/accept
- * @description Accept a pending match (target channel owner)
- * @access Private
- * @param {string} id - Match UUID
- * @returns {Object} match
- */
 router.put('/:id/accept', auth, async (req, res) => {
     try {
-        const result = await getUserChannel(req.firebaseUser.uid);
-        if (!result?.account) return res.status(404).json({ error: 'No channel connected' });
+        const result = await getUserChannelsByFirebaseUid({
+            User,
+            YouTubeAccount,
+            firebaseUid: req.firebaseUser.uid,
+        });
+
+        if (!result) return res.status(404).json({ error: 'User not found' });
+        if (result.channelIds.length === 0) return res.status(404).json({ error: 'No channel connected' });
 
         const match = await TrafficMatch.findByPk(req.params.id);
         if (!match) return res.status(404).json({ error: 'Match not found' });
 
-        // Only the target (offer creator) can accept
-        if (match.targetChannelId !== result.account.id) {
-            return res.status(403).json({ error: 'Тільки власник пропозиції може прийняти' });
+        if (!result.channelIds.includes(match.targetChannelId)) {
+            return res.status(403).json({ error: 'Only target channel owner can accept' });
         }
 
         if (match.status !== 'pending') {
-            return res.status(400).json({ error: 'Обмін вже не в статусі "очікування"' });
+            return res.status(400).json({ error: 'Match is not pending' });
         }
 
-        await match.update({ status: 'accepted' });
-
-        await ActionLog.create({
-            userId: result.user.id,
-            action: 'match_accepted',
-            details: { matchId: match.id },
-            ip: req.ip,
-        });
+        const transaction = await sequelize.transaction();
+        try {
+            await match.update({ status: 'accepted' }, { transaction });
+            await ActionLog.create({
+                userId: result.user.id,
+                action: 'match_accepted',
+                details: { matchId: match.id },
+                ip: req.ip,
+            }, { transaction });
+            await transaction.commit();
+        } catch (txError) {
+            await transaction.rollback();
+            throw txError;
+        }
 
         res.json({ match });
 
-        // Real-time: notify initiator
         const io = req.app.get('io');
         emitSwapStatusChanged(io, match, 'accepted', result.user.id);
         const initiatorChannel = await YouTubeAccount.findByPk(match.initiatorChannelId);
         if (initiatorChannel) {
             emitNotification(io, initiatorChannel.userId, {
                 type: 'match_accepted',
-                title: 'Обмін прийнято!',
-                message: 'Ваш обмін було прийнято.',
+                title: 'Exchange accepted',
+                message: 'Your exchange request was accepted.',
                 link: '/swaps/outgoing',
             });
         }
@@ -116,56 +113,59 @@ router.put('/:id/accept', auth, async (req, res) => {
     }
 });
 
-/**
- * @route PUT /api/matches/:id/reject
- * @description Reject a match. Reopens the original offer.
- * @access Private (both sides can reject)
- * @param {string} id - Match UUID
- * @returns {Object} match
- */
 router.put('/:id/reject', auth, async (req, res) => {
     try {
-        const result = await getUserChannel(req.firebaseUser.uid);
-        if (!result?.account) return res.status(404).json({ error: 'No channel connected' });
+        const result = await getUserChannelsByFirebaseUid({
+            User,
+            YouTubeAccount,
+            firebaseUid: req.firebaseUser.uid,
+        });
+
+        if (!result) return res.status(404).json({ error: 'User not found' });
+        if (result.channelIds.length === 0) return res.status(404).json({ error: 'No channel connected' });
 
         const match = await TrafficMatch.findByPk(req.params.id);
         if (!match) return res.status(404).json({ error: 'Match not found' });
 
-        // Both sides can reject
-        if (match.targetChannelId !== result.account.id && match.initiatorChannelId !== result.account.id) {
-            return res.status(403).json({ error: 'Не ваш обмін' });
+        const isTarget = result.channelIds.includes(match.targetChannelId);
+        const isInitiator = result.channelIds.includes(match.initiatorChannelId);
+        if (!isTarget && !isInitiator) {
+            return res.status(403).json({ error: 'Not your match' });
         }
 
         if (!['pending', 'accepted'].includes(match.status)) {
-            return res.status(400).json({ error: 'Неможливо відхилити цей обмін' });
+            return res.status(400).json({ error: 'Cannot reject this match' });
         }
 
-        await match.update({ status: 'rejected' });
+        const transaction = await sequelize.transaction();
+        try {
+            await match.update({ status: 'rejected' }, { transaction });
+            const offer = await TrafficOffer.findByPk(match.offerId, { transaction });
+            if (offer) await offer.update({ status: 'open' }, { transaction });
 
-        // Reopen the offer
-        const offer = await TrafficOffer.findByPk(match.offerId);
-        if (offer) await offer.update({ status: 'open' });
-
-        await ActionLog.create({
-            userId: result.user.id,
-            action: 'match_rejected',
-            details: { matchId: match.id },
-            ip: req.ip,
-        });
+            await ActionLog.create({
+                userId: result.user.id,
+                action: 'match_rejected',
+                details: { matchId: match.id },
+                ip: req.ip,
+            }, { transaction });
+            await transaction.commit();
+        } catch (txError) {
+            await transaction.rollback();
+            throw txError;
+        }
 
         res.json({ match });
 
-        // Real-time: notify counterparty
         const io = req.app.get('io');
         emitSwapStatusChanged(io, match, 'rejected', result.user.id);
-        const counterChannelId = match.targetChannelId === result.account.id
-            ? match.initiatorChannelId : match.targetChannelId;
+        const counterChannelId = isTarget ? match.initiatorChannelId : match.targetChannelId;
         const counterChannel = await YouTubeAccount.findByPk(counterChannelId);
         if (counterChannel) {
             emitNotification(io, counterChannel.userId, {
                 type: 'match_rejected',
-                title: 'Обмін відхилено',
-                message: 'Пропозицію обміну було відхилено.',
+                title: 'Exchange rejected',
+                message: 'Your exchange request was rejected.',
                 link: '/swaps/outgoing',
             });
         }
@@ -175,53 +175,39 @@ router.put('/:id/reject', auth, async (req, res) => {
     }
 });
 
-/**
- * @route PUT /api/matches/:id/confirm
- * @description Confirm exchange completion from one side. Auto-completes when both confirm.
- * @access Private (both sides)
- * @param {string} id - Match UUID
- * @returns {Object} match
- */
 router.put('/:id/confirm', auth, async (req, res) => {
     try {
-        const result = await getUserChannel(req.firebaseUser.uid);
-        if (!result?.account) return res.status(404).json({ error: 'No channel connected' });
+        const result = await getUserChannelsByFirebaseUid({
+            User,
+            YouTubeAccount,
+            firebaseUid: req.firebaseUser.uid,
+        });
+
+        if (!result) return res.status(404).json({ error: 'User not found' });
+        if (result.channelIds.length === 0) return res.status(404).json({ error: 'No channel connected' });
 
         const match = await TrafficMatch.findByPk(req.params.id);
         if (!match) return res.status(404).json({ error: 'Match not found' });
 
         if (match.status !== 'accepted') {
-            return res.status(400).json({ error: 'Обмін має бути прийнятий для підтвердження' });
+            return res.status(400).json({ error: 'Match must be accepted before confirmation' });
         }
 
-        const isInitiator = match.initiatorChannelId === result.account.id;
-        const isTarget = match.targetChannelId === result.account.id;
-
+        const isInitiator = result.channelIds.includes(match.initiatorChannelId);
+        const isTarget = result.channelIds.includes(match.targetChannelId);
         if (!isInitiator && !isTarget) {
-            return res.status(403).json({ error: 'Не ваш обмін' });
+            return res.status(403).json({ error: 'Not your match' });
         }
 
-        // Update confirmation flag
-        if (isInitiator) {
-            await match.update({ initiatorConfirmed: true });
-        } else {
-            await match.update({ targetConfirmed: true });
-        }
-
-        // Reload to check both flags
-        await match.reload();
-
-        // If both confirmed, mark as completed
-        if (match.initiatorConfirmed && match.targetConfirmed) {
-            await match.update({
-                status: 'completed',
-                completedAt: new Date(),
-            });
-
-            // Update offer status
-            const offer = await TrafficOffer.findByPk(match.offerId);
-            if (offer) await offer.update({ status: 'completed' });
-        }
+        await completeMatchInTransaction({
+            match,
+            isInitiator,
+            actorUserId: result.user.id,
+            ip: req.ip,
+            sequelize,
+            TrafficOffer,
+            ActionLog,
+        });
 
         await ActionLog.create({
             userId: result.user.id,
@@ -236,7 +222,6 @@ router.put('/:id/confirm', auth, async (req, res) => {
 
         res.json({ match });
 
-        // Real-time: emit status change
         const io = req.app.get('io');
         if (match.status === 'completed') {
             emitSwapStatusChanged(io, match, 'completed', result.user.id);
@@ -245,20 +230,19 @@ router.put('/:id/confirm', auth, async (req, res) => {
             if (counterChannel) {
                 emitNotification(io, counterChannel.userId, {
                     type: 'exchange_completed',
-                    title: 'Обмін завершено! 🎉',
-                    message: 'Обидві сторони підтвердили обмін. Залиште відгук!',
+                    title: 'Exchange completed',
+                    message: 'Both sides confirmed the exchange.',
                     link: '/exchanges',
                 });
             }
         } else {
-            // One side confirmed, notify the other
             const counterChannelId = isInitiator ? match.targetChannelId : match.initiatorChannelId;
             const counterChannel = await YouTubeAccount.findByPk(counterChannelId);
             if (counterChannel) {
                 emitNotification(io, counterChannel.userId, {
                     type: 'match_confirmed_partial',
-                    title: 'Партнер підтвердив',
-                    message: 'Партнер підтвердив виконання. Підтвердіть зі свого боку.',
+                    title: 'Partner confirmed',
+                    message: 'Partner confirmed completion. Please confirm from your side.',
                     link: '/swaps/outgoing',
                 });
             }

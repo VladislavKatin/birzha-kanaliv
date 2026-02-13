@@ -1,97 +1,100 @@
 const router = require('express').Router();
-const { TrafficOffer, YouTubeAccount, User, TrafficMatch, ActionLog } = require('../models');
+const { sequelize, TrafficOffer, YouTubeAccount, User, TrafficMatch, ActionLog } = require('../models');
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
+const { getUserChannelsByFirebaseUid, resolveActionChannelId } = require('../services/channelAccessService');
 
-/**
- * Get user and their primary YouTube channel.
- * @param {string} firebaseUid
- * @returns {Object|null} { user, account }
- */
-async function getUserChannel(firebaseUid) {
-    const user = await User.findOne({ where: { firebaseUid } });
-    if (!user) return null;
-    const account = await YouTubeAccount.findOne({ where: { userId: user.id } });
-    return { user, account };
+function handleChannelSelectionError(res, errorCode, noChannelMessage) {
+    if (errorCode === 'NO_CHANNELS_CONNECTED') {
+        return res.status(400).json({ error: noChannelMessage });
+    }
+    if (errorCode === 'CHANNEL_NOT_OWNED') {
+        return res.status(403).json({ error: 'Not your channel' });
+    }
+    if (errorCode === 'CHANNEL_ID_REQUIRED') {
+        return res.status(400).json({ error: 'channelId is required when multiple channels are connected' });
+    }
+    return res.status(400).json({ error: 'Invalid channel selection' });
 }
 
-/**
- * @route POST /api/offers
- * @description Create a new traffic exchange offer
- * @access Private (must have connected YouTube channel)
- * @param {string} type - Offer type: 'subs' or 'views'
- * @param {string} [description] - Offer description
- * @param {string} [niche] - Target niche filter
- * @param {string} [language] - Target language filter
- * @param {number} [minSubscribers=0] - Min subscriber requirement
- * @param {number} [maxSubscribers=0] - Max subscriber requirement
- * @returns {Object} offer
- */
 router.post('/', auth, async (req, res) => {
     try {
-        const result = await getUserChannel(req.firebaseUser.uid);
-        if (!result?.account) {
-            return res.status(400).json({ error: 'Підключіть YouTube-канал перед створенням пропозиції' });
+        const result = await getUserChannelsByFirebaseUid({
+            User,
+            YouTubeAccount,
+            firebaseUid: req.firebaseUser.uid,
+        });
+
+        if (!result) {
+            return res.status(404).json({ error: 'User not found' });
         }
 
-        // Anti-abuse: max 5 offers per week
+        const selected = resolveActionChannelId({
+            requestedChannelId: req.body.channelId,
+            channelIds: result.channelIds,
+        });
+
+        if (selected.error) {
+            return handleChannelSelectionError(
+                res,
+                selected.error,
+                'Connect a YouTube channel before creating an offer'
+            );
+        }
+
         const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
         const weeklyOffers = await TrafficOffer.count({
             where: {
-                channelId: result.account.id,
+                channelId: selected.channelId,
                 createdAt: { [Op.gte]: oneWeekAgo },
             },
         });
 
         if (weeklyOffers >= 5) {
             return res.status(429).json({
-                error: 'Максимум 5 пропозицій на тиждень. Спробуйте пізніше.',
+                error: 'Maximum 5 offers per week. Try again later.',
             });
         }
 
         const { type, description, niche, language, minSubscribers, maxSubscribers } = req.body;
 
         if (!type || !['subs', 'views'].includes(type)) {
-            return res.status(400).json({ error: 'Тип має бути "subs" або "views"' });
+            return res.status(400).json({ error: 'Type must be "subs" or "views"' });
         }
 
-        const offer = await TrafficOffer.create({
-            channelId: result.account.id,
-            type,
-            description,
-            niche,
-            language,
-            minSubscribers: minSubscribers || 0,
-            maxSubscribers: maxSubscribers || 0,
-            status: 'open',
-        });
+        const transaction = await sequelize.transaction();
 
-        // Log action
-        await ActionLog.create({
-            userId: result.user.id,
-            action: 'offer_created',
-            details: { offerId: offer.id, type },
-            ip: req.ip,
-        });
+        try {
+            const offer = await TrafficOffer.create({
+                channelId: selected.channelId,
+                type,
+                description,
+                niche,
+                language,
+                minSubscribers: minSubscribers || 0,
+                maxSubscribers: maxSubscribers || 0,
+                status: 'open',
+            }, { transaction });
 
-        res.status(201).json({ offer });
+            await ActionLog.create({
+                userId: result.user.id,
+                action: 'offer_created',
+                details: { offerId: offer.id, type, channelId: selected.channelId },
+                ip: req.ip,
+            }, { transaction });
+
+            await transaction.commit();
+            res.status(201).json({ offer });
+        } catch (txError) {
+            await transaction.rollback();
+            throw txError;
+        }
     } catch (error) {
         console.error('Create offer error:', error);
-        res.status(500).json({ error: 'Не вдалося створити пропозицію' });
+        res.status(500).json({ error: 'Failed to create offer' });
     }
 });
 
-/**
- * @route GET /api/offers
- * @description List open offers with optional filters (public)
- * @access Public
- * @param {string} [type] - 'subs' or 'views'
- * @param {string} [niche] - Filter by niche
- * @param {string} [language] - Filter by language
- * @param {number} [page=1] - Page number
- * @param {number} [limit=20] - Items per page
- * @returns {Object} offers[], pagination
- */
 router.get('/', async (req, res) => {
     try {
         const { type, niche, language, minSubs, maxSubs, page = 1, limit = 20 } = req.query;
@@ -134,21 +137,24 @@ router.get('/', async (req, res) => {
     }
 });
 
-/**
- * @route GET /api/offers/my
- * @description Get current user's own offers
- * @access Private
- * @returns {Object} offers[]
- */
 router.get('/my', auth, async (req, res) => {
     try {
-        const result = await getUserChannel(req.firebaseUser.uid);
-        if (!result?.account) {
+        const result = await getUserChannelsByFirebaseUid({
+            User,
+            YouTubeAccount,
+            firebaseUid: req.firebaseUser.uid,
+        });
+
+        if (!result) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (result.channelIds.length === 0) {
             return res.status(404).json({ error: 'No channel connected' });
         }
 
         const offers = await TrafficOffer.findAll({
-            where: { channelId: result.account.id },
+            where: { channelId: { [Op.in]: result.channelIds } },
             include: [
                 {
                     model: TrafficMatch,
@@ -162,20 +168,13 @@ router.get('/my', auth, async (req, res) => {
             order: [['createdAt', 'DESC']],
         });
 
-        res.json({ offers });
+        res.json({ offers, myChannelIds: result.channelIds });
     } catch (error) {
         console.error('Get my offers error:', error);
         res.status(500).json({ error: 'Failed to get offers' });
     }
 });
 
-/**
- * @route GET /api/offers/:id
- * @description Get single offer details with channel info
- * @access Public
- * @param {string} id - Offer UUID
- * @returns {Object} offer
- */
 router.get('/:id', async (req, res) => {
     try {
         const offer = await TrafficOffer.findByPk(req.params.id, {
@@ -199,57 +198,84 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// DELETE /api/offers/:id — cancel offer
 router.delete('/:id', auth, async (req, res) => {
     try {
-        const result = await getUserChannel(req.firebaseUser.uid);
-        if (!result?.account) return res.status(404).json({ error: 'No channel connected' });
+        const result = await getUserChannelsByFirebaseUid({
+            User,
+            YouTubeAccount,
+            firebaseUid: req.firebaseUser.uid,
+        });
+
+        if (!result) return res.status(404).json({ error: 'User not found' });
+        if (result.channelIds.length === 0) return res.status(404).json({ error: 'No channel connected' });
 
         const offer = await TrafficOffer.findByPk(req.params.id);
         if (!offer) return res.status(404).json({ error: 'Offer not found' });
-        if (offer.channelId !== result.account.id) {
+        if (!result.channelIds.includes(offer.channelId)) {
             return res.status(403).json({ error: 'Not your offer' });
         }
 
-        await offer.destroy();
-        res.json({ message: 'Offer deleted' });
+        const transaction = await sequelize.transaction();
+        try {
+            await offer.destroy({ transaction });
+            await ActionLog.create({
+                userId: result.user.id,
+                action: 'offer_deleted',
+                details: { offerId: offer.id, channelId: offer.channelId },
+                ip: req.ip,
+            }, { transaction });
+            await transaction.commit();
+            res.json({ message: 'Offer deleted' });
+        } catch (txError) {
+            await transaction.rollback();
+            throw txError;
+        }
     } catch (error) {
         console.error('Delete offer error:', error);
         res.status(500).json({ error: 'Failed to delete offer' });
     }
 });
 
-/**
- * @route POST /api/offers/:id/respond
- * @description Respond to an offer — creates a pending match. Max 3 active matches.
- * @access Private (must have connected YouTube channel)
- * @param {string} id - Offer UUID
- * @returns {Object} match
- */
 router.post('/:id/respond', auth, async (req, res) => {
     try {
-        const result = await getUserChannel(req.firebaseUser.uid);
-        if (!result?.account) {
-            return res.status(400).json({ error: 'Підключіть YouTube-канал' });
+        const result = await getUserChannelsByFirebaseUid({
+            User,
+            YouTubeAccount,
+            firebaseUid: req.firebaseUser.uid,
+        });
+
+        if (!result) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const selected = resolveActionChannelId({
+            requestedChannelId: req.body.channelId,
+            channelIds: result.channelIds,
+        });
+
+        if (selected.error) {
+            return handleChannelSelectionError(
+                res,
+                selected.error,
+                'Connect a YouTube channel before responding to an offer'
+            );
         }
 
         const offer = await TrafficOffer.findByPk(req.params.id);
         if (!offer) return res.status(404).json({ error: 'Offer not found' });
         if (offer.status !== 'open') {
-            return res.status(400).json({ error: 'Пропозиція вже не активна' });
+            return res.status(400).json({ error: 'Offer is no longer active' });
         }
 
-        // Can't respond to own offer
-        if (offer.channelId === result.account.id) {
-            return res.status(400).json({ error: 'Не можна відгукнутися на власну пропозицію' });
+        if (offer.channelId === selected.channelId) {
+            return res.status(400).json({ error: 'Cannot respond to your own offer' });
         }
 
-        // Anti-abuse: max 3 active matches simultaneously
         const activeMatches = await TrafficMatch.count({
             where: {
                 [Op.or]: [
-                    { initiatorChannelId: result.account.id },
-                    { targetChannelId: result.account.id },
+                    { initiatorChannelId: selected.channelId },
+                    { targetChannelId: selected.channelId },
                 ],
                 status: { [Op.in]: ['pending', 'accepted'] },
             },
@@ -257,30 +283,35 @@ router.post('/:id/respond', auth, async (req, res) => {
 
         if (activeMatches >= 3) {
             return res.status(429).json({
-                error: 'Максимум 3 активних обміни одночасно',
+                error: 'Maximum 3 active exchanges at the same time',
             });
         }
 
-        // Create match
-        const match = await TrafficMatch.create({
-            offerId: offer.id,
-            initiatorChannelId: result.account.id,
-            targetChannelId: offer.channelId,
-            status: 'pending',
-        });
+        const transaction = await sequelize.transaction();
 
-        // Update offer status
-        await offer.update({ status: 'matched' });
+        try {
+            const match = await TrafficMatch.create({
+                offerId: offer.id,
+                initiatorChannelId: selected.channelId,
+                targetChannelId: offer.channelId,
+                status: 'pending',
+            }, { transaction });
 
-        // Log action
-        await ActionLog.create({
-            userId: result.user.id,
-            action: 'match_created',
-            details: { matchId: match.id, offerId: offer.id },
-            ip: req.ip,
-        });
+            await offer.update({ status: 'matched' }, { transaction });
 
-        res.status(201).json({ match });
+            await ActionLog.create({
+                userId: result.user.id,
+                action: 'match_created',
+                details: { matchId: match.id, offerId: offer.id, initiatorChannelId: selected.channelId },
+                ip: req.ip,
+            }, { transaction });
+
+            await transaction.commit();
+            res.status(201).json({ match });
+        } catch (txError) {
+            await transaction.rollback();
+            throw txError;
+        }
     } catch (error) {
         console.error('Respond to offer error:', error);
         res.status(500).json({ error: 'Failed to respond to offer' });

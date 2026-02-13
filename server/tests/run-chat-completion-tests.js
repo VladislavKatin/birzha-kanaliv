@@ -4,6 +4,8 @@ const { runMigrationSeedUnitTests } = require('./migrationSeed.unit.spec');
 const { runMigrationSeedFunctionalTests } = require('./migrationSeed.functional.spec');
 const { runReviewReadUnitTests } = require('./reviewRead.unit.spec');
 const { runReviewReadFunctionalTests } = require('./reviewRead.functional.spec');
+const { runChannelAccessUnitTests } = require('./channelAccess.unit.spec');
+const { runChannelAccessFunctionalTests } = require('./channelAccess.functional.spec');
 
 async function run() {
     const tests = [
@@ -13,6 +15,8 @@ async function run() {
         { name: 'functional: migration and seed transaction flow', fn: runMigrationSeedFunctionalTests },
         { name: 'unit: review read rating summary', fn: runReviewReadUnitTests },
         { name: 'functional: published reviews query contract', fn: runReviewReadFunctionalTests },
+        { name: 'unit: channel selection rules', fn: runChannelAccessUnitTests },
+        { name: 'functional: user channel lookup', fn: runChannelAccessFunctionalTests },
     ];
 
     let failed = 0;
