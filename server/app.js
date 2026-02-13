@@ -9,10 +9,28 @@ const path = require('path');
 
 const app = express();
 
+const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:5173,http://localhost:5174')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+function corsOriginValidator(origin, callback) {
+    if (!origin) {
+        // Allow non-browser requests (health checks, server-to-server)
+        return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+    }
+
+    return callback(new Error(`CORS origin not allowed: ${origin}`), false);
+}
+
 // Middleware
 app.use(helmet());
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: corsOriginValidator,
     credentials: true
 }));
 app.use(morgan('dev'));
