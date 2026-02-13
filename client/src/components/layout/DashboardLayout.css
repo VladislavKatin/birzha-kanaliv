@@ -5,8 +5,8 @@
     --surface-3: #eef4ff;
     --surface-4: #dde9ff;
     --text-primary: #0f2746;
-    --text-secondary: #2f4d74;
-    --text-muted: #4f6c91;
+    --text-secondary: #3f5b82;
+    --text-muted: #6f87a8;
     --brand-400: #1f6fd6;
     --brand-500: #005bbb;
     --brand-600: #00489a;
@@ -265,7 +265,7 @@
 
 .topbar {
     height: 62px;
-    background: rgba(255, 255, 255, 0.97);
+    background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-color);
     display: flex;
@@ -311,7 +311,7 @@
     border-radius: 10px;
     border: 1px solid var(--border-color);
     background: var(--surface-2);
-    color: #1f3f67;
+    color: var(--text-secondary);
     font-size: 13px;
     font-weight: 700;
     text-decoration: none;
@@ -324,10 +324,10 @@
 }
 
 .topbar-link-disabled {
-    opacity: 0.9;
+    opacity: 0.65;
     cursor: not-allowed;
-    color: #355984;
-    background: #f2f7ff;
+    color: var(--text-muted);
+    background: var(--surface-2);
 }
 
 .topbar-link-disabled:hover {
@@ -372,7 +372,7 @@
 
 .topbar-greeting {
     font-size: 15px;
-    color: #2a4d79;
+    color: var(--text-secondary);
 }
 
 .topbar-greeting strong {
