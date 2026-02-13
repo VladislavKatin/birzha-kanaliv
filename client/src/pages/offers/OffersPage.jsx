@@ -17,6 +17,7 @@ export default function OffersPage() {
     const { user } = useAuthStore();
     const navigate = useNavigate();
     const [offers, setOffers] = useState([]);
+    const [showDemoOffers, setShowDemoOffers] = useState(false);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState({ niche: '' });
     const [showCreate, setShowCreate] = useState(false);
@@ -47,6 +48,7 @@ export default function OffersPage() {
             if (filter.niche) {
                 params.set('niche', filter.niche);
             }
+            params.set('limit', '200');
             const response = await api.get(`/offers?${params.toString()}`);
             setOffers(response.data.offers || response.data || []);
         } catch (error) {
@@ -119,6 +121,10 @@ export default function OffersPage() {
         );
     }
 
+    const realOffers = offers.filter((offer) => !isDemoChannel(offer.channel));
+    const demoOffers = offers.filter((offer) => isDemoChannel(offer.channel));
+    const visibleOffers = showDemoOffers ? [...realOffers, ...demoOffers] : realOffers;
+
     return (
         <div className="offers-page">
             <div className="offers-header">
@@ -141,17 +147,26 @@ export default function OffersPage() {
                     value={filter.niche}
                     onChange={(event) => setFilter((prev) => ({ ...prev, niche: event.target.value }))}
                 />
+                {demoOffers.length > 0 && (
+                    <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setShowDemoOffers((value) => !value)}
+                    >
+                        {showDemoOffers ? 'Сховати DEMO' : `Показати DEMO (${demoOffers.length})`}
+                    </button>
+                )}
             </div>
 
-            {offers.length === 0 ? (
+            {visibleOffers.length === 0 ? (
                 <div className="swaps-empty card">
                     <span className="swaps-empty-icon">🔎</span>
-                    <h3>Пропозицій поки немає</h3>
-                    <p>Створіть першу пропозицію обміну.</p>
+                    <h3>Реальних пропозицій поки немає</h3>
+                    <p>Спробуйте змінити фільтр або увімкнути DEMO-пропозиції.</p>
                 </div>
             ) : (
                 <div className="offers-grid">
-                    {offers.map((offer) => (
+                    {visibleOffers.map((offer) => (
                         <div key={offer.id} className="offer-card card">
                             <div className="offer-card-top">
                                 <img src={offer.channel?.channelAvatar || ''} alt="" className="offer-card-avatar" />
