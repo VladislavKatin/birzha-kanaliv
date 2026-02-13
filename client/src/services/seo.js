@@ -69,6 +69,25 @@ export function buildBlogArticleJsonLd(article) {
     };
 }
 
+export function buildBlogArticleFaqJsonLd(article) {
+    if (!article || !Array.isArray(article.faq) || article.faq.length === 0) {
+        return null;
+    }
+
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: article.faq.map((item) => ({
+            '@type': 'Question',
+            name: item.q,
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: item.a,
+            },
+        })),
+    };
+}
+
 function upsertMeta(selector, attrName, attrValue, content) {
     if (!document) {
         return;

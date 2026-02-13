@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Content calendar with analytics loop">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg4)"/>
+  <rect x="80" y="90" width="700" height="430" rx="20" fill="#ffffff"/>
+  <g fill="#e2e8f0">
+    <rect x="120" y="150" width="180" height="70" rx="10"/>
+    <rect x="320" y="150" width="180" height="70" rx="10"/>
+    <rect x="520" y="150" width="180" height="70" rx="10"/>
+    <rect x="120" y="240" width="180" height="70" rx="10"/>
+    <rect x="320" y="240" width="180" height="70" rx="10"/>
+    <rect x="520" y="240" width="180" height="70" rx="10"/>
+    <rect x="120" y="330" width="180" height="70" rx="10"/>
+    <rect x="320" y="330" width="180" height="70" rx="10"/>
+    <rect x="520" y="330" width="180" height="70" rx="10"/>
+  </g>
+  <circle cx="940" cy="300" r="140" fill="none" stroke="#ffd500" stroke-width="16"/>
+  <path d="M1045 245 l45 0 l0 -45" stroke="#ffd500" stroke-width="12" fill="none"/>
+  <polyline points="870,330 920,280 970,300 1020,240" fill="none" stroke="#005bbb" stroke-width="10"/>
+  <text x="840" y="470" fill="#ffffff" font-family="Arial, sans-serif" font-size="34" font-weight="700">Analyze Loop</text>
+  <text x="80" y="585" fill="#ffffff" font-family="Arial, sans-serif" font-size="40" font-weight="700">Content Calendar + Analytics Cycle</text>
+</svg>

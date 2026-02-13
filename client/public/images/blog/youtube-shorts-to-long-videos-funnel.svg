@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="YouTube Shorts to Long Video Funnel">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#005bbb"/>
+      <stop offset="100%" stop-color="#003a7a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="70" y="70" width="260" height="160" rx="20" fill="#ffffff" opacity="0.95"/>
+  <text x="100" y="150" fill="#0f172a" font-family="Arial, sans-serif" font-size="36" font-weight="700">Shorts</text>
+  <rect x="470" y="220" width="260" height="160" rx="20" fill="#ffd500" opacity="0.95"/>
+  <text x="515" y="305" fill="#0f172a" font-family="Arial, sans-serif" font-size="34" font-weight="700">Funnel</text>
+  <rect x="870" y="370" width="260" height="160" rx="20" fill="#ffffff" opacity="0.95"/>
+  <text x="900" y="450" fill="#0f172a" font-family="Arial, sans-serif" font-size="34" font-weight="700">Long Video</text>
+  <path d="M340 150 C410 170 420 230 470 260" stroke="#ffd500" stroke-width="14" fill="none"/>
+  <path d="M740 320 C810 340 820 400 870 430" stroke="#ffd500" stroke-width="14" fill="none"/>
+  <text x="70" y="560" fill="#ffffff" font-family="Arial, sans-serif" font-size="44" font-weight="700">Shorts -> Long-form Growth System</text>
+</svg>

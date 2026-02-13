@@ -138,6 +138,7 @@ export default function HomePage() {
     const location = useLocation();
     const { authPath, offersPath } = getLandingCtaPaths();
     const articles = getBlogArticlesPreview();
+    const featuredArticles = articles.slice(0, 3);
 
     const metricsSummary = getLandingMetricsSummary({
         stats,
@@ -345,7 +346,7 @@ export default function HomePage() {
                             </button>
                         </div>
                         <div className="blog-grid">
-                            {articles.map((article) => (
+                            {featuredArticles.map((article) => (
                                 <article key={article.slug} className="blog-card">
                                     <img src={article.coverImage} alt={article.coverAlt} loading="lazy" />
                                     <div className="blog-card-body">

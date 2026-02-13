@@ -113,13 +113,139 @@
     line-height: 1.78;
 }
 
+.blog-chart-card,
+.blog-faq-card,
+.blog-related-card {
+    margin-top: 22px;
+    border: 1px solid #d9e8f8;
+    border-radius: 18px;
+    background: #ffffff;
+    padding: 26px;
+}
+
+.blog-chart-card h3,
+.blog-faq-card h3,
+.blog-related-card h3 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+}
+
+.blog-chart-card > p {
+    margin: 0 0 14px;
+    color: #475569;
+    line-height: 1.7;
+}
+
+.blog-chart-wrap {
+    width: 100%;
+    height: 320px;
+    border: 1px solid #d9e8f8;
+    border-radius: 12px;
+    padding: 10px;
+    background: #f9fcff;
+}
+
+.blog-chart-insights {
+    margin: 14px 0 0;
+    padding-left: 18px;
+    color: #334155;
+    line-height: 1.65;
+}
+
+.blog-faq-list {
+    display: grid;
+    gap: 10px;
+}
+
+.blog-faq-list details {
+    border: 1px solid #d9e8f8;
+    border-radius: 12px;
+    background: #f9fcff;
+    padding: 10px 14px;
+}
+
+.blog-faq-list summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.blog-faq-list p {
+    margin: 8px 0 0;
+    color: #334155;
+    line-height: 1.7;
+}
+
+.blog-related-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.blog-related-item {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px;
+    border: 1px solid #d9e8f8;
+    border-radius: 12px;
+    background: #f9fcff;
+    overflow: hidden;
+}
+
+.blog-related-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.blog-related-item div {
+    padding: 12px;
+}
+
+.blog-related-item h4 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    line-height: 1.35;
+}
+
+.blog-related-item p {
+    margin: 0 0 10px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.blog-related-item button {
+    border: none;
+    border-radius: 10px;
+    padding: 8px 12px;
+    background: #005bbb;
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 @media (max-width: 768px) {
     .blog-article-page {
         padding-top: 26px;
     }
 
     .blog-article-hero,
-    .blog-article-content {
+    .blog-article-content,
+    .blog-chart-card,
+    .blog-faq-card,
+    .blog-related-card {
         padding: 18px;
+    }
+
+    .blog-chart-wrap {
+        height: 260px;
+    }
+
+    .blog-related-item {
+        grid-template-columns: 1fr;
+    }
+
+    .blog-related-item img {
+        height: 180px;
     }
 }

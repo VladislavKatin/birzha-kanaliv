@@ -1,5 +1,5 @@
 ﻿import assert from 'node:assert/strict';
-import { buildBlogArticleJsonLd, buildBlogCollectionJsonLd, buildSeoPayload } from './seo.js';
+import { buildBlogArticleFaqJsonLd, buildBlogArticleJsonLd, buildBlogCollectionJsonLd, buildSeoPayload } from './seo.js';
 import { getBlogArticleBySlug, getBlogArticlesPreview } from './blogArticles.js';
 
 export function runSeoFunctionalTests() {
@@ -19,11 +19,16 @@ export function runSeoFunctionalTests() {
 
     const listSchema = buildBlogCollectionJsonLd(getBlogArticlesPreview());
     assert.equal(listSchema['@type'], 'Blog');
-    assert.equal(listSchema.blogPost.length, 2);
+    assert.equal(listSchema.blogPost.length, 7);
 
     const article = getBlogArticleBySlug('youtube-collab-strategy-2026');
     const articleSchema = buildBlogArticleJsonLd(article);
     assert.equal(articleSchema['@type'], 'BlogPosting');
     assert.equal(articleSchema.mainEntityOfPage, 'https://youtoobe.app/blog/youtube-collab-strategy-2026');
+
+    const faqSchema = buildBlogArticleFaqJsonLd(article);
+    assert.equal(faqSchema['@type'], 'FAQPage');
+    assert.equal(Array.isArray(faqSchema.mainEntity), true);
+    assert.equal(faqSchema.mainEntity.length > 0, true);
 }
 

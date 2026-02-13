@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="YouTube monetization CPM and RPM">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1220"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg2)"/>
+  <rect x="70" y="80" width="1060" height="470" rx="26" fill="#0f172a" stroke="#334155"/>
+  <polyline points="140,430 270,410 400,380 530,340 660,320 790,300 920,260 1040,220" fill="none" stroke="#94a3b8" stroke-width="8"/>
+  <polyline points="140,470 270,450 400,420 530,370 660,330 790,290 920,240 1040,180" fill="none" stroke="#005bbb" stroke-width="8"/>
+  <line x1="130" y1="500" x2="1050" y2="500" stroke="#475569" stroke-width="3"/>
+  <line x1="130" y1="140" x2="130" y2="500" stroke="#475569" stroke-width="3"/>
+  <text x="160" y="190" fill="#94a3b8" font-family="Arial, sans-serif" font-size="28" font-weight="700">CPM</text>
+  <text x="160" y="240" fill="#005bbb" font-family="Arial, sans-serif" font-size="28" font-weight="700">RPM</text>
+  <text x="70" y="575" fill="#ffffff" font-family="Arial, sans-serif" font-size="42" font-weight="700">CPM vs RPM: Real Revenue Logic 2026</text>
+</svg>
