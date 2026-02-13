@@ -60,85 +60,6 @@
     gap: 16px;
 }
 
-.public-real-channels {
-    margin-top: 14px;
-    border: 1px solid #dbe6f3;
-    border-radius: 14px;
-    background: #ffffff;
-    padding: 14px;
-}
-
-.public-real-channels-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-.public-real-channels-head h3 {
-    margin: 0;
-    font-size: 16px;
-    color: #15385f;
-}
-
-.public-real-channels-head span {
-    border-radius: 999px;
-    border: 1px solid #d4e5f7;
-    background: #f7fbff;
-    color: #005bbb;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 2px 10px;
-}
-
-.public-real-channels-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 10px;
-}
-
-.public-real-channel-item {
-    border: 1px solid #dbe6f3;
-    border-radius: 10px;
-    background: #fdfefe;
-    padding: 8px 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.public-real-channel-item img {
-    width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    object-fit: cover;
-}
-
-.public-real-channel-item div {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.public-real-channel-item strong {
-    color: #15385f;
-    font-size: 13px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.public-real-channel-item span {
-    color: #64748b;
-    font-size: 12px;
-}
-
-.public-real-channels-empty {
-    margin: 0;
-    color: #64748b;
-    font-size: 13px;
-}
-
 .public-offer-card {
     border: 1px solid #dbe6f3;
     border-radius: 16px;
@@ -187,18 +108,11 @@
 }
 
 .demo-badge {
-    width: 18px;
-    height: 18px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    background: #ffe8e8;
+    display: inline-block;
     color: #c1121f;
-    border: 1px solid #ffc9c9;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
-    line-height: 1;
+    letter-spacing: 0.02em;
 }
 
 .public-offer-desc {

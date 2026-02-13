@@ -1,4 +1,4 @@
-п»їimport { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PublicLayout from '../../components/layout/PublicLayout';
 import useAuthStore from '../../stores/authStore';
@@ -24,14 +24,12 @@ export default function OffersCatalogPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [filter, setFilter] = useState({ niche: '', language: '' });
-    const [showDemoOffers, setShowDemoOffers] = useState(false);
-    const [realChannels, setRealChannels] = useState([]);
 
     const nicheOptions = useMemo(() => getNicheOptions(), []);
     const languageOptions = useMemo(() => getLanguageOptions(), []);
     const query = useMemo(() => buildPublicOffersQuery(filter), [filter]);
     const { realOffers, demoOffers } = useMemo(() => splitOffersByChannelKind(offers), [offers]);
-    const visibleOffers = showDemoOffers ? [...realOffers, ...demoOffers] : realOffers;
+    const visibleOffers = [...realOffers, ...demoOffers];
 
     useEffect(() => {
         let cancelled = false;
@@ -47,7 +45,7 @@ export default function OffersCatalogPage() {
                 setOffers(response.data.offers || []);
             } catch {
                 if (!cancelled) {
-                    setError('РќРµ РІРґР°Р»РѕСЃСЏ Р·Р°РІР°РЅС‚Р°Р¶РёС‚Рё РєР°С‚Р°Р»РѕРі РїСЂРѕРїРѕР·РёС†С–Р№.');
+                    setError('Не вдалося завантажити каталог пропозицій.');
                 }
             } finally {
                 if (!cancelled) {
@@ -63,42 +61,13 @@ export default function OffersCatalogPage() {
         };
     }, [query]);
 
-    useEffect(() => {
-        let cancelled = false;
-
-        async function loadRealChannels() {
-            try {
-                const response = await api.get('/channels?limit=200');
-                if (cancelled) {
-                    return;
-                }
-
-                const channels = response.data.channels || [];
-                const sortedRealChannels = channels
-                    .filter((channel) => !isDemoChannel(channel))
-                    .sort((a, b) => new Date(b.connectedAt || 0).getTime() - new Date(a.connectedAt || 0).getTime());
-                setRealChannels(sortedRealChannels);
-            } catch {
-                if (!cancelled) {
-                    setRealChannels([]);
-                }
-            }
-        }
-
-        loadRealChannels();
-
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
     return (
         <PublicLayout>
             <section className="offers-catalog-page">
                 <div className="offers-catalog-inner">
                     <header className="offers-catalog-header">
-                        <h1>РљР°С‚Р°Р»РѕРі РїСЂРѕРїРѕР·РёС†С–Р№ РѕР±РјС–РЅСѓ</h1>
-                        <p>РџРµСЂРµРіР»СЏРґР°Р№С‚Рµ РІС–РґРєСЂРёС‚С– РїСЂРѕРїРѕР·РёС†С–С— РІС–Рґ РєР°РЅР°Р»С–РІ. Р’С–РґРїРѕРІС–РґР°С‚Рё РЅР° РЅРёС… РјРѕР¶СѓС‚СЊ Р»РёС€Рµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅС– РєРѕСЂРёСЃС‚СѓРІР°С‡С–.</p>
+                        <h1>Каталог пропозицій обміну</h1>
+                        <p>Переглядайте відкриті пропозиції від каналів. Відповідати на них можуть лише авторизовані користувачі.</p>
                     </header>
 
                     <div className="offers-catalog-filters">
@@ -106,7 +75,7 @@ export default function OffersCatalogPage() {
                             value={filter.niche}
                             onChange={(event) => setFilter((prev) => ({ ...prev, niche: event.target.value }))}
                         >
-                            <option value="">РќС–С€Р° РєР°РЅР°Р»Сѓ</option>
+                            <option value="">Ніша каналу</option>
                             {nicheOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
                                     {option.label}
@@ -116,7 +85,7 @@ export default function OffersCatalogPage() {
                         <input
                             type="text"
                             list="offers-language-options"
-                            placeholder="РњРѕРІР° РєР°РЅР°Р»Сѓ"
+                            placeholder="Мова каналу"
                             value={filter.language}
                             onChange={(event) => setFilter((prev) => ({ ...prev, language: event.target.value }))}
                         />
@@ -125,44 +94,14 @@ export default function OffersCatalogPage() {
                                 <option key={option.code} value={getLanguageSearchValue(option)} />
                             ))}
                         </datalist>
-                        {demoOffers.length > 0 && (
-                            <button
-                                type="button"
-                                onClick={() => setShowDemoOffers((value) => !value)}
-                            >
-                                {showDemoOffers ? 'РЎС…РѕРІР°С‚Рё DEMO' : `РџРѕРєР°Р·Р°С‚Рё DEMO (${demoOffers.length})`}
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="public-real-channels">
-                        <div className="public-real-channels-head">
-                            <h3>Р РµР°Р»СЊРЅРѕ Р·Р°СЂРµС”СЃС‚СЂРѕРІР°РЅС– РєР°РЅР°Р»Рё</h3>
-                            <span>{realChannels.length}</span>
-                        </div>
-                        {realChannels.length === 0 ? (
-                            <p className="public-real-channels-empty">РџРѕРєРё РЅРµРјР°С” РєР°РЅР°Р»С–РІ СЂРµР°Р»СЊРЅРёС… РєРѕСЂРёСЃС‚СѓРІР°С‡С–РІ.</p>
-                        ) : (
-                            <div className="public-real-channels-list">
-                                {realChannels.slice(0, 12).map((channel) => (
-                                    <article key={channel.id} className="public-real-channel-item">
-                                        <img src={channel.channelAvatar || ''} alt="" />
-                                        <div>
-                                            <strong>{channel.channelTitle || 'РљР°РЅР°Р»'}</strong>
-                                            <span>{formatPublicNumber(channel.subscribers)} РїС–РґРїРёСЃРЅРёРєС–РІ</span>
-                                        </div>
-                                    </article>
-                                ))}
-                            </div>
-                        )}
                     </div>
 
                     {loading ? (
-                        <div className="offers-catalog-empty">Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ РєР°С‚Р°Р»РѕРіСѓ...</div>
+                        <div className="offers-catalog-empty">Завантаження каталогу...</div>
                     ) : error ? (
                         <div className="offers-catalog-empty">{error}</div>
                     ) : visibleOffers.length === 0 ? (
-                        <div className="offers-catalog-empty">РџРѕРєРё РЅРµРјР°С” РІС–РґРєСЂРёС‚РёС… РїСЂРѕРїРѕР·РёС†С–Р№.</div>
+                        <div className="offers-catalog-empty">Поки немає відкритих пропозицій.</div>
                     ) : (
                         <div className="offers-catalog-grid">
                             {visibleOffers.map((offer) => (
@@ -171,14 +110,14 @@ export default function OffersCatalogPage() {
                                         <img src={offer.channel?.channelAvatar || ''} alt="" />
                                         <div>
                                             <h3>
-                                                {offer.channel?.channelTitle || 'РљР°РЅР°Р»'}
+                                                {offer.channel?.channelTitle || 'Канал'}
                                                 {isDemoChannel(offer.channel) && (
-                                                    <span className="demo-badge" title="Р”РµРјРѕ-РєР°РЅР°Р»" aria-label="Р”РµРјРѕ-РєР°РЅР°Р»">
-                                                        в—‰
+                                                    <span className="demo-badge" title="Демо-канал" aria-label="Демо-канал">
+                                                        DEMO
                                                     </span>
                                                 )}
                                             </h3>
-                                            <p>{formatPublicNumber(offer.channel?.subscribers)} РїС–РґРїРёСЃРЅРёРєС–РІ</p>
+                                            <p>{formatPublicNumber(offer.channel?.subscribers)} підписників</p>
                                         </div>
                                         <span>{getOfferTypeLabel(offer.type)}</span>
                                     </div>
@@ -188,18 +127,19 @@ export default function OffersCatalogPage() {
                                     <div className="public-offer-meta">
                                         {offer.niche && <span>{offer.niche}</span>}
                                         {offer.language && <span>{offer.language}</span>}
-                                        {offer.minSubscribers > 0 && <span>РІС–Рґ {formatPublicNumber(offer.minSubscribers)}</span>}
+                                        {offer.minSubscribers > 0 && <span>від {formatPublicNumber(offer.minSubscribers)}</span>}
+                                        {offer.channel?.totalViews > 0 && <span>{formatPublicNumber(offer.channel.totalViews)} переглядів</span>}
                                     </div>
 
                                     <div className="public-offer-actions">
-                                        <button onClick={() => navigate(buildOfferDetailsPath(offer.id))}>Р’С–РґРєСЂРёС‚Рё РїСЂРѕРїРѕР·РёС†С–СЋ</button>
+                                        <button onClick={() => navigate(buildOfferDetailsPath(offer.id))}>Деталі</button>
                                         {user ? (
                                             <button className="primary" onClick={() => navigate(`/offers/${offer.id}`)}>
-                                                Р—Р°РїСЂРѕРїРѕРЅСѓРІР°С‚Рё РѕР±РјС–РЅ
+                                                Запропонувати обмін
                                             </button>
                                         ) : (
                                             <button className="primary" onClick={() => navigate(buildAuthRedirectPath(buildOfferDetailsPath(offer.id)))}>
-                                                РЈРІС–Р№С‚Рё, С‰РѕР± РІС–РґРїРѕРІС–СЃС‚Рё
+                                                Увійти, щоб відповісти
                                             </button>
                                         )}
                                     </div>

@@ -130,7 +130,7 @@ export default function OfferDetailsPage() {
                                         {offer.channel?.channelTitle || 'Канал'}
                                         {isDemoChannel(offer.channel) && (
                                             <span className="demo-badge" title="Демо-канал" aria-label="Демо-канал">
-                                                ◉
+                                                DEMO
                                             </span>
                                         )}
                                     </h1>
