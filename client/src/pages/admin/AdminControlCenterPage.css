@@ -113,7 +113,7 @@
 }
 
 .admin-users-table .admin-user-cell span:last-child {
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .admin-role-badge {
@@ -153,7 +153,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
 }
 
@@ -181,7 +181,7 @@
     vertical-align: top;
     padding: 8px;
     border-bottom: 1px solid var(--border-color);
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
 }
 
@@ -202,11 +202,11 @@
 }
 
 .admin-user-cell span {
-    color: var(--text-muted);
+    color: #4f6c91;
 }
 
 .admin-empty {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
 }
 

@@ -58,7 +58,9 @@
 }
 
 .channel-card.inactive {
-    opacity: 0.6;
+    opacity: 1;
+    background: linear-gradient(180deg, #ffffff, #f7fbff);
+    border-color: #c8d8ef;
 }
 
 .channel-card-top {
@@ -122,8 +124,8 @@
 }
 
 .channel-card-niche {
-    font-size: 11px;
-    color: var(--text-muted);
+    font-size: 12px;
+    color: #46658d;
 }
 
 .channel-card-stats {
@@ -148,8 +150,8 @@
 }
 
 .channel-stat-label {
-    font-size: 10px;
-    color: var(--text-muted);
+    font-size: 11px;
+    color: #46658d;
     margin-top: 2px;
 }
 
@@ -202,8 +204,8 @@
 }
 
 .toggle-label {
-    font-size: 13px;
-    color: var(--text-secondary);
+    font-size: 14px;
+    color: #2e4f79;
 }
 
 .channel-card-actions {
@@ -398,8 +400,8 @@
 }
 
 .video-stats {
-    font-size: 11px;
-    color: var(--text-muted);
+    font-size: 12px;
+    color: #4b6b92;
     margin-top: 2px;
 }
 
@@ -439,13 +441,13 @@
 }
 
 .swap-partner-subs {
-    font-size: 11px;
-    color: var(--text-muted);
+    font-size: 12px;
+    color: #4b6b92;
 }
 
 .swap-date {
     font-size: 12px;
-    color: var(--text-muted);
+    color: #4b6b92;
 }
 
 /* Settings */
