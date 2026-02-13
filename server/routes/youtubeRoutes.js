@@ -10,9 +10,45 @@ const { logInfo, logWarn, logError } = require('../services/logger');
  * @access Private
  * @returns {Object} authUrl - Google OAuth authorization URL
  */
-router.get('/connect', auth, (req, res) => {
+router.get('/connect', auth, async (req, res) => {
     try {
         const state = req.firebaseUser.uid;
+        const { email, name, picture } = req.firebaseUser;
+
+        await sequelize.transaction(async (transaction) => {
+            let user = await User.findOne({
+                where: { firebaseUid: state },
+                transaction,
+            });
+
+            if (!user) {
+                if (!email) {
+                    throw new Error('Missing email in auth payload');
+                }
+
+                user = await User.create({
+                    firebaseUid: state,
+                    email,
+                    displayName: name || email.split('@')[0],
+                    photoURL: picture || null,
+                }, { transaction });
+
+                await ActionLog.create({
+                    userId: user.id,
+                    action: 'user_auto_created_for_youtube_connect',
+                    details: { firebaseUid: state },
+                    ip: req.ip,
+                }, { transaction });
+            }
+
+            await ActionLog.create({
+                userId: user.id,
+                action: 'youtube_connect_started',
+                details: { firebaseUid: state },
+                ip: req.ip,
+            }, { transaction });
+        });
+
         const authUrl = youtubeService.getAuthUrl(state);
         logInfo('youtube.connect.url.generated', { firebaseUid: state });
         res.json({ authUrl });
