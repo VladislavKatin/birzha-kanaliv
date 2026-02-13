@@ -13,5 +13,6 @@ router.use('/exchanges', require('./exchangeRoutes'));
 router.use('/profile', require('./profileRoutes'));
 router.use('/gdpr', require('./gdprRoutes'));
 router.use('/admin', require('./adminRoutes'));
+router.use('/support', require('./supportRoutes'));
 
 module.exports = router;

@@ -1,78 +1,197 @@
-﻿import { Link } from 'react-router-dom';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import api from '../../services/api';
 import './SupportChatsPage.css';
 
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+
+function formatTime(dateValue) {
+    const date = new Date(dateValue);
+    return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDate(dateValue) {
+    const date = new Date(dateValue);
+    return date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' });
+}
+
+function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Не вдалося прочитати файл'));
+        reader.readAsDataURL(file);
+    });
+}
+
 export default function SupportChatsPage() {
-    const bugTemplate = `Тема: Повідомлення про помилку\n\n1) Що саме сталося:\n2) На якій сторінці:\n3) Коли помітили:\n4) Як відтворити:\n5) Скріншот/відео (за можливості):`;
+    const fileInputRef = useRef(null);
+    const listEndRef = useRef(null);
+
+    const [loading, setLoading] = useState(true);
+    const [messages, setMessages] = useState([]);
+    const [myUserId, setMyUserId] = useState('');
+    const [inputValue, setInputValue] = useState('');
+    const [selectedImage, setSelectedImage] = useState('');
+    const [sending, setSending] = useState(false);
+
+    useEffect(() => {
+        loadSupportChat();
+    }, []);
+
+    useEffect(() => {
+        listEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    async function loadSupportChat() {
+        try {
+            const response = await api.get('/support/chat');
+            setMyUserId(response.data.myUserId);
+            const initial = [response.data.adminWelcome, ...(response.data.messages || [])];
+            setMessages(initial);
+        } catch (error) {
+            console.error('Failed to load support chat:', error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function handlePickImage(event) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        try {
+            if (!file.type.startsWith('image/')) {
+                return;
+            }
+            if (file.size > MAX_IMAGE_BYTES) {
+                return;
+            }
+            const dataUrl = await fileToDataUrl(file);
+            setSelectedImage(dataUrl);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            event.target.value = '';
+        }
+    }
+
+    async function handleSend() {
+        const content = inputValue.trim();
+        if ((!content && !selectedImage) || sending) return;
+
+        setSending(true);
+        const payload = {
+            content,
+            imageData: selectedImage || undefined,
+        };
+
+        try {
+            const response = await api.post('/support/chat/messages', payload);
+            setMessages((prev) => [...prev, response.data.message]);
+            setInputValue('');
+            setSelectedImage('');
+        } catch (error) {
+            console.error('Failed to send support message:', error);
+        } finally {
+            setSending(false);
+        }
+    }
+
+    const grouped = useMemo(() => {
+        const result = [];
+        let lastDate = '';
+        for (const message of messages) {
+            const date = formatDate(message.createdAt);
+            if (date !== lastDate) {
+                result.push({ type: 'date', date, id: `date-${date}` });
+                lastDate = date;
+            }
+            result.push({ type: 'message', ...message });
+        }
+        return result;
+    }, [messages]);
 
     return (
         <div className="support-page">
             <div className="support-header">
                 <h1>Повідомлення</h1>
-                <p>Єдиний розділ для чатів користувачів, обговорень у спільноті та швидких звернень до команди розробки.</p>
+                <p>Єдиний чат з адміністрацією: опишіть помилку або питання, додайте скріншот і надішліть повідомлення.</p>
             </div>
 
-            <div className="support-grid">
-                <section className="card support-card">
-                    <h3>Чати між користувачами</h3>
-                    <p>Вся комунікація по обмінах зібрана в одному місці: вхідні, вихідні та активні угоди.</p>
-                    <div className="support-actions">
-                        <Link to="/swaps/incoming" className="btn btn-secondary">
-                            Вхідні запити
-                        </Link>
-                        <Link to="/swaps/outgoing" className="btn btn-secondary">
-                            Вихідні запити
-                        </Link>
-                        <Link to="/exchanges" className="btn btn-primary">
-                            Активні обміни
-                        </Link>
-                    </div>
-                </section>
+            <section className="card support-chat-card">
+                {loading ? (
+                    <div className="support-chat-empty">Завантаження чату...</div>
+                ) : (
+                    <>
+                        <div className="support-chat-list">
+                            {grouped.map((item) => {
+                                if (item.type === 'date') {
+                                    return (
+                                        <div key={item.id} className="support-chat-date">
+                                            <span>{item.date}</span>
+                                        </div>
+                                    );
+                                }
 
-                <section className="card support-card">
-                    <h3>Загальні чати спільноти</h3>
-                    <p>Спільні чати для пошуку партнерів, обговорення нових ідей і швидкої взаємодії між учасниками.</p>
-                    <div className="support-actions">
-                        <a className="btn btn-primary" href="https://t.me/" target="_blank" rel="noreferrer">
-                            Відкрити Telegram-чат
-                        </a>
-                        <a className="btn btn-secondary" href="https://discord.com/channels/@me" target="_blank" rel="noreferrer">
-                            Відкрити Discord
-                        </a>
-                    </div>
-                </section>
+                                const mine = item.sender?.id === myUserId;
+                                return (
+                                    <div key={item.id} className={`support-chat-message ${mine ? 'mine' : 'theirs'}`}>
+                                        <div className="support-chat-bubble">
+                                            <div className="support-chat-author">{item.sender?.displayName || 'Користувач'}</div>
+                                            {item.imageData && (
+                                                <a href={item.imageData} target="_blank" rel="noreferrer" className="support-chat-image-link">
+                                                    <img src={item.imageData} alt="Вкладення" className="support-chat-image" />
+                                                </a>
+                                            )}
+                                            {item.content && <p>{item.content}</p>}
+                                            <div className="support-chat-time">{formatTime(item.createdAt)}</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            <div ref={listEndRef} />
+                        </div>
 
-                <section className="card support-card">
-                    <h3>Підтримка та помилки</h3>
-                    <p>Якщо знайшли баг, надішліть адміну структурований звіт. Це прискорює перевірку і виправлення.</p>
-                    <textarea className="support-template" readOnly value={bugTemplate} rows={9} />
-                </section>
+                        <div className="support-chat-input-wrap">
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp,image/gif"
+                                onChange={handlePickImage}
+                                style={{ display: 'none' }}
+                            />
 
-                <section id="dev-chat" className="card support-card">
-                    <h3>Чат з розробниками</h3>
-                    <p>Знайшли помилку або маєте ідею? Пишіть у чат розробки та додавайте скріншоти одразу в повідомленні.</p>
-                    <div className="support-actions">
-                        <a className="btn btn-primary" href="https://t.me/" target="_blank" rel="noreferrer">
-                            Відкрити чат з розробниками
-                        </a>
-                    </div>
-                </section>
+                            {selectedImage && (
+                                <div className="support-chat-preview">
+                                    <img src={selectedImage} alt="Preview" />
+                                    <button type="button" onClick={() => setSelectedImage('')}>✕</button>
+                                </div>
+                            )}
 
-                <section className="card support-card support-card-wide">
-                    <h3>Швидкі переходи</h3>
-                    <p>Корисні посилання для роботи з обмінами та каналами під час листування.</p>
-                    <div className="support-actions">
-                        <Link to="/dashboard/offers" className="btn btn-secondary">
-                            Пропозиції
-                        </Link>
-                        <Link to="/my-channels" className="btn btn-secondary">
-                            Мої канали
-                        </Link>
-                        <Link to="/faq" className="btn btn-secondary">
-                            FAQ
-                        </Link>
-                    </div>
-                </section>
-            </div>
+                            <div className="support-chat-controls">
+                                <button type="button" className="btn btn-secondary" onClick={() => fileInputRef.current?.click()}>
+                                    Додати скріншот
+                                </button>
+                                <textarea
+                                    className="support-chat-input"
+                                    rows={2}
+                                    value={inputValue}
+                                    onChange={(event) => setInputValue(event.target.value)}
+                                    placeholder="Напишіть повідомлення адміністрації..."
+                                />
+                                <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    onClick={handleSend}
+                                    disabled={sending || (!inputValue.trim() && !selectedImage)}
+                                >
+                                    Надіслати
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </section>
         </div>
     );
 }

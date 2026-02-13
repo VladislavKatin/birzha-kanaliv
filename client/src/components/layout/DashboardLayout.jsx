@@ -21,7 +21,7 @@ const navItems = [
 
 const topLinks = [
     { to: '/faq', label: 'FAQ' },
-    { to: '/support/chats#dev-chat', label: 'Найшли помилку' },
+    { to: '/support/chats', label: 'Найшли помилку' },
 ];
 
 export default function DashboardLayout() {
