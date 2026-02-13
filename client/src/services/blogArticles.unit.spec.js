@@ -9,7 +9,7 @@ import {
 
 export function runBlogArticlesUnitTests() {
     const previews = getBlogArticlesPreview();
-    assert.equal(previews.length, 7);
+    assert.equal(previews.length, 12);
     assert.equal(previews[0].slug, 'youtube-collab-strategy-2026');
 
     const article = getBlogArticleBySlug('youtube-trust-score-and-reviews');
