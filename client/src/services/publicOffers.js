@@ -13,6 +13,12 @@ export function getOfferTypeLabel(type) {
     return type === 'views' ? 'Перегляди' : 'Підписники';
 }
 
+export function isDemoChannel(channel) {
+    const channelId = channel?.channelId || '';
+    const channelTitle = channel?.channelTitle || '';
+    return channelId.startsWith('UC_DEMO_') || channelTitle.includes('[DEMO]');
+}
+
 export function buildPublicOffersQuery(filter = {}) {
     const params = new URLSearchParams();
     const niche = filter.niche ? filter.niche.trim() : '';

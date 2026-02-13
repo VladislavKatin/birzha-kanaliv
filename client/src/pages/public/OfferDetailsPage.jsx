@@ -5,7 +5,12 @@ import PublicLayout from '../../components/layout/PublicLayout';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import { buildAuthRedirectPath } from '../../services/navigation';
-import { buildOfferDetailsPath, formatPublicNumber, getOfferTypeLabel } from '../../services/publicOffers';
+import {
+    buildOfferDetailsPath,
+    formatPublicNumber,
+    getOfferTypeLabel,
+    isDemoChannel,
+} from '../../services/publicOffers';
 import './OfferDetailsPage.css';
 
 export default function OfferDetailsPage() {
@@ -121,7 +126,10 @@ export default function OfferDetailsPage() {
                             <header className="offer-details-head">
                                 <img src={offer.channel?.channelAvatar || ''} alt="" />
                                 <div>
-                                    <h1>{offer.channel?.channelTitle || 'Канал'}</h1>
+                                    <h1>
+                                        {offer.channel?.channelTitle || 'Канал'}
+                                        {isDemoChannel(offer.channel) && <span className="demo-badge">DEMO</span>}
+                                    </h1>
                                     <p>{formatPublicNumber(offer.channel?.subscribers)} підписників • {formatPublicNumber(offer.channel?.totalViews)} переглядів</p>
                                 </div>
                                 <span>{getOfferTypeLabel(offer.type)}</span>

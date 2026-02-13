@@ -9,6 +9,7 @@ import {
     buildPublicOffersQuery,
     formatPublicNumber,
     getOfferTypeLabel,
+    isDemoChannel,
 } from '../../services/publicOffers';
 import './OffersCatalogPage.css';
 
@@ -97,7 +98,10 @@ export default function OffersCatalogPage() {
                                     <div className="public-offer-head">
                                         <img src={offer.channel?.channelAvatar || ''} alt="" />
                                         <div>
-                                            <h3>{offer.channel?.channelTitle || 'Канал'}</h3>
+                                            <h3>
+                                                {offer.channel?.channelTitle || 'Канал'}
+                                                {isDemoChannel(offer.channel) && <span className="demo-badge">DEMO</span>}
+                                            </h3>
                                             <p>{formatPublicNumber(offer.channel?.subscribers)} підписників</p>
                                         </div>
                                         <span>{getOfferTypeLabel(offer.type)}</span>

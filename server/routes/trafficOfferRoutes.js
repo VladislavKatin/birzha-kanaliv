@@ -116,10 +116,13 @@ router.get('/', async (req, res) => {
                 {
                     model: YouTubeAccount,
                     as: 'channel',
-                    attributes: ['channelTitle', 'channelAvatar', 'subscribers', 'niche', 'language', 'country'],
+                    attributes: ['channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'niche', 'language', 'country'],
                 },
             ],
-            order: [['createdAt', 'DESC']],
+            order: [
+                [sequelize.literal(`CASE WHEN "channel"."channelId" LIKE 'UC_DEMO_%' THEN 1 ELSE 0 END`), 'ASC'],
+                ['createdAt', 'DESC'],
+            ],
             limit: parseInt(limit),
             offset,
         });

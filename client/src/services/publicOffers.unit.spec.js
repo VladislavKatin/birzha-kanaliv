@@ -3,6 +3,7 @@ import {
     buildOfferDetailsPath,
     formatPublicNumber,
     getOfferTypeLabel,
+    isDemoChannel,
 } from './publicOffers.js';
 
 export function runPublicOffersUnitTests() {
@@ -11,4 +12,6 @@ export function runPublicOffersUnitTests() {
     assert.equal(getOfferTypeLabel('subs'), 'Підписники');
     assert.equal(getOfferTypeLabel('views'), 'Перегляди');
     assert.equal(buildOfferDetailsPath('abc-1'), '/offers/abc-1');
+    assert.equal(isDemoChannel({ channelId: 'UC_DEMO_SAMPLE' }), true);
+    assert.equal(isDemoChannel({ channelId: 'UC_REAL_SAMPLE', channelTitle: 'Real Channel' }), false);
 }
