@@ -24,6 +24,24 @@
     };
 }
 
+export function normalizeAdminUsers(raw = {}) {
+    const users = Array.isArray(raw.users) ? raw.users : [];
+    return {
+        page: Number(raw.page || 1),
+        limit: Number(raw.limit || 20),
+        total: Number(raw.total || 0),
+        pages: Number(raw.pages || 1),
+        users: users.map((user) => ({
+            id: user.id,
+            email: user.email || '',
+            displayName: user.displayName || '',
+            role: user.role || 'user',
+            channelCount: Number(user.channelCount || 0),
+            createdAt: user.createdAt || null,
+        })),
+    };
+}
+
 export function formatAdminDate(value) {
     if (!value) {
         return '-';

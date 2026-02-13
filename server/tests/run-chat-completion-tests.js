@@ -12,6 +12,8 @@ const { runApiSmokeUnitTests } = require('./apiSmoke.unit.spec');
 const { runApiSmokeFunctionalTests } = require('./apiSmoke.functional.spec');
 const { runAdminOverviewUnitTests } = require('./adminOverview.unit.spec');
 const { runAdminOverviewFunctionalTests } = require('./adminOverview.functional.spec');
+const { runAdminUsersUnitTests } = require('./adminUsers.unit.spec');
+const { runAdminUsersFunctionalTests } = require('./adminUsers.functional.spec');
 
 async function run() {
     const tests = [
@@ -29,6 +31,8 @@ async function run() {
         { name: 'functional: api smoke core flow', fn: runApiSmokeFunctionalTests },
         { name: 'unit: admin overview payload contract', fn: runAdminOverviewUnitTests },
         { name: 'functional: admin overview access and data', fn: runAdminOverviewFunctionalTests },
+        { name: 'unit: admin users endpoint manifest', fn: runAdminUsersUnitTests },
+        { name: 'functional: admin users manage flow', fn: runAdminUsersFunctionalTests },
     ];
 
     let failed = 0;

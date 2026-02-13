@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 import api from '../../services/api';
-import { formatAdminDate, normalizeAdminOverview } from '../../services/adminCenter';
+import { formatAdminDate, normalizeAdminOverview, normalizeAdminUsers } from '../../services/adminCenter';
 import './AdminControlCenterPage.css';
 
 function DistributionList({ title, items }) {
@@ -28,35 +29,127 @@ export default function AdminControlCenterPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    const [usersData, setUsersData] = useState(() => normalizeAdminUsers());
+    const [usersLoading, setUsersLoading] = useState(true);
+    const [usersError, setUsersError] = useState('');
+    const [userFilter, setUserFilter] = useState({ search: '', role: '' });
+    const [userPage, setUserPage] = useState(1);
+    const [updatingUserId, setUpdatingUserId] = useState('');
+
+    useEffect(() => {
+        loadOverview();
+    }, []);
+
     useEffect(() => {
         let cancelled = false;
 
-        async function loadOverview() {
-            setLoading(true);
-            setError('');
+        async function loadUsers() {
+            setUsersLoading(true);
+            setUsersError('');
+
             try {
-                const response = await api.get('/admin/overview');
+                const params = new URLSearchParams();
+                params.set('page', String(userPage));
+                params.set('limit', '20');
+                if (userFilter.search.trim()) {
+                    params.set('search', userFilter.search.trim());
+                }
+                if (userFilter.role) {
+                    params.set('role', userFilter.role);
+                }
+
+                const response = await api.get(`/admin/users?${params.toString()}`);
                 if (cancelled) {
                     return;
                 }
-                setData(normalizeAdminOverview(response.data));
+                setUsersData(normalizeAdminUsers(response.data));
             } catch (err) {
                 if (!cancelled) {
-                    setError(err.response?.data?.error || 'Не вдалося завантажити дані адмінки.');
+                    setUsersError(err.response?.data?.error || 'Не вдалося завантажити список користувачів.');
                 }
             } finally {
                 if (!cancelled) {
-                    setLoading(false);
+                    setUsersLoading(false);
                 }
             }
         }
 
-        loadOverview();
+        loadUsers();
 
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [userPage, userFilter]);
+
+    async function loadOverview() {
+        setLoading(true);
+        setError('');
+
+        try {
+            const response = await api.get('/admin/overview');
+            setData(normalizeAdminOverview(response.data));
+        } catch (err) {
+            setError(err.response?.data?.error || 'Не вдалося завантажити дані адмінки.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function handleRoleChange(user, nextRole) {
+        if (!nextRole || user.role === nextRole) {
+            return;
+        }
+
+        const reason = window.prompt('Причина зміни ролі (необов\'язково):', '') || '';
+
+        setUpdatingUserId(user.id);
+        try {
+            const response = await api.patch(`/admin/users/${user.id}/role`, { role: nextRole, reason });
+            const updatedRole = response.data.user?.role || nextRole;
+            setUsersData((prev) => ({
+                ...prev,
+                users: prev.users.map((item) => (item.id === user.id ? { ...item, role: updatedRole } : item)),
+            }));
+            toast.success('Роль користувача оновлено.');
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Не вдалося оновити роль.');
+        } finally {
+            setUpdatingUserId('');
+        }
+    }
+
+    async function handleSuspendToggle(user) {
+        const suspended = user.role !== 'suspended';
+        const reason = window.prompt(
+            suspended
+                ? 'Причина призупинення доступу:'
+                : 'Причина відновлення доступу (необов\'язково):',
+            '',
+        );
+
+        if (suspended && !String(reason || '').trim()) {
+            toast.error('Потрібно вказати причину призупинення.');
+            return;
+        }
+
+        setUpdatingUserId(user.id);
+        try {
+            const response = await api.patch(`/admin/users/${user.id}/suspend`, {
+                suspended,
+                reason: String(reason || '').trim(),
+            });
+            const updatedRole = response.data.user?.role || (suspended ? 'suspended' : 'user');
+            setUsersData((prev) => ({
+                ...prev,
+                users: prev.users.map((item) => (item.id === user.id ? { ...item, role: updatedRole } : item)),
+            }));
+            toast.success(suspended ? 'Доступ користувача призупинено.' : 'Доступ користувача відновлено.');
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Не вдалося оновити статус користувача.');
+        } finally {
+            setUpdatingUserId('');
+        }
+    }
 
     const summaryCards = useMemo(
         () => [
@@ -111,6 +204,119 @@ export default function AdminControlCenterPage() {
                 <DistributionList title="Матчі за статусом" items={data.distributions.matchesByStatus} />
                 <DistributionList title="Популярні ніші" items={data.distributions.topNiches} />
             </section>
+
+            <article className="card admin-users-card">
+                <div className="admin-users-header">
+                    <h3>Управління користувачами</h3>
+                    <button className="btn btn-secondary btn-sm" onClick={loadOverview}>
+                        Оновити метрики
+                    </button>
+                </div>
+
+                <div className="admin-users-filters">
+                    <input
+                        type="text"
+                        placeholder="Пошук: email, ім'я, firebaseUid"
+                        value={userFilter.search}
+                        onChange={(event) => {
+                            setUserPage(1);
+                            setUserFilter((prev) => ({ ...prev, search: event.target.value }));
+                        }}
+                    />
+                    <select
+                        value={userFilter.role}
+                        onChange={(event) => {
+                            setUserPage(1);
+                            setUserFilter((prev) => ({ ...prev, role: event.target.value }));
+                        }}
+                    >
+                        <option value="">Усі ролі</option>
+                        <option value="user">user</option>
+                        <option value="admin">admin</option>
+                        <option value="suspended">suspended</option>
+                    </select>
+                </div>
+
+                {usersLoading ? (
+                    <p className="admin-empty">Завантаження користувачів...</p>
+                ) : usersError ? (
+                    <p className="admin-empty">{usersError}</p>
+                ) : (
+                    <>
+                        <div className="admin-table-wrap">
+                            <table className="admin-users-table">
+                                <thead>
+                                    <tr>
+                                        <th>Користувач</th>
+                                        <th>Роль</th>
+                                        <th>Каналів</th>
+                                        <th>Створений</th>
+                                        <th>Дії</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {usersData.users.map((user) => (
+                                        <tr key={user.id}>
+                                            <td>
+                                                <div className="admin-user-cell">
+                                                    <strong>{user.displayName || user.email}</strong>
+                                                    <span>{user.email}</span>
+                                                    <span>{user.id}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span className={`admin-role-badge role-${user.role}`}>{user.role}</span>
+                                            </td>
+                                            <td>{user.channelCount}</td>
+                                            <td>{formatAdminDate(user.createdAt)}</td>
+                                            <td>
+                                                <div className="admin-user-actions">
+                                                    <button
+                                                        className="btn btn-secondary btn-sm"
+                                                        onClick={() => handleRoleChange(user, user.role === 'admin' ? 'user' : 'admin')}
+                                                        disabled={updatingUserId === user.id || user.role === 'suspended'}
+                                                    >
+                                                        {user.role === 'admin' ? 'Зробити user' : 'Зробити admin'}
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-danger btn-sm"
+                                                        onClick={() => handleSuspendToggle(user)}
+                                                        disabled={updatingUserId === user.id}
+                                                    >
+                                                        {user.role === 'suspended' ? 'Відновити' : 'Призупинити'}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="admin-users-pagination">
+                            <span>
+                                Сторінка {usersData.page} з {usersData.pages} · Всього {usersData.total}
+                            </span>
+                            <div className="admin-users-pagination-actions">
+                                <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={() => setUserPage((prev) => Math.max(prev - 1, 1))}
+                                    disabled={usersData.page <= 1}
+                                >
+                                    Назад
+                                </button>
+                                <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={() => setUserPage((prev) => Math.min(prev + 1, usersData.pages))}
+                                    disabled={usersData.page >= usersData.pages}
+                                >
+                                    Далі
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </article>
 
             <section className="admin-data-grid">
                 <article className="card admin-table-card">
