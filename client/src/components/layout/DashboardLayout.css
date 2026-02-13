@@ -295,6 +295,8 @@
     align-items: center;
     gap: 12px;
     position: relative;
+    min-width: 0;
+    flex-shrink: 0;
 }
 
 .topbar-links {
@@ -308,6 +310,7 @@
     overflow-y: hidden;
     scrollbar-width: thin;
     white-space: nowrap;
+    flex: 1 1 auto;
 }
 
 .topbar-link {

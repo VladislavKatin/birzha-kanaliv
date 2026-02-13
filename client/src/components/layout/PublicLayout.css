@@ -32,6 +32,7 @@
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 16px;
+    min-width: 0;
 }
 
 .navbar-logo {
@@ -111,6 +112,7 @@
     align-items: center;
     gap: 12px;
     justify-self: end;
+    min-width: 0;
 }
 
 .navbar-btn {
@@ -121,6 +123,7 @@
     border: none;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .navbar-btn.primary {
