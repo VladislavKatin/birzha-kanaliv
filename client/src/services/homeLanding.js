@@ -1,9 +1,7 @@
-﻿import { buildAuthRedirectPath } from './navigation.js';
-
-export function getLandingCtaPaths() {
+﻿export function getLandingCtaPaths() {
     return {
         authPath: '/auth',
-        offersPath: buildAuthRedirectPath('/offers'),
+        offersPath: '/offers',
     };
 }
 

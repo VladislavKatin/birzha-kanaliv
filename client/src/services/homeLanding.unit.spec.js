@@ -5,7 +5,7 @@ export function runHomeLandingUnitTests() {
     const paths = getLandingCtaPaths();
 
     assert.equal(paths.authPath, '/auth');
-    assert.equal(paths.offersPath, '/auth?next=%2Foffers');
+    assert.equal(paths.offersPath, '/offers');
 
     const navLinks = getLandingNavLinks();
     assert.equal(navLinks.length, 5);

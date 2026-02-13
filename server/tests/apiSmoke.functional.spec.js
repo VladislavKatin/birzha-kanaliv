@@ -1,4 +1,4 @@
-const assert = require('node:assert/strict');
+﻿const assert = require('node:assert/strict');
 
 const OFFER_OWNER_UID = 'seed-firebase-uid-1';
 const RESPONDER_UID = 'seed-firebase-uid-2';
@@ -16,6 +16,7 @@ async function runApiSmokeFunctionalTests() {
     try {
         await smokeAuthMe(baseUrl);
         await smokeOffersList(baseUrl);
+        await smokeOfferDetailsPublic(baseUrl);
 
         const primaryFlow = await createAndProgressMatchFlow(baseUrl, {
             offerOwnerUid: OFFER_OWNER_UID,
@@ -63,6 +64,26 @@ async function smokeOffersList(baseUrl) {
 
     assert.equal(response.status, 200);
     assert.equal(Array.isArray(response.body.offers), true);
+}
+
+async function smokeOfferDetailsPublic(baseUrl) {
+    const listed = await request(baseUrl, {
+        method: 'GET',
+        path: '/api/offers',
+    });
+
+    assert.equal(listed.status, 200);
+    assert.equal(Array.isArray(listed.body.offers), true);
+    assert.equal(listed.body.offers.length > 0, true);
+
+    const offerId = listed.body.offers[0].id;
+    const detail = await request(baseUrl, {
+        method: 'GET',
+        path: `/api/offers/${offerId}`,
+    });
+
+    assert.equal(detail.status, 200);
+    assert.equal(detail.body.offer.id, offerId);
 }
 
 async function createAndProgressMatchFlow(baseUrl, {

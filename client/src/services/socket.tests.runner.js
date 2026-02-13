@@ -10,6 +10,8 @@ import { runHomeLandingUnitTests } from './homeLanding.unit.spec.js';
 import { runHomeLandingFunctionalTests } from './homeLanding.functional.spec.js';
 import { runBlogArticlesUnitTests } from './blogArticles.unit.spec.js';
 import { runSeoFunctionalTests } from './seo.functional.spec.js';
+import { runPublicOffersUnitTests } from './publicOffers.unit.spec.js';
+import { runPublicOffersFunctionalTests } from './publicOffers.functional.spec.js';
 
 async function run() {
     const tests = [
@@ -25,6 +27,8 @@ async function run() {
         { name: 'functional: home landing readiness rules', fn: runHomeLandingFunctionalTests },
         { name: 'unit: blog articles content contract', fn: runBlogArticlesUnitTests },
         { name: 'functional: seo payload and schema builders', fn: runSeoFunctionalTests },
+        { name: 'unit: public offers helpers', fn: runPublicOffersUnitTests },
+        { name: 'functional: public offers query builder', fn: runPublicOffersFunctionalTests },
     ];
 
     let failed = 0;

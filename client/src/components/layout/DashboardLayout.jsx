@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
@@ -7,14 +7,14 @@ import { buildNotificationKey, formatToastMessage } from '../../services/globalN
 import './DashboardLayout.css';
 
 const navItems = [
-    { path: '/dashboard', label: 'Дашборд', icon: '🏠' },
-    { path: '/my-channels', label: 'Мої канали', icon: '📺' },
-    { path: '/offers', label: 'Пропозиції', icon: '🔍' },
-    { path: '/swaps/incoming', label: 'Вхідні', icon: '📥' },
-    { path: '/swaps/outgoing', label: 'Вихідні', icon: '📤' },
-    { path: '/exchanges', label: 'Обміни', icon: '🤝' },
-    { path: '/profile/edit', label: 'Профіль', icon: '👤' },
-    { path: '/settings/notifications', label: 'Сповіщення', icon: '🔔' },
+    { path: '/dashboard', label: 'Р”Р°С€Р±РѕСЂРґ', icon: 'рџЏ ' },
+    { path: '/my-channels', label: 'РњРѕС— РєР°РЅР°Р»Рё', icon: 'рџ“є' },
+    { path: '/dashboard/offers', label: 'РџСЂРѕРїРѕР·РёС†С–С—', icon: 'рџ”Ќ' },
+    { path: '/swaps/incoming', label: 'Р’С…С–РґРЅС–', icon: 'рџ“Ґ' },
+    { path: '/swaps/outgoing', label: 'Р’РёС…С–РґРЅС–', icon: 'рџ“¤' },
+    { path: '/exchanges', label: 'РћР±РјС–РЅРё', icon: 'рџ¤ќ' },
+    { path: '/profile/edit', label: 'РџСЂРѕС„С–Р»СЊ', icon: 'рџ‘¤' },
+    { path: '/settings/notifications', label: 'РЎРїРѕРІС–С‰РµРЅРЅСЏ', icon: 'рџ””' },
 ];
 
 export default function DashboardLayout() {
@@ -60,8 +60,8 @@ export default function DashboardLayout() {
             <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <div className="sidebar-logo">
-                        <span className="logo-icon">▶</span>
-                        <span className="logo-text">Біржа Каналів</span>
+                        <span className="logo-icon">в–¶</span>
+                        <span className="logo-text">Р‘С–СЂР¶Р° РљР°РЅР°Р»С–РІ</span>
                     </div>
                 </div>
 
@@ -89,12 +89,12 @@ export default function DashboardLayout() {
                             className="user-avatar"
                         />
                         <div className="user-details">
-                            <span className="user-name">{dbUser?.displayName || user?.email || 'Користувач'}</span>
+                            <span className="user-name">{dbUser?.displayName || user?.email || 'РљРѕСЂРёСЃС‚СѓРІР°С‡'}</span>
                             <span className="user-email">{user?.email}</span>
                         </div>
                     </div>
-                    <button className="btn-logout" onClick={handleSignOut} title="Вийти">
-                        🚪
+                    <button className="btn-logout" onClick={handleSignOut} title="Р’РёР№С‚Рё">
+                        рџљЄ
                     </button>
                 </div>
             </aside>
@@ -102,7 +102,7 @@ export default function DashboardLayout() {
             <div className="main-area">
                 <header className="topbar">
                     <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                        ☰
+                        в°
                     </button>
                     <div className="topbar-right">
                         <button
@@ -110,7 +110,7 @@ export default function DashboardLayout() {
                             onClick={() => setNotificationsOpen((open) => !open)}
                             title="Notifications"
                         >
-                            <span>🔔</span>
+                            <span>рџ””</span>
                             {notifications.length > 0 && (
                                 <span className="notifications-count">{notifications.length}</span>
                             )}
@@ -160,7 +160,7 @@ export default function DashboardLayout() {
                         )}
 
                         <span className="topbar-greeting">
-                            Привіт, <strong>{dbUser?.displayName || 'Користувач'}</strong> 👋
+                            РџСЂРёРІС–С‚, <strong>{dbUser?.displayName || 'РљРѕСЂРёСЃС‚СѓРІР°С‡'}</strong> рџ‘‹
                         </span>
                     </div>
                 </header>
@@ -172,3 +172,4 @@ export default function DashboardLayout() {
         </div>
     );
 }
+

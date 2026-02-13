@@ -1,5 +1,4 @@
 ﻿import { Link } from 'react-router-dom';
-import { buildAuthRedirectPath } from '../../services/navigation';
 import { getLandingNavLinks } from '../../services/homeLanding';
 import './PublicLayout.css';
 
@@ -22,7 +21,7 @@ export default function Footer() {
                     {navLinks.map((item) => (
                         <a key={item.href} href={item.href}>{item.label}</a>
                     ))}
-                    <Link to={buildAuthRedirectPath('/offers')}>Пропозиції</Link>
+                    <Link to="/offers">Пропозиції</Link>
                     <Link to="/auth">Увійти</Link>
                 </div>
                 <div className="footer-copy">

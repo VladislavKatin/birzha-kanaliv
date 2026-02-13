@@ -1,0 +1,139 @@
+﻿.offer-details-page {
+    min-height: calc(100vh - 72px);
+    background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    padding: 44px 16px 72px;
+}
+
+.offer-details-inner {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.offer-back {
+    border: none;
+    background: none;
+    color: #005bbb;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 14px;
+}
+
+.offer-details-card {
+    border-radius: 18px;
+    border: 1px solid #d9e8f8;
+    background: #ffffff;
+    padding: 22px;
+    display: grid;
+    gap: 18px;
+}
+
+.offer-details-head {
+    display: grid;
+    grid-template-columns: 54px 1fr auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.offer-details-head img {
+    width: 54px;
+    height: 54px;
+    border-radius: 999px;
+    object-fit: cover;
+}
+
+.offer-details-head h1 {
+    margin: 0;
+    font-size: clamp(24px, 3vw, 34px);
+    letter-spacing: -0.02em;
+}
+
+.offer-details-head p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.offer-details-head span {
+    border-radius: 999px;
+    border: 1px solid #d4e5f7;
+    background: #f7fbff;
+    color: #005bbb;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 12px;
+}
+
+.offer-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.offer-details-grid h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+}
+
+.offer-details-grid p,
+.offer-details-grid li {
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.offer-details-grid ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.offer-details-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.offer-details-actions select {
+    min-width: 220px;
+    border: 1px solid #d9e7f5;
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 10px 12px;
+}
+
+.offer-details-actions button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #005bbb, #2a70c7);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.offer-details-actions button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.offer-details-empty {
+    border-radius: 14px;
+    border: 1px solid #dbe6f3;
+    background: #ffffff;
+    padding: 18px;
+    color: #475569;
+}
+
+@media (max-width: 860px) {
+    .offer-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .offer-details-head {
+        grid-template-columns: 54px 1fr;
+    }
+
+    .offer-details-head span {
+        grid-column: 1 / -1;
+        width: fit-content;
+    }
+}

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './stores/authStore';
@@ -7,6 +7,8 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import HomePage from './pages/public/HomePage';
 import BlogListPage from './pages/public/BlogListPage';
 import BlogArticlePage from './pages/public/BlogArticlePage';
+import OffersCatalogPage from './pages/public/OffersCatalogPage';
+import OfferDetailsPage from './pages/public/OfferDetailsPage';
 import AuthPage from './pages/auth/AuthPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import MyChannelsPage from './pages/channels/MyChannelsPage';
@@ -20,13 +22,14 @@ import PublicProfilePage from './pages/profile/PublicProfilePage';
 import EditProfilePage from './pages/profile/EditProfilePage';
 import NotificationSettingsPage from './pages/settings/NotificationSettingsPage';
 
-/** Initialize Firebase auth listener once on mount */
 function AuthInit({ children }) {
-    const initAuth = useAuthStore(state => state.initAuth);
+    const initAuth = useAuthStore((state) => state.initAuth);
+
     useEffect(() => {
         const unsub = initAuth();
         return () => unsub();
     }, [initAuth]);
+
     return children;
 }
 
@@ -47,19 +50,19 @@ export default function App() {
                     }}
                 />
                 <Routes>
-                    {/* Public routes */}
                     <Route path="/" element={<HomePage />} />
+                    <Route path="/offers" element={<OffersCatalogPage />} />
+                    <Route path="/offers/:offerId" element={<OfferDetailsPage />} />
                     <Route path="/blog" element={<BlogListPage />} />
                     <Route path="/blog/:slug" element={<BlogArticlePage />} />
                     <Route path="/auth" element={<AuthPage />} />
 
-                    {/* Protected dashboard routes */}
                     <Route element={<ProtectedRoute />}>
                         <Route element={<DashboardLayout />}>
                             <Route path="/dashboard" element={<DashboardPage />} />
                             <Route path="/my-channels" element={<MyChannelsPage />} />
                             <Route path="/my-channels/:id" element={<ChannelDetailPage />} />
-                            <Route path="/offers" element={<OffersPage />} />
+                            <Route path="/dashboard/offers" element={<OffersPage />} />
                             <Route path="/swaps/incoming" element={<IncomingSwapsPage />} />
                             <Route path="/swaps/outgoing" element={<OutgoingSwapsPage />} />
                             <Route path="/exchanges" element={<ExchangesPage />} />
