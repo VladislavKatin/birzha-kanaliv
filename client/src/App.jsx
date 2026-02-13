@@ -77,6 +77,7 @@ export default function App() {
                             <Route path="/support/chats" element={<SupportChatsPage />} />
                             <Route element={<AdminRoute />}>
                                 <Route path="/admin" element={<AdminControlCenterPage />} />
+                                <Route path="/dashboard/admin" element={<AdminControlCenterPage />} />
                             </Route>
                         </Route>
                         <Route path="/chat/:transactionId" element={<ChatPage />} />
