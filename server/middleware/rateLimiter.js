@@ -9,12 +9,14 @@ const rateLimit = require('express-rate-limit');
  * @param {number} [options.windowMs=15*60*1000] - Time window in ms
  * @param {number} [options.max=100] - Max requests per window
  * @param {string} [options.message] - Error message
+ * @param {Function} [options.skip] - Skip callback
  * @returns {Function} Express middleware
  */
 function createRateLimiter({
     windowMs = 15 * 60 * 1000,
     max = 100,
-    message = 'Забагато запитів. Спробуйте пізніше.',
+    message = 'Too many requests. Please try again later.',
+    skip = () => false,
 } = {}) {
     return rateLimit({
         windowMs,
@@ -22,26 +24,32 @@ function createRateLimiter({
         standardHeaders: true,
         legacyHeaders: false,
         message: { error: message },
+        skip,
         // When Redis is available, uncomment:
         // store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
     });
 }
 
-/** Default API limiter: 100 requests per 15 minutes */
-const apiLimiter = createRateLimiter();
+/**
+ * Default API limiter: 100 requests per 15 minutes.
+ * Excludes /api/auth/*, which has a dedicated auth limiter.
+ */
+const apiLimiter = createRateLimiter({
+    skip: (req) => req.path.startsWith('/auth'),
+});
 
 /** Strict auth limiter: 10 requests per 15 minutes */
 const authLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
     max: 10,
-    message: 'Забагато спроб авторизації. Спробуйте через 15 хвилин.',
+    message: 'Too many auth attempts. Please try again in 15 minutes.',
 });
 
 /** Upload limiter: 5 requests per 15 minutes */
 const uploadLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
     max: 5,
-    message: 'Забагато завантажень. Спробуйте через 15 хвилин.',
+    message: 'Too many uploads. Please try again in 15 minutes.',
 });
 
 module.exports = { apiLimiter, authLimiter, uploadLimiter, createRateLimiter };
