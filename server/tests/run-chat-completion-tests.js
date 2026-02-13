@@ -14,6 +14,7 @@ const { runAdminOverviewUnitTests } = require('./adminOverview.unit.spec');
 const { runAdminOverviewFunctionalTests } = require('./adminOverview.functional.spec');
 const { runAdminUsersUnitTests } = require('./adminUsers.unit.spec');
 const { runAdminUsersFunctionalTests } = require('./adminUsers.functional.spec');
+const { runChatMessagePayloadUnitTests } = require('./chatMessagePayload.unit.spec');
 
 async function run() {
     const tests = [
@@ -33,6 +34,7 @@ async function run() {
         { name: 'functional: admin overview access and data', fn: runAdminOverviewFunctionalTests },
         { name: 'unit: admin users endpoint manifest', fn: runAdminUsersUnitTests },
         { name: 'functional: admin users manage flow', fn: runAdminUsersFunctionalTests },
+        { name: 'unit: chat message payload parser', fn: runChatMessagePayloadUnitTests },
     ];
 
     let failed = 0;

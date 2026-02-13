@@ -60,10 +60,22 @@ export default function useSocket(matchId) {
         }
     }, []);
 
-    const sendMessage = useCallback((content) => {
-        if (socketRef.current?.connected && content.trim()) {
-            socketRef.current.emit('send:message', { matchId, content });
-        }
+    const sendMessage = useCallback((payloadOrContent) => {
+        if (!socketRef.current?.connected) return;
+
+        const payload = typeof payloadOrContent === 'string'
+            ? { content: payloadOrContent }
+            : (payloadOrContent || {});
+
+        const content = typeof payload.content === 'string' ? payload.content : '';
+        const imageData = typeof payload.imageData === 'string' ? payload.imageData : '';
+        if (!content.trim() && !imageData.trim()) return;
+
+        socketRef.current.emit('send:message', {
+            matchId,
+            content,
+            imageData,
+        });
     }, [matchId]);
 
     const sendTyping = useCallback((isTyping) => {

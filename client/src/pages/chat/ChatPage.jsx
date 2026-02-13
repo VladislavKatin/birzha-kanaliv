@@ -1,17 +1,28 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import useSocket from '../../hooks/useSocket';
 import toast from 'react-hot-toast';
 import './ChatPage.css';
 
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+
 function formatTime(dateStr) {
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' });
+}
+
+function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Не вдалося прочитати зображення'));
+        reader.readAsDataURL(file);
+    });
 }
 
 export default function ChatPage() {
@@ -19,13 +30,22 @@ export default function ChatPage() {
     const navigate = useNavigate();
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+    const fileInputRef = useRef(null);
     const typingTimeoutRef = useRef(null);
 
-    const { connected, messages: socketMessages, setMessages, typingUsers, sendMessage, sendTyping } = useSocket(transactionId);
+    const {
+        connected,
+        messages: socketMessages,
+        setMessages,
+        typingUsers,
+        sendMessage,
+        sendTyping,
+    } = useSocket(transactionId);
 
     const [chatData, setChatData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [inputValue, setInputValue] = useState('');
+    const [selectedImage, setSelectedImage] = useState('');
     const [sending, setSending] = useState(false);
     const [showDisclaimer, setShowDisclaimer] = useState(false);
 
@@ -39,9 +59,9 @@ export default function ChatPage() {
 
     async function loadChat() {
         try {
-            const res = await api.get(`/chat/${transactionId}/messages`);
-            setChatData(res.data);
-            setMessages(res.data.messages || []);
+            const response = await api.get(`/chat/${transactionId}/messages`);
+            setChatData(response.data);
+            setMessages(response.data.messages || []);
         } catch (error) {
             console.error('Failed to load chat:', error);
             toast.error('Не вдалося завантажити чат');
@@ -54,40 +74,71 @@ export default function ChatPage() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
 
+    async function handleFilePick(event) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        try {
+            if (!file.type.startsWith('image/')) {
+                toast.error('Можна надсилати лише зображення');
+                return;
+            }
+            if (file.size > MAX_IMAGE_BYTES) {
+                toast.error('Зображення має бути до 3MB');
+                return;
+            }
+
+            const dataUrl = await fileToDataUrl(file);
+            setSelectedImage(dataUrl);
+        } catch (error) {
+            toast.error(error.message || 'Не вдалося додати зображення');
+        } finally {
+            event.target.value = '';
+        }
+    }
+
+    function clearSelectedImage() {
+        setSelectedImage('');
+    }
+
     async function handleSend() {
         const content = inputValue.trim();
-        if (!content || sending) return;
+        const imageData = selectedImage;
+        if ((!content && !imageData) || sending) return;
 
         setSending(true);
         setInputValue('');
+        setSelectedImage('');
+
+        const payload = { content, imageData };
 
         if (connected) {
-            sendMessage(content);
+            sendMessage(payload);
             sendTyping(false);
         } else {
-            // Fallback to REST
             try {
-                const res = await api.post(`/chat/${transactionId}/messages`, { content });
-                setMessages(prev => [...prev, res.data.message]);
+                const response = await api.post(`/chat/${transactionId}/messages`, payload);
+                setMessages((prev) => [...prev, response.data.message]);
             } catch (error) {
-                toast.error('Не вдалося надіслати повідомлення');
+                toast.error(error.response?.data?.error || 'Не вдалося надіслати повідомлення');
                 setInputValue(content);
+                setSelectedImage(imageData);
             }
         }
+
         setSending(false);
         inputRef.current?.focus();
     }
 
-    function handleKeyDown(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
+    function handleKeyDown(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
             handleSend();
         }
     }
 
-    function handleInputChange(e) {
-        setInputValue(e.target.value);
-        // Typing indicator
+    function handleInputChange(event) {
+        setInputValue(event.target.value);
         sendTyping(true);
         clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = setTimeout(() => sendTyping(false), 2000);
@@ -95,15 +146,16 @@ export default function ChatPage() {
 
     async function handleComplete() {
         try {
-            const res = await api.post(`/chat/${transactionId}/complete`);
-            setChatData(prev => ({ ...prev, match: res.data.match }));
-            if (res.data.match.status === 'completed') {
-                toast.success('🎉 Обмін завершено! Тепер можете залишити відгук.');
+            const response = await api.post(`/chat/${transactionId}/complete`);
+            setChatData((prev) => ({ ...prev, match: response.data.match }));
+
+            if (response.data.match.status === 'completed') {
+                toast.success('Обмін завершено. Можете залишити відгук.');
             } else {
-                toast.success('Ви підтвердили завершення. Чекаємо на партнера.');
+                toast.success('Підтверджено. Очікуємо підтвердження партнера.');
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Не вдалося підтвердити');
+            toast.error(error.response?.data?.error || 'Не вдалося підтвердити завершення');
         }
     }
 
@@ -121,32 +173,29 @@ export default function ChatPage() {
             <div className="chat-error">
                 <h3>Чат не знайдено</h3>
                 <button className="btn btn-secondary" onClick={() => navigate('/dashboard')}>
-                    ← На головну
+                    Назад
                 </button>
             </div>
         );
     }
 
     const { partner, match, myUserId } = chatData;
-    const isTyping = Object.values(typingUsers).some(v => v);
+    const isTyping = Object.values(typingUsers).some(Boolean);
     const isCompleted = match?.status === 'completed';
-    const myConfirmed = match?.initiatorConfirmed || match?.targetConfirmed; // simplified
 
-    // Group messages by date
     const messageGroups = [];
     let lastDate = '';
-    for (const msg of socketMessages) {
-        const date = formatDate(msg.createdAt);
+    for (const message of socketMessages) {
+        const date = formatDate(message.createdAt);
         if (date !== lastDate) {
             messageGroups.push({ type: 'date', date });
             lastDate = date;
         }
-        messageGroups.push({ type: 'message', ...msg });
+        messageGroups.push({ type: 'message', ...message });
     }
 
     return (
         <div className="chat-page">
-            {/* Header */}
             <div className="chat-header">
                 <button className="btn-back" onClick={() => navigate(-1)}>←</button>
                 <div className="chat-header-partner">
@@ -156,63 +205,57 @@ export default function ChatPage() {
                         className="chat-partner-avatar"
                     />
                     <div className="chat-partner-info">
-                        <span className="chat-partner-name">
-                            {partner?.channelTitle || partner?.owner?.displayName || 'Партнер'}
-                        </span>
-                        <span className="chat-partner-status">
-                            {connected ? (isTyping ? 'друкує...' : '🟢 Онлайн') : '⚪ Офлайн'}
-                        </span>
+                        <span className="chat-partner-name">{partner?.channelTitle || partner?.owner?.displayName || 'Партнер'}</span>
+                        <span className="chat-partner-status">{connected ? (isTyping ? 'друкує...' : 'Онлайн') : 'Офлайн'}</span>
                     </div>
                 </div>
                 <div className="chat-header-actions">
                     {match?.status === 'accepted' && (
                         <button className="btn btn-primary btn-sm" onClick={handleComplete}>
-                            ✅ Підтвердити виконання
+                            Підтвердити виконання
                         </button>
                     )}
                     {isCompleted && (
                         <button className="btn btn-primary btn-sm" onClick={() => navigate('/exchanges')}>
-                            ⭐ Залишити відгук
+                            Залишити відгук
                         </button>
                     )}
                 </div>
             </div>
 
-            {/* Disclaimer banner */}
             <div className="chat-disclaimer">
-                <span>⚠️ Не передавайте паролі та реквізити. Уся комунікація лише через платформу.</span>
+                <span>Не передавайте паролі чи платіжні дані. Всі домовленості тільки в межах платформи.</span>
                 <button className="disclaimer-more" onClick={() => setShowDisclaimer(true)}>Детальніше</button>
             </div>
 
-            {/* Status bar */}
             {match && (
                 <div className={`chat-status-bar ${isCompleted ? 'completed' : ''}`}>
                     {isCompleted ? (
-                        <span>✅ Обмін завершено! Обидві сторони підтвердили.</span>
+                        <span>Обмін завершено.</span>
                     ) : match.status === 'accepted' ? (
-                        <span>🤝 Обмін прийнято. Домовтесь про деталі в чаті, потім підтвердіть виконання.</span>
+                        <span>Обмін прийнято. Домовтеся в чаті та підтвердіть виконання.</span>
                     ) : (
-                        <span>📌 Статус: {match.status}</span>
+                        <span>Статус: {match.status}</span>
                     )}
                 </div>
             )}
 
-            {/* Messages */}
             <div className="chat-messages">
                 {messageGroups.length === 0 ? (
                     <div className="chat-empty">
                         <span className="chat-empty-icon">💬</span>
-                        <p>Напишіть перше повідомлення!</p>
+                        <p>Напишіть перше повідомлення</p>
                     </div>
                 ) : (
-                    messageGroups.map((item, i) => {
+                    messageGroups.map((item, index) => {
                         if (item.type === 'date') {
                             return (
-                                <div key={`date-${i}`} className="chat-date-divider">
+                                <div key={`date-${index}`} className="chat-date-divider">
                                     <span>{item.date}</span>
                                 </div>
                             );
                         }
+
                         const isMine = item.sender?.id === myUserId || item.senderUserId === myUserId;
                         return (
                             <div key={item.id} className={`chat-message ${isMine ? 'mine' : 'theirs'}`}>
@@ -224,7 +267,12 @@ export default function ChatPage() {
                                     />
                                 )}
                                 <div className="chat-msg-bubble">
-                                    <p className="chat-msg-text">{item.content}</p>
+                                    {item.imageData && (
+                                        <a href={item.imageData} target="_blank" rel="noreferrer" className="chat-msg-image-link">
+                                            <img src={item.imageData} alt="Вкладене зображення" className="chat-msg-image" />
+                                        </a>
+                                    )}
+                                    {item.content && <p className="chat-msg-text">{item.content}</p>}
                                     <span className="chat-msg-time">{formatTime(item.createdAt)}</span>
                                 </div>
                             </div>
@@ -240,39 +288,63 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
             {!isCompleted && (
                 <div className="chat-input-bar">
-                    <textarea
-                        ref={inputRef}
-                        className="chat-input"
-                        placeholder="Напишіть повідомлення..."
-                        value={inputValue}
-                        onChange={handleInputChange}
-                        onKeyDown={handleKeyDown}
-                        rows={1}
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        onChange={handleFilePick}
+                        style={{ display: 'none' }}
                     />
+
+                    <button
+                        type="button"
+                        className="chat-attach-btn"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Додати зображення"
+                    >
+                        🖼
+                    </button>
+
+                    <div className="chat-input-stack">
+                        {selectedImage && (
+                            <div className="chat-image-preview">
+                                <img src={selectedImage} alt="Попередній перегляд" />
+                                <button type="button" onClick={clearSelectedImage}>✕</button>
+                            </div>
+                        )}
+
+                        <textarea
+                            ref={inputRef}
+                            className="chat-input"
+                            placeholder="Напишіть повідомлення..."
+                            value={inputValue}
+                            onChange={handleInputChange}
+                            onKeyDown={handleKeyDown}
+                            rows={1}
+                        />
+                    </div>
+
                     <button
                         className="chat-send-btn"
                         onClick={handleSend}
-                        disabled={!inputValue.trim() || sending}
+                        disabled={(!inputValue.trim() && !selectedImage) || sending}
                     >
                         ➤
                     </button>
                 </div>
             )}
 
-            {/* Disclaimer Modal */}
             {showDisclaimer && (
                 <div className="modal-overlay" onClick={() => setShowDisclaimer(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <h3>⚠️ Правила безпеки</h3>
+                    <div className="modal-content" onClick={(event) => event.stopPropagation()}>
+                        <h3>Правила безпеки</h3>
                         <ul className="disclaimer-list">
-                            <li>Ніколи не передавайте паролі від каналу</li>
-                            <li>Не діліться банківськими реквізитами</li>
-                            <li>Будь-які домовленості мають бути в межах платформи</li>
-                            <li>Підозрілу активність повідомляйте адміністрації</li>
-                            <li>Обмін має бути взаємовигідним і чесним</li>
+                            <li>Не передавайте паролі від акаунтів</li>
+                            <li>Не надсилайте платіжні реквізити</li>
+                            <li>Всі умови фіксуйте в чаті платформи</li>
+                            <li>Підозрілі дії одразу повідомляйте адміністрації</li>
                         </ul>
                         <div className="modal-actions">
                             <button className="btn btn-primary" onClick={() => setShowDisclaimer(false)}>

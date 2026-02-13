@@ -155,6 +155,20 @@ async function smokeChatSend(baseUrl, matchId, uid) {
 
     assert.equal(response.status, 201);
     assert.equal(!!response.body.message, true);
+
+    const imageResponse = await request(baseUrl, {
+        method: 'POST',
+        path: `/api/chat/${matchId}/messages`,
+        uid,
+        body: {
+            content: '',
+            imageData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO6Xn4sAAAAASUVORK5CYII=',
+        },
+    });
+
+    assert.equal(imageResponse.status, 201);
+    assert.equal(typeof imageResponse.body.message.imageData, 'string');
+    assert.equal(imageResponse.body.message.imageData.startsWith('data:image/'), true);
 }
 
 async function smokeMatchCompleteViaChat(baseUrl, matchId, firstUid, secondUid) {

@@ -8,7 +8,7 @@ export default function SupportChatsPage() {
         <div className="support-page">
             <div className="support-header">
                 <h1>Повідомлення</h1>
-                <p>Єдиний розділ для чатів користувачів, обговорень у спільноті, звернень до адміністратора та майбутнього чату з розробниками.</p>
+                <p>Єдиний розділ для чатів користувачів, обговорень у спільноті та швидких звернень до команди розробки.</p>
             </div>
 
             <div className="support-grid">
@@ -47,13 +47,13 @@ export default function SupportChatsPage() {
                     <textarea className="support-template" readOnly value={bugTemplate} rows={9} />
                 </section>
 
-                <section className="card support-card">
+                <section id="dev-chat" className="card support-card">
                     <h3>Чат з розробниками</h3>
-                    <p>У майбутньому буде окрема адмін-сторінка для керування проєктом і прямого зв'язку з командою.</p>
+                    <p>Знайшли помилку або маєте ідею? Пишіть у чат розробки та додавайте скріншоти одразу в повідомленні.</p>
                     <div className="support-actions">
-                        <button type="button" className="btn btn-secondary" disabled>
-                            Скоро буде доступно
-                        </button>
+                        <a className="btn btn-primary" href="https://t.me/" target="_blank" rel="noreferrer">
+                            Відкрити чат з розробниками
+                        </a>
                     </div>
                 </section>
 

@@ -1,5 +1,6 @@
 const admin = require('./config/firebase');
-const { ChatRoom, Message, User, YouTubeAccount, TrafficMatch } = require('./models');
+const { sequelize, ChatRoom, Message, User, YouTubeAccount, TrafficMatch, ActionLog } = require('./models');
+const { normalizeIncomingMessagePayload, formatMessageForClient } = require('./services/chatMessagePayload');
 
 /** @type {Map<string, Set<string>>} userId → Set of socket IDs */
 const onlineUsers = new Map();
@@ -88,22 +89,39 @@ function setupSocket(server) {
         // ── Chat: send message ────────────────────────────
         socket.on('send:message', async (data) => {
             try {
-                const { matchId, content } = data;
-                if (!content || !content.trim()) return;
+                const { matchId } = data || {};
+                const payload = normalizeIncomingMessagePayload(data || {});
+                if (!matchId) return;
 
-                let chatRoom = await ChatRoom.findOne({ where: { matchId } });
-                if (!chatRoom) {
-                    chatRoom = await ChatRoom.create({ matchId });
-                }
+                const fullMessage = await sequelize.transaction(async (transaction) => {
+                    let chatRoom = await ChatRoom.findOne({ where: { matchId }, transaction });
+                    if (!chatRoom) {
+                        chatRoom = await ChatRoom.create({ matchId }, { transaction });
+                    }
 
-                const message = await Message.create({
-                    chatRoomId: chatRoom.id,
-                    senderUserId: socket.userId,
-                    content: content.trim(),
-                });
+                    const message = await Message.create({
+                        chatRoomId: chatRoom.id,
+                        senderUserId: socket.userId,
+                        content: payload.storedContent,
+                    }, { transaction });
 
-                const fullMessage = await Message.findByPk(message.id, {
-                    include: [{ model: User, as: 'sender', attributes: ['id', 'displayName', 'photoURL'] }],
+                    await ActionLog.create({
+                        userId: socket.userId,
+                        action: 'chat_message_sent',
+                        details: {
+                            matchId,
+                            messageId: message.id,
+                            hasImage: !!payload.imageData,
+                            source: 'socket',
+                        },
+                    }, { transaction });
+
+                    const createdMessage = await Message.findByPk(message.id, {
+                        include: [{ model: User, as: 'sender', attributes: ['id', 'displayName', 'photoURL'] }],
+                        transaction,
+                    });
+
+                    return formatMessageForClient(createdMessage);
                 });
 
                 const room = `match:${matchId}`;

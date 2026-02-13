@@ -21,7 +21,7 @@ const navItems = [
 
 const topLinks = [
     { to: '/faq', label: 'FAQ' },
-    { to: '/support/chats', label: 'Повідомлення' },
+    { to: '/support/chats#dev-chat', label: 'Найшли помилку' },
 ];
 
 export default function DashboardLayout() {
@@ -118,9 +118,9 @@ export default function DashboardLayout() {
                                 {item.label}
                             </Link>
                         ))}
-                        <button className="topbar-link topbar-link-disabled" type="button" disabled title="Скоро буде доступно">
-                            Чат з розробниками (незабаром)
-                        </button>
+                        <Link to="/support/chats#dev-chat" className="topbar-link">
+                            Чат з розробниками
+                        </Link>
                     </div>
 
                     <div className="topbar-right">
