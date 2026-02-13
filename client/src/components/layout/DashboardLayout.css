@@ -16,6 +16,7 @@
     --shadow-md: 0 10px 24px rgba(16, 47, 86, 0.08);
     --shadow-lg: 0 20px 40px rgba(16, 47, 86, 0.14);
     font-size: 15px;
+    color: var(--text-primary);
 
     display: flex;
     min-height: 100vh;
@@ -23,6 +24,12 @@
         radial-gradient(1200px 420px at 85% -15%, rgba(255, 213, 79, 0.16), transparent 58%),
         radial-gradient(900px 340px at -10% 0%, rgba(0, 91, 187, 0.1), transparent 56%),
         var(--surface-0);
+}
+
+.dashboard-layout h1,
+.dashboard-layout h2,
+.dashboard-layout h3 {
+    color: var(--text-primary);
 }
 
 .dashboard-layout .card {

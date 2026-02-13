@@ -16,11 +16,12 @@
     font-weight: 800;
     letter-spacing: -0.03em;
     margin-bottom: 4px;
+    color: var(--text-primary);
 }
 
 .channels-subtitle {
-    color: var(--text-secondary);
-    font-size: 13px;
+    color: #365a87;
+    font-size: 14px;
 }
 
 .channels-grid {
@@ -43,10 +44,12 @@
 .channels-empty h3 {
     font-size: 18px;
     margin-bottom: 8px;
+    color: var(--text-primary);
 }
 
 .channels-empty p {
-    color: var(--text-secondary);
+    color: #365a87;
+    font-size: 14px;
     margin-bottom: 20px;
 }
 
