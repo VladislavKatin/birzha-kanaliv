@@ -4,6 +4,8 @@ import {
     GoogleAuthProvider,
     onAuthStateChanged,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signOut,
 } from 'firebase/auth';
 
@@ -16,16 +18,28 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+const missingConfigKeys = Object.entries(firebaseConfig)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
+function getFirebaseConfigError() {
+    if (missingConfigKeys.length === 0) return null;
+    return `Firebase config missing: ${missingConfigKeys.join(', ')}`;
+}
+
 export {
     auth,
     googleProvider,
+    getFirebaseConfigError,
     onAuthStateChanged,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signOut,
 };
