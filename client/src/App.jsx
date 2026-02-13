@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './stores/authStore';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import AdminRoute from './components/common/AdminRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
 import HomePage from './pages/public/HomePage';
 import BlogListPage from './pages/public/BlogListPage';
@@ -23,6 +24,7 @@ import PublicProfilePage from './pages/profile/PublicProfilePage';
 import EditProfilePage from './pages/profile/EditProfilePage';
 import NotificationSettingsPage from './pages/settings/NotificationSettingsPage';
 import SupportChatsPage from './pages/support/SupportChatsPage';
+import AdminControlCenterPage from './pages/admin/AdminControlCenterPage';
 
 function AuthInit({ children }) {
     const initAuth = useAuthStore((state) => state.initAuth);
@@ -73,6 +75,9 @@ export default function App() {
                             <Route path="/profile/edit" element={<EditProfilePage />} />
                             <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
                             <Route path="/support/chats" element={<SupportChatsPage />} />
+                            <Route element={<AdminRoute />}>
+                                <Route path="/admin" element={<AdminControlCenterPage />} />
+                            </Route>
                         </Route>
                         <Route path="/chat/:transactionId" element={<ChatPage />} />
                     </Route>

@@ -31,6 +31,9 @@ export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const seenNotificationKeysRef = useRef(new Set());
+    const visibleNavItems = dbUser?.role === 'admin'
+        ? [{ path: '/admin', label: 'Адмінка', description: 'Управління платформою', icon: 'settings' }, ...navItems]
+        : navItems;
 
     const handleSignOut = async () => {
         await signOut();
@@ -67,7 +70,7 @@ export default function DashboardLayout() {
                 </div>
 
                 <nav className="sidebar-nav">
-                    {navItems.map((item) => (
+                    {visibleNavItems.map((item) => (
                         <NavLink
                             key={item.path}
                             to={item.path}

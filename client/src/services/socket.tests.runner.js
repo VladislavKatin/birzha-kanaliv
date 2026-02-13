@@ -12,6 +12,8 @@ import { runBlogArticlesUnitTests } from './blogArticles.unit.spec.js';
 import { runSeoFunctionalTests } from './seo.functional.spec.js';
 import { runPublicOffersUnitTests } from './publicOffers.unit.spec.js';
 import { runPublicOffersFunctionalTests } from './publicOffers.functional.spec.js';
+import { runAdminCenterUnitTests } from './adminCenter.unit.spec.js';
+import { runAdminCenterFunctionalTests } from './adminCenter.functional.spec.js';
 
 async function run() {
     const tests = [
@@ -29,6 +31,8 @@ async function run() {
         { name: 'functional: seo payload and schema builders', fn: runSeoFunctionalTests },
         { name: 'unit: public offers helpers', fn: runPublicOffersUnitTests },
         { name: 'functional: public offers query builder', fn: runPublicOffersFunctionalTests },
+        { name: 'unit: admin center normalization', fn: runAdminCenterUnitTests },
+        { name: 'functional: admin center payload fallback', fn: runAdminCenterFunctionalTests },
     ];
 
     let failed = 0;

@@ -10,6 +10,8 @@ const { runLoggerUnitTests } = require('./logger.unit.spec');
 const { runLoggerFunctionalTests } = require('./logger.functional.spec');
 const { runApiSmokeUnitTests } = require('./apiSmoke.unit.spec');
 const { runApiSmokeFunctionalTests } = require('./apiSmoke.functional.spec');
+const { runAdminOverviewUnitTests } = require('./adminOverview.unit.spec');
+const { runAdminOverviewFunctionalTests } = require('./adminOverview.functional.spec');
 
 async function run() {
     const tests = [
@@ -25,6 +27,8 @@ async function run() {
         { name: 'functional: structured logger output', fn: runLoggerFunctionalTests },
         { name: 'unit: api smoke endpoint manifest', fn: runApiSmokeUnitTests },
         { name: 'functional: api smoke core flow', fn: runApiSmokeFunctionalTests },
+        { name: 'unit: admin overview payload contract', fn: runAdminOverviewUnitTests },
+        { name: 'functional: admin overview access and data', fn: runAdminOverviewFunctionalTests },
     ];
 
     let failed = 0;
