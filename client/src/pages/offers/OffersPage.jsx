@@ -21,6 +21,7 @@ export default function OffersPage() {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState({ niche: '' });
     const [showCreate, setShowCreate] = useState(false);
+    const [realChannels, setRealChannels] = useState([]);
     const [createForm, setCreateForm] = useState({
         type: 'subs',
         description: '',
@@ -36,6 +37,7 @@ export default function OffersPage() {
         if (user) {
             loadMyChannels();
         }
+        loadRealChannels();
     }, []);
 
     useEffect(() => {
@@ -68,6 +70,20 @@ export default function OffersPage() {
             }
         } catch (error) {
             console.error('Failed to load channels:', error);
+        }
+    }
+
+    async function loadRealChannels() {
+        try {
+            const response = await api.get('/channels?limit=200');
+            const channels = response.data.channels || [];
+            const sortedRealChannels = channels
+                .filter((channel) => !isDemoChannel(channel))
+                .sort((a, b) => new Date(b.connectedAt || 0).getTime() - new Date(a.connectedAt || 0).getTime());
+            setRealChannels(sortedRealChannels);
+        } catch (error) {
+            console.error('Failed to load real channels:', error);
+            setRealChannels([]);
         }
     }
 
@@ -154,6 +170,28 @@ export default function OffersPage() {
                     >
                         {showDemoOffers ? 'Сховати DEMO' : `Показати DEMO (${demoOffers.length})`}
                     </button>
+                )}
+            </div>
+
+            <div className="real-channels card">
+                <div className="real-channels-head">
+                    <h3>Реально зареєстровані канали</h3>
+                    <span>{realChannels.length}</span>
+                </div>
+                {realChannels.length === 0 ? (
+                    <p className="real-channels-empty">Поки немає каналів реальних користувачів.</p>
+                ) : (
+                    <div className="real-channels-list">
+                        {realChannels.slice(0, 12).map((channel) => (
+                            <div key={channel.id} className="real-channel-item">
+                                <img src={channel.channelAvatar || ''} alt="" className="real-channel-avatar" />
+                                <div className="real-channel-text">
+                                    <strong>{channel.channelTitle || 'Канал'}</strong>
+                                    <span>{formatNumber(channel.subscribers)} підписників</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 )}
             </div>
 

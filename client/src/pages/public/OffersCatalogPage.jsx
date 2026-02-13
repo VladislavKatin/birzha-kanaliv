@@ -25,6 +25,7 @@ export default function OffersCatalogPage() {
     const [error, setError] = useState('');
     const [filter, setFilter] = useState({ niche: '', language: '' });
     const [showDemoOffers, setShowDemoOffers] = useState(false);
+    const [realChannels, setRealChannels] = useState([]);
 
     const nicheOptions = useMemo(() => getNicheOptions(), []);
     const languageOptions = useMemo(() => getLanguageOptions(), []);
@@ -61,6 +62,35 @@ export default function OffersCatalogPage() {
             cancelled = true;
         };
     }, [query]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadRealChannels() {
+            try {
+                const response = await api.get('/channels?limit=200');
+                if (cancelled) {
+                    return;
+                }
+
+                const channels = response.data.channels || [];
+                const sortedRealChannels = channels
+                    .filter((channel) => !isDemoChannel(channel))
+                    .sort((a, b) => new Date(b.connectedAt || 0).getTime() - new Date(a.connectedAt || 0).getTime());
+                setRealChannels(sortedRealChannels);
+            } catch {
+                if (!cancelled) {
+                    setRealChannels([]);
+                }
+            }
+        }
+
+        loadRealChannels();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     return (
         <PublicLayout>
@@ -102,6 +132,28 @@ export default function OffersCatalogPage() {
                             >
                                 {showDemoOffers ? 'Сховати DEMO' : `Показати DEMO (${demoOffers.length})`}
                             </button>
+                        )}
+                    </div>
+
+                    <div className="public-real-channels">
+                        <div className="public-real-channels-head">
+                            <h3>Реально зареєстровані канали</h3>
+                            <span>{realChannels.length}</span>
+                        </div>
+                        {realChannels.length === 0 ? (
+                            <p className="public-real-channels-empty">Поки немає каналів реальних користувачів.</p>
+                        ) : (
+                            <div className="public-real-channels-list">
+                                {realChannels.slice(0, 12).map((channel) => (
+                                    <article key={channel.id} className="public-real-channel-item">
+                                        <img src={channel.channelAvatar || ''} alt="" />
+                                        <div>
+                                            <strong>{channel.channelTitle || 'Канал'}</strong>
+                                            <span>{formatPublicNumber(channel.subscribers)} підписників</span>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
                         )}
                     </div>
 
