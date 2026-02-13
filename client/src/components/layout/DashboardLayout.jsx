@@ -18,11 +18,7 @@ const navItems = [
     { path: '/settings/notifications', label: 'Сповіщення', description: 'Канали отримання сповіщень', icon: 'bell' },
 ];
 
-const topLinks = [
-    { to: '/my-channels', label: 'Мої канали' },
-    { to: '/exchanges', label: 'Обміни' },
-    { to: '/blog', label: 'Блог' },
-];
+const topLinks = [];
 
 export default function DashboardLayout() {
     const { user, dbUser, signOut } = useAuthStore();
