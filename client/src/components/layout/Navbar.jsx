@@ -12,11 +12,11 @@ export default function Navbar() {
     return (
         <nav className="navbar">
             <div className="navbar-inner">
-                <Link to="/" className="navbar-logo" aria-label="YouToobe Home">
+                <Link to="/" className="navbar-logo" aria-label="Біржа Каналів Home">
                     <span className="youtube-logo-mark" aria-hidden="true">
                         <span className="youtube-logo-play" />
                     </span>
-                    <span className="navbar-logo-text">YouToobe</span>
+                    <span className="navbar-logo-text">Біржа Каналів</span>
                 </Link>
 
                 <div className="navbar-links" aria-label="Landing anchors">

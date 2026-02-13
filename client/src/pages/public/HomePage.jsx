@@ -148,8 +148,8 @@ export default function HomePage() {
 
     useEffect(() => {
         applyPageSeo({
-            title: 'YouToobe - Біржа YouTube-обмінів для українських креаторів',
-            description: 'YouToobe допомагає YouTube-креаторам знаходити надійних партнерів, запускати обміни та масштабувати канал органічно.',
+            title: 'Біржа Каналів - Біржа YouTube-обмінів для українських креаторів',
+            description: 'Біржа Каналів допомагає YouTube-креаторам знаходити надійних партнерів, запускати обміни та масштабувати канал органічно.',
             keywords: [
                 'YouTube обмін',
                 'колаборації YouTube',
@@ -297,13 +297,13 @@ export default function HomePage() {
                         <h2 className="section-title">Чому обирають нас</h2>
                         <p className="section-subtitle">Інструменти, які закривають повний цикл партнерства</p>
                         <div className="features-grid">
-                            {features.map((feature) => {
+                            {features.map((feature, index) => {
                                 const Icon = feature.icon;
 
                                 return (
                                     <article key={feature.title} className="feature-card">
-                                        <div className="feature-icon" aria-hidden="true">
-                                            <Icon size={22} strokeWidth={2.2} />
+                                        <div className={`feature-icon tone-${(index % 6) + 1}`} aria-hidden="true">
+                                            <Icon size={24} strokeWidth={2.2} />
                                         </div>
                                         <h3 className="feature-title">{feature.title}</h3>
                                         <p className="feature-desc">{feature.desc}</p>
@@ -325,7 +325,7 @@ export default function HomePage() {
                             </ul>
                         </div>
                         <div className="compare-col better">
-                            <h3>З YouToobe</h3>
+                            <h3>З Біржею Каналів</h3>
                             <ul>
                                 <li>Каталог релевантних пропозицій і швидкий відгук</li>
                                 <li>Прозорі метрики, рейтинги та історія взаємодії</li>
@@ -337,7 +337,7 @@ export default function HomePage() {
 
                 <section className="blog-section" id="blog">
                     <div className="section-inner">
-                        <h2 className="section-title">Блог YouToobe</h2>
+                        <h2 className="section-title">Блог Біржа Каналів</h2>
                         <p className="section-subtitle">Практичні матеріали для зростання YouTube-каналу в 2026 році</p>
                         <div className="blog-list-action">
                             <button className="hero-btn secondary" onClick={() => navigate('/blog')}>

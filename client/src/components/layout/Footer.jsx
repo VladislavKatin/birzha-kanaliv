@@ -14,7 +14,7 @@ export default function Footer() {
                         <span className="youtube-logo-mark" aria-hidden="true">
                             <span className="youtube-logo-play" />
                         </span>
-                        YouToobe
+                        Біржа Каналів
                     </span>
                     <p className="footer-desc">Безпечний обмін аудиторією між YouTube-каналами</p>
                 </div>
@@ -26,7 +26,7 @@ export default function Footer() {
                     <Link to="/auth">Увійти</Link>
                 </div>
                 <div className="footer-copy">
-                    © {new Date().getFullYear()} YouToobe. Усі права захищені.
+                    © {new Date().getFullYear()} Біржа Каналів. Усі права захищені.
                 </div>
             </div>
         </footer>

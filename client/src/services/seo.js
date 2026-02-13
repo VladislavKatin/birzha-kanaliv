@@ -13,8 +13,8 @@ function toAbsoluteUrl(path) {
 }
 
 export function buildSeoPayload(input = {}) {
-    const title = input.title || 'YouToobe';
-    const description = input.description || 'YouToobe platform';
+    const title = input.title || 'Біржа Каналів';
+    const description = input.description || 'Платформа Біржа Каналів';
     const keywords = Array.isArray(input.keywords) ? input.keywords.join(', ') : '';
     const url = toAbsoluteUrl(input.path || '/');
     const image = toAbsoluteUrl(input.image || '/icons/icon-512.png');
@@ -33,7 +33,7 @@ export function buildBlogCollectionJsonLd(articles = []) {
     return {
         '@context': 'https://schema.org',
         '@type': 'Blog',
-        name: 'YouToobe Blog',
+        name: 'Блог Біржа Каналів',
         description: 'Практичні матеріали для розвитку YouTube-каналу',
         url: `${BASE_URL}/#blog`,
         blogPost: articles.map(article => ({
@@ -59,11 +59,11 @@ export function buildBlogArticleJsonLd(article) {
         datePublished: article.publishedAtIso || article.publishedAt,
         author: {
             '@type': 'Organization',
-            name: 'YouToobe',
+            name: 'Біржа Каналів',
         },
         publisher: {
             '@type': 'Organization',
-            name: 'YouToobe',
+            name: 'Біржа Каналів',
         },
         mainEntityOfPage: `${BASE_URL}/blog/${article.slug}`,
     };

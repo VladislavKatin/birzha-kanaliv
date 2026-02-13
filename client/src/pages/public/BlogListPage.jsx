@@ -16,8 +16,8 @@ export default function BlogListPage() {
 
     useEffect(() => {
         applyPageSeo({
-            title: 'Блог YouToobe - практичні статті для росту YouTube-каналу',
-            description: 'Блог YouToobe: стратегії колаборацій, репутації та системного росту YouTube-каналу у 2026 році.',
+            title: 'Блог Біржа Каналів - практичні статті для росту YouTube-каналу',
+            description: 'Блог Біржа Каналів: стратегії колаборацій, репутації та системного росту YouTube-каналу у 2026 році.',
             keywords: ['блог youtube', 'просування youtube', 'колаборації youtube', 'trust score youtube'],
             path: '/blog',
             type: 'website',
@@ -35,7 +35,7 @@ export default function BlogListPage() {
                     </button>
 
                     <header className="blog-list-header">
-                        <h1>Блог YouToobe</h1>
+                        <h1>Блог Біржа Каналів</h1>
                         <p>Матеріали для українських креаторів: як будувати партнерства, посилювати репутацію і рости стабільно.</p>
                     </header>
 

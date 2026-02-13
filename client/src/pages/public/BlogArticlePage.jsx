@@ -14,7 +14,7 @@ export default function BlogArticlePage() {
     useEffect(() => {
         if (!article) {
             applyPageSeo({
-                title: 'Статтю не знайдено - YouToobe Blog',
+                title: 'Статтю не знайдено - Блог Біржа Каналів',
                 description: 'Запитана стаття відсутня або була переміщена.',
                 path: `/blog/${slug || ''}`,
                 type: 'article',
