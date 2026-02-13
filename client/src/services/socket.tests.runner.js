@@ -2,6 +2,8 @@ import { runSocketUnitTests } from './socket.unit.spec.js';
 import { runSocketFunctionalTests } from './socket.functional.spec.js';
 import { runNavigationUnitTests } from './navigation.unit.spec.js';
 import { runNavigationFunctionalTests } from './navigation.functional.spec.js';
+import { runGlobalNotificationUnitTests } from './globalNotifications.unit.spec.js';
+import { runGlobalNotificationFunctionalTests } from './globalNotifications.functional.spec.js';
 
 async function run() {
     const tests = [
@@ -9,6 +11,8 @@ async function run() {
         { name: 'functional: createAuthenticatedSocket', fn: runSocketFunctionalTests },
         { name: 'unit: navigation redirect helpers', fn: runNavigationUnitTests },
         { name: 'functional: post-auth navigation safety', fn: runNavigationFunctionalTests },
+        { name: 'unit: global notification normalization', fn: runGlobalNotificationUnitTests },
+        { name: 'functional: global notification key strategy', fn: runGlobalNotificationFunctionalTests },
     ];
 
     let failed = 0;
