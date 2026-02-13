@@ -8,6 +8,8 @@ const { runChannelAccessUnitTests } = require('./channelAccess.unit.spec');
 const { runChannelAccessFunctionalTests } = require('./channelAccess.functional.spec');
 const { runLoggerUnitTests } = require('./logger.unit.spec');
 const { runLoggerFunctionalTests } = require('./logger.functional.spec');
+const { runApiSmokeUnitTests } = require('./apiSmoke.unit.spec');
+const { runApiSmokeFunctionalTests } = require('./apiSmoke.functional.spec');
 
 async function run() {
     const tests = [
@@ -21,6 +23,8 @@ async function run() {
         { name: 'functional: user channel lookup', fn: runChannelAccessFunctionalTests },
         { name: 'unit: structured logger payload', fn: runLoggerUnitTests },
         { name: 'functional: structured logger output', fn: runLoggerFunctionalTests },
+        { name: 'unit: api smoke endpoint manifest', fn: runApiSmokeUnitTests },
+        { name: 'functional: api smoke core flow', fn: runApiSmokeFunctionalTests },
     ];
 
     let failed = 0;

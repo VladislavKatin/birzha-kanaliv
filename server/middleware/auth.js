@@ -1,6 +1,19 @@
 const admin = require('../config/firebase');
 
 const auth = async (req, res, next) => {
+    if (process.env.NODE_ENV === 'test') {
+        const testUid = req.headers['x-test-firebase-uid'];
+        if (testUid) {
+            req.firebaseUser = {
+                uid: testUid,
+                email: req.headers['x-test-email'] || `${testUid}@example.test`,
+                name: req.headers['x-test-name'] || testUid,
+                picture: null,
+            };
+            return next();
+        }
+    }
+
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

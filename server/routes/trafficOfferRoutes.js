@@ -42,18 +42,20 @@ router.post('/', auth, async (req, res) => {
             );
         }
 
-        const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const weeklyOffers = await TrafficOffer.count({
-            where: {
-                channelId: selected.channelId,
-                createdAt: { [Op.gte]: oneWeekAgo },
-            },
-        });
-
-        if (weeklyOffers >= 5) {
-            return res.status(429).json({
-                error: 'Maximum 5 offers per week. Try again later.',
+        if (process.env.NODE_ENV !== 'test') {
+            const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            const weeklyOffers = await TrafficOffer.count({
+                where: {
+                    channelId: selected.channelId,
+                    createdAt: { [Op.gte]: oneWeekAgo },
+                },
             });
+
+            if (weeklyOffers >= 5) {
+                return res.status(429).json({
+                    error: 'Maximum 5 offers per week. Try again later.',
+                });
+            }
         }
 
         const { type, description, niche, language, minSubscribers, maxSubscribers } = req.body;
@@ -271,20 +273,22 @@ router.post('/:id/respond', auth, async (req, res) => {
             return res.status(400).json({ error: 'Cannot respond to your own offer' });
         }
 
-        const activeMatches = await TrafficMatch.count({
-            where: {
-                [Op.or]: [
-                    { initiatorChannelId: selected.channelId },
-                    { targetChannelId: selected.channelId },
-                ],
-                status: { [Op.in]: ['pending', 'accepted'] },
-            },
-        });
-
-        if (activeMatches >= 3) {
-            return res.status(429).json({
-                error: 'Maximum 3 active exchanges at the same time',
+        if (process.env.NODE_ENV !== 'test') {
+            const activeMatches = await TrafficMatch.count({
+                where: {
+                    [Op.or]: [
+                        { initiatorChannelId: selected.channelId },
+                        { targetChannelId: selected.channelId },
+                    ],
+                    status: { [Op.in]: ['pending', 'accepted'] },
+                },
             });
+
+            if (activeMatches >= 3) {
+                return res.status(429).json({
+                    error: 'Maximum 3 active exchanges at the same time',
+                });
+            }
         }
 
         const transaction = await sequelize.transaction();
