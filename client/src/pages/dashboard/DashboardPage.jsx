@@ -17,7 +17,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         loadData();
-        // Check for YouTube connect callback
+
         const params = new URLSearchParams(window.location.search);
         if (params.get('youtube') === 'connected') {
             refreshUserData();
@@ -27,10 +27,7 @@ export default function DashboardPage() {
 
     async function loadData() {
         try {
-            const [statsRes, activityRes] = await Promise.all([
-                api.get('/user/stats'),
-                api.get('/user/activity?limit=5'),
-            ]);
+            const [statsRes, activityRes] = await Promise.all([api.get('/user/stats'), api.get('/user/activity?limit=5')]);
             setStats(statsRes.data);
             setActivity(activityRes.data.events || []);
         } catch (error) {
@@ -53,7 +50,7 @@ export default function DashboardPage() {
         <div className="dashboard-page">
             <div className="dashboard-header">
                 <h1>Дашборд</h1>
-                <p className="dashboard-subtitle">Огляд вашої активності на платформі</p>
+                <p className="dashboard-subtitle">Огляд активності вашого акаунта на платформі</p>
             </div>
 
             <div className="dashboard-grid">

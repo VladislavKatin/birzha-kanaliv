@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
+import Icon from '../../components/common/Icon';
 import './DashboardPage.css';
 
 export default function QuickActions({ youtubeConnected }) {
@@ -8,60 +9,60 @@ export default function QuickActions({ youtubeConnected }) {
 
     const actions = [
         {
-            icon: '➕',
-            label: 'Додати канал',
-            description: 'Підключити YouTube через OAuth',
+            icon: 'plus',
+            label: youtubeConnected ? 'Додати ще канал' : 'Підключити канал',
+            description: 'Підключення YouTube через безпечний OAuth',
             onClick: connectYouTube,
-            gradient: 'linear-gradient(135deg, #ef4444, #f97316)',
+            tone: 'accent',
         },
         {
-            icon: '🔍',
+            icon: 'search',
             label: 'Знайти партнера',
-            description: 'Переглянути каталог пропозицій',
+            description: 'Перейти до каталогу пропозицій обміну',
             onClick: () => navigate('/offers'),
-            gradient: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+            tone: 'blue',
         },
         {
-            icon: '📊',
+            icon: 'youtube',
             label: 'Мої канали',
-            description: 'Статистика та управління',
+            description: 'Статистика, налаштування та синхронізація',
             onClick: () => navigate('/my-channels'),
-            gradient: 'linear-gradient(135deg, #22c55e, #10b981)',
+            tone: 'green',
         },
         {
-            icon: '📥',
+            icon: 'messages',
             label: 'Вхідні запити',
-            description: 'Перегляд запитів на обмін',
+            description: 'Нові пропозиції від інших каналів',
             onClick: () => navigate('/swaps/incoming'),
-            gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+            tone: 'violet',
         },
         {
-            icon: '📤',
+            icon: 'message',
             label: 'Вихідні запити',
-            description: 'Мої надіслані пропозиції',
+            description: 'Ваші надіслані пропозиції обміну',
             onClick: () => navigate('/swaps/outgoing'),
-            gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+            tone: 'amber',
         },
         {
-            icon: '🤝',
+            icon: 'handshake',
             label: 'Активні обміни',
-            description: 'Поточні партнерства',
+            description: 'Поточні угоди та прогрес виконання',
             onClick: () => navigate('/exchanges'),
-            gradient: 'linear-gradient(135deg, #06b6d4, #22d3ee)',
+            tone: 'teal',
         },
         {
-            icon: '👤',
+            icon: 'user',
             label: 'Мій профіль',
-            description: 'Редагувати профіль',
+            description: 'Редагування опису, контактів та посилань',
             onClick: () => navigate('/profile/edit'),
-            gradient: 'linear-gradient(135deg, #64748b, #94a3b8)',
+            tone: 'slate',
         },
         {
-            icon: '🔔',
+            icon: 'bell',
             label: 'Сповіщення',
-            description: 'Налаштування сповіщень',
+            description: 'Канали отримання та пріоритет подій',
             onClick: () => navigate('/settings/notifications'),
-            gradient: 'linear-gradient(135deg, #ec4899, #f472b6)',
+            tone: 'rose',
         },
     ];
 
@@ -70,13 +71,9 @@ export default function QuickActions({ youtubeConnected }) {
             <h3 className="quick-actions-title">Швидкі дії</h3>
             <div className="quick-actions-list">
                 {actions.map((action) => (
-                    <button
-                        key={action.label}
-                        className="quick-action-btn"
-                        onClick={action.onClick}
-                    >
-                        <div className="quick-action-icon" style={{ background: action.gradient }}>
-                            {action.icon}
+                    <button key={action.label} className="quick-action-btn" onClick={action.onClick}>
+                        <div className={`quick-action-icon ${action.tone}`}>
+                            <Icon name={action.icon} size={18} />
                         </div>
                         <div className="quick-action-text">
                             <span className="quick-action-label">{action.label}</span>
