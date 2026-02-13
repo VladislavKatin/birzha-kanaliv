@@ -21,11 +21,18 @@ async function runAdminOpsFunctionalTests() {
         const prevRole = adminUser.role;
         await adminUser.update({ role: 'admin' });
 
-        demoChannel = await YouTubeAccount.findOne({ where: { channelId: { [require('sequelize').Op.iLike]: 'UC_DEMO_%' } } });
-        assert.equal(!!demoChannel, true);
-
-        demoOffer = await TrafficOffer.findOne({ where: { channelId: demoChannel.id } });
+        demoOffer = await TrafficOffer.findOne({
+            include: [{
+                model: YouTubeAccount,
+                as: 'channel',
+                attributes: ['id', 'channelId'],
+                where: { channelId: { [require('sequelize').Op.iLike]: 'UC_DEMO_%' } },
+            }],
+        });
         assert.equal(!!demoOffer, true);
+
+        demoChannel = await YouTubeAccount.findByPk(demoOffer.channelId);
+        assert.equal(!!demoChannel, true);
 
         const prevChannelActive = demoChannel.isActive;
         const prevOfferStatus = demoOffer.status;

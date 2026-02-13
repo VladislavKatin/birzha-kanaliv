@@ -20,10 +20,12 @@ export default function AuthPage() {
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
         try {
-            await signInWithGoogle();
-            navigate(nextPath);
+            const result = await signInWithGoogle();
+            if (result?.method === 'popup') {
+                navigate(nextPath);
+            }
         } catch {
-            // Error is handled in AuthContext
+            // Error text is already set in auth store
         } finally {
             setIsLoading(false);
         }

@@ -1,19 +1,18 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import {
     auth,
     googleProvider,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signOut as firebaseSignOut,
     onAuthStateChanged,
 } from '../services/firebase';
 import api from '../services/api';
 
-/**
- * Auth store — replaces AuthContext.
- * Manages Firebase user, backend user sync, YouTube account state.
- */
+let redirectResultChecked = false;
+
 const useAuthStore = create((set, get) => ({
-    // ── State ──────────────────────────────────────────────
     user: null,
     dbUser: null,
     youtubeAccount: null,
@@ -21,7 +20,6 @@ const useAuthStore = create((set, get) => ({
     loading: true,
     error: null,
 
-    // ── Internal: sync with backend after Firebase auth ───
     _syncWithBackend: async () => {
         try {
             const response = await api.post('/auth/login', {});
@@ -33,17 +31,27 @@ const useAuthStore = create((set, get) => ({
             return response.data;
         } catch (err) {
             console.error('Backend sync failed:', err);
+            throw err;
         }
     },
 
-    // ── Actions ───────────────────────────────────────────
-
-    /** Initialize auth listener — call once on app mount */
     initAuth: () => {
+        if (!redirectResultChecked) {
+            redirectResultChecked = true;
+            getRedirectResult(auth).catch((err) => {
+                console.error('Google redirect result error:', err);
+                set({ error: getErrorMessage(err?.code) });
+            });
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             set({ user: firebaseUser });
             if (firebaseUser) {
-                await get()._syncWithBackend();
+                try {
+                    await get()._syncWithBackend();
+                } catch {
+                    set({ error: 'Не вдалося синхронізувати авторизацію з сервером' });
+                }
             } else {
                 set({
                     dbUser: null,
@@ -53,24 +61,44 @@ const useAuthStore = create((set, get) => ({
             }
             set({ loading: false });
         });
+
         return unsubscribe;
     },
 
-    /** Sign in with Google popup */
     signInWithGoogle: async () => {
         set({ error: null });
+
         try {
             const result = await signInWithPopup(auth, googleProvider);
             await get()._syncWithBackend();
-            return result.user;
+            return { user: result.user, method: 'popup' };
         } catch (err) {
-            const msg = getErrorMessage(err.code);
-            set({ error: msg });
+            const code = String(err?.code || '');
+
+            const shouldFallbackToRedirect = [
+                'auth/popup-blocked',
+                'auth/cancelled-popup-request',
+                'auth/operation-not-supported-in-this-environment',
+            ].includes(code);
+
+            if (shouldFallbackToRedirect) {
+                try {
+                    await signInWithRedirect(auth, googleProvider);
+                    return { user: null, method: 'redirect' };
+                } catch (redirectError) {
+                    console.error('Google redirect sign-in failed:', redirectError);
+                    const message = getErrorMessage(redirectError?.code);
+                    set({ error: message });
+                    throw redirectError;
+                }
+            }
+
+            const message = getErrorMessage(code);
+            set({ error: message });
             throw err;
         }
     },
 
-    /** Sign out */
     signOut: async () => {
         try {
             await firebaseSignOut(auth);
@@ -78,6 +106,7 @@ const useAuthStore = create((set, get) => ({
                 dbUser: null,
                 youtubeAccount: null,
                 youtubeConnected: false,
+                error: null,
             });
         } catch (err) {
             console.error('Sign out error:', err);
@@ -85,7 +114,6 @@ const useAuthStore = create((set, get) => ({
         }
     },
 
-    /** Redirect to YouTube OAuth */
     connectYouTube: async () => {
         try {
             const response = await api.get('/youtube/connect');
@@ -96,7 +124,6 @@ const useAuthStore = create((set, get) => ({
         }
     },
 
-    /** Refresh user data from backend */
     refreshUserData: async () => {
         if (get().user) {
             await get()._syncWithBackend();
@@ -106,11 +133,18 @@ const useAuthStore = create((set, get) => ({
 
 function getErrorMessage(code) {
     const messages = {
-        'auth/popup-closed-by-user': 'Вікно авторизації закрито',
-        'auth/network-request-failed': 'Помилка мережі',
-        'auth/too-many-requests': 'Забагато спроб. Спробуйте пізніше',
+        'auth/popup-closed-by-user': 'Вікно входу було закрито. Спробуйте ще раз.',
+        'auth/popup-blocked': 'Браузер заблокував popup. Дозвольте popups для цього сайту.',
+        'auth/cancelled-popup-request': 'Запит входу скасовано. Спробуйте ще раз.',
+        'auth/network-request-failed': 'Помилка мережі під час входу. Перевірте інтернет.',
+        'auth/too-many-requests': 'Забагато спроб входу. Спробуйте пізніше.',
+        'auth/unauthorized-domain': 'Домен не дозволений у Firebase Auth. Додайте його в Authorized domains.',
+        'auth/operation-not-allowed': 'Google Sign-In не увімкнений у Firebase Authentication.',
+        'auth/operation-not-supported-in-this-environment': 'Цей режим входу не підтримується в поточному середовищі браузера.',
+        'auth/internal-error': 'Внутрішня помилка Firebase Auth. Спробуйте оновити сторінку.',
     };
-    return messages[code] || 'Сталася помилка. Спробуйте ще раз.';
+
+    return messages[code] || 'Не вдалося увійти через Google. Спробуйте ще раз.';
 }
 
 export default useAuthStore;
