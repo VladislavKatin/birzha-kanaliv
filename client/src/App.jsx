@@ -7,6 +7,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import HomePage from './pages/public/HomePage';
 import BlogListPage from './pages/public/BlogListPage';
 import BlogArticlePage from './pages/public/BlogArticlePage';
+import FaqPage from './pages/public/FaqPage';
 import OffersCatalogPage from './pages/public/OffersCatalogPage';
 import OfferDetailsPage from './pages/public/OfferDetailsPage';
 import AuthPage from './pages/auth/AuthPage';
@@ -21,6 +22,7 @@ import ChatPage from './pages/chat/ChatPage';
 import PublicProfilePage from './pages/profile/PublicProfilePage';
 import EditProfilePage from './pages/profile/EditProfilePage';
 import NotificationSettingsPage from './pages/settings/NotificationSettingsPage';
+import SupportChatsPage from './pages/support/SupportChatsPage';
 
 function AuthInit({ children }) {
     const initAuth = useAuthStore((state) => state.initAuth);
@@ -55,6 +57,7 @@ export default function App() {
                     <Route path="/offers/:offerId" element={<OfferDetailsPage />} />
                     <Route path="/blog" element={<BlogListPage />} />
                     <Route path="/blog/:slug" element={<BlogArticlePage />} />
+                    <Route path="/faq" element={<FaqPage />} />
                     <Route path="/auth" element={<AuthPage />} />
 
                     <Route element={<ProtectedRoute />}>
@@ -69,6 +72,7 @@ export default function App() {
                             <Route path="/profile/:userId" element={<PublicProfilePage />} />
                             <Route path="/profile/edit" element={<EditProfilePage />} />
                             <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
+                            <Route path="/support/chats" element={<SupportChatsPage />} />
                         </Route>
                         <Route path="/chat/:transactionId" element={<ChatPage />} />
                     </Route>

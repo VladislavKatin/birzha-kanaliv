@@ -316,6 +316,18 @@
     background: #ffffff;
 }
 
+.topbar-link-disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    color: var(--text-muted);
+}
+
+.topbar-link-disabled:hover {
+    color: var(--text-muted);
+    border-color: var(--border-color);
+    background: var(--surface-2);
+}
+
 .notifications-btn {
     position: relative;
     width: 34px;

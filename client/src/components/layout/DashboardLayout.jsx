@@ -18,7 +18,10 @@ const navItems = [
     { path: '/settings/notifications', label: 'Сповіщення', description: 'Канали отримання сповіщень', icon: 'bell' },
 ];
 
-const topLinks = [];
+const topLinks = [
+    { to: '/faq', label: 'FAQ' },
+    { to: '/support/chats', label: 'Знайшли помилку' },
+];
 
 export default function DashboardLayout() {
     const { user, dbUser, signOut } = useAuthStore();
@@ -111,6 +114,9 @@ export default function DashboardLayout() {
                                 {item.label}
                             </Link>
                         ))}
+                        <button className="topbar-link topbar-link-disabled" type="button" disabled title="Скоро буде доступно">
+                            Чат з розробниками (незабаром)
+                        </button>
                     </div>
 
                     <div className="topbar-right">
