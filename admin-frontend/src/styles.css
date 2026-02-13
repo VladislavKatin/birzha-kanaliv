@@ -312,6 +312,29 @@ th { color: var(--muted); font-weight: 700; }
     padding: 10px 12px;
 }
 
+.settings-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.settings-grid label {
+    display: grid;
+    gap: 6px;
+}
+
+.settings-grid label span {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.settings-grid input {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    padding: 9px 11px;
+}
+
 .user-cell {
     display: flex;
     flex-direction: column;

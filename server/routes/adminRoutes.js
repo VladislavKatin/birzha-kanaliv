@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const { normalizeIncomingMessagePayload } = require('../services/chatMessagePayload');
+const { getSystemLimits, normalizeIncomingLimits, validateLimits } = require('../services/systemLimitsService');
 const {
     sequelize,
     User,
@@ -1317,6 +1318,8 @@ router.get('/system/insights', auth, admin, async (req, res) => {
                 }),
             ]);
 
+            const limitsConfig = await getSystemLimits({ ActionLog, transaction });
+
             await ActionLog.create({
                 userId: req.dbUser.id,
                 action: 'admin_system_insights_opened',
@@ -1341,6 +1344,7 @@ router.get('/system/insights', auth, admin, async (req, res) => {
                 topIps,
                 registrations7d: registrations,
                 completedExchanges7d: exchanges,
+                currentLimits: limitsConfig.limits,
             };
         });
 
@@ -1348,6 +1352,74 @@ router.get('/system/insights', auth, admin, async (req, res) => {
     } catch (error) {
         console.error('Admin system insights error:', error);
         res.status(500).json({ error: 'Failed to load system insights' });
+    }
+});
+
+/**
+ * @route GET /api/admin/system/limits
+ * @description Read configurable anti-spam limits.
+ * @access Private (admin)
+ */
+router.get('/system/limits', auth, admin, async (req, res) => {
+    try {
+        const payload = await sequelize.transaction(async (transaction) => {
+            const limits = await getSystemLimits({ ActionLog, transaction });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_system_limits_opened',
+                details: { source: limits.source },
+                ip: req.ip,
+            }, { transaction });
+
+            return limits;
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin system limits read error:', error);
+        res.status(500).json({ error: 'Failed to load system limits' });
+    }
+});
+
+/**
+ * @route PATCH /api/admin/system/limits
+ * @description Update configurable anti-spam limits.
+ * @access Private (admin)
+ */
+router.patch('/system/limits', auth, admin, async (req, res) => {
+    try {
+        const reason = String(req.body.reason || '').trim();
+        const nextLimits = normalizeIncomingLimits(req.body || {});
+        const validation = validateLimits(nextLimits);
+        if (validation.length > 0) {
+            return res.status(400).json({ error: validation.join('; ') });
+        }
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const current = await getSystemLimits({ ActionLog, transaction });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_system_limits_updated',
+                details: {
+                    previous: current.limits,
+                    limits: nextLimits,
+                    reason: reason || null,
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                limits: nextLimits,
+                updatedAt: new Date().toISOString(),
+            };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin system limits update error:', error);
+        res.status(500).json({ error: 'Failed to update system limits' });
     }
 });
 
@@ -1388,15 +1460,26 @@ router.get('/incidents', auth, admin, async (req, res) => {
                 transaction,
             });
 
+            const ipCounter = new Map();
+            logs.forEach((log) => {
+                if (!log.ip) return;
+                ipCounter.set(log.ip, (ipCounter.get(log.ip) || 0) + 1);
+            });
+
             const incidents = logs.map((log) => {
                 const action = String(log.action || '');
                 let level = 'low';
                 if (action.includes('failed') || action.includes('error')) level = 'high';
                 if (action.includes('suspend') || action.includes('flag')) level = 'medium';
+                const ipHits = log.ip ? (ipCounter.get(log.ip) || 0) : 0;
+                let riskTag = 'normal';
+                if (ipHits >= 25 || level === 'high') riskTag = 'critical';
+                else if (ipHits >= 12 || level === 'medium') riskTag = 'elevated';
                 return {
                     id: log.id,
                     createdAt: log.createdAt,
                     level,
+                    riskTag,
                     action: log.action,
                     ip: log.ip,
                     details: log.details || {},
@@ -1417,6 +1500,21 @@ router.get('/incidents', auth, admin, async (req, res) => {
                 transaction,
             });
 
+            const summaryByLevel = incidents.reduce((acc, row) => {
+                acc[row.level] = (acc[row.level] || 0) + 1;
+                return acc;
+            }, {});
+
+            const summaryByAction = incidents.reduce((acc, row) => {
+                acc[row.action] = (acc[row.action] || 0) + 1;
+                return acc;
+            }, {});
+
+            const topActions = Object.entries(summaryByAction)
+                .map(([action, count]) => ({ action, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 12);
+
             await ActionLog.create({
                 userId: req.dbUser.id,
                 action: 'admin_incidents_opened',
@@ -1430,6 +1528,8 @@ router.get('/incidents', auth, admin, async (req, res) => {
                 total: incidents.length,
                 incidents,
                 topIps,
+                summaryByLevel,
+                topActions,
             };
         });
 
@@ -1592,6 +1692,61 @@ router.patch('/demo/offers/:id/status', auth, admin, async (req, res) => {
     } catch (error) {
         console.error('Admin demo offer status update error:', error);
         res.status(500).json({ error: 'Failed to update demo offer status' });
+    }
+});
+
+/**
+ * @route GET /api/admin/exports/history
+ * @description Export download history for admins.
+ * @access Private (admin)
+ */
+router.get('/exports/history', auth, admin, async (req, res) => {
+    try {
+        const payload = await sequelize.transaction(async (transaction) => {
+            const logs = await ActionLog.findAll({
+                where: {
+                    action: {
+                        [Op.in]: [
+                            'admin_export_users_csv',
+                            'admin_export_exchanges_csv',
+                            'admin_export_support_csv',
+                        ],
+                    },
+                },
+                include: [{ model: User, as: 'user', attributes: ['id', 'displayName', 'email'] }],
+                order: [['createdAt', 'DESC']],
+                limit: 300,
+                transaction,
+            });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_export_history_opened',
+                details: { count: logs.length },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                total: logs.length,
+                items: logs.map((log) => ({
+                    id: log.id,
+                    action: log.action,
+                    createdAt: log.createdAt,
+                    ip: log.ip,
+                    rowCount: Number(log.details?.rowCount || 0),
+                    user: log.user ? {
+                        id: log.user.id,
+                        displayName: log.user.displayName,
+                        email: log.user.email,
+                    } : null,
+                })),
+            };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin export history error:', error);
+        res.status(500).json({ error: 'Failed to load export history' });
     }
 });
 

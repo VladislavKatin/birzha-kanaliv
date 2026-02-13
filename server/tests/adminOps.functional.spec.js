@@ -29,6 +29,7 @@ async function runAdminOpsFunctionalTests() {
 
         const prevChannelActive = demoChannel.isActive;
         const prevOfferStatus = demoOffer.status;
+        let prevLimits = null;
 
         try {
             const incidents = await request(baseUrl, {
@@ -38,6 +39,31 @@ async function runAdminOpsFunctionalTests() {
             });
             assert.equal(incidents.status, 200);
             assert.equal(Array.isArray(incidents.body.incidents), true);
+            assert.equal(typeof incidents.body.summaryByLevel, 'object');
+            assert.equal(Array.isArray(incidents.body.topActions), true);
+
+            const limitsRead = await request(baseUrl, {
+                method: 'GET',
+                path: '/api/admin/system/limits',
+                uid: ADMIN_UID,
+            });
+            assert.equal(limitsRead.status, 200);
+            assert.equal(typeof limitsRead.body.limits, 'object');
+            prevLimits = limitsRead.body.limits;
+
+            const limitsUpdate = await request(baseUrl, {
+                method: 'PATCH',
+                path: '/api/admin/system/limits',
+                uid: ADMIN_UID,
+                body: {
+                    offersPerWeek: 7,
+                    activeExchangesPerChannel: 4,
+                    reason: 'test-update-limits',
+                },
+            });
+            assert.equal(limitsUpdate.status, 200);
+            assert.equal(limitsUpdate.body.limits.offersPerWeek, 7);
+            assert.equal(limitsUpdate.body.limits.activeExchangesPerChannel, 4);
 
             const demoList = await request(baseUrl, {
                 method: 'GET',
@@ -92,7 +118,27 @@ async function runAdminOpsFunctionalTests() {
             });
             assert.equal(supportCsv.status, 200);
             assert.equal(String(supportCsv.body).includes('senderEmail'), true);
+
+            const exportHistory = await request(baseUrl, {
+                method: 'GET',
+                path: '/api/admin/exports/history',
+                uid: ADMIN_UID,
+            });
+            assert.equal(exportHistory.status, 200);
+            assert.equal(Array.isArray(exportHistory.body.items), true);
         } finally {
+            if (prevLimits) {
+                await request(baseUrl, {
+                    method: 'PATCH',
+                    path: '/api/admin/system/limits',
+                    uid: ADMIN_UID,
+                    body: {
+                        offersPerWeek: prevLimits.offersPerWeek,
+                        activeExchangesPerChannel: prevLimits.activeExchangesPerChannel,
+                        reason: 'restore-limits-after-test',
+                    },
+                });
+            }
             await demoChannel.update({ isActive: prevChannelActive });
             await demoOffer.update({ status: prevOfferStatus });
             await adminUser.update({ role: prevRole });

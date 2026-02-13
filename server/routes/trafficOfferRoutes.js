@@ -3,6 +3,7 @@ const { sequelize, TrafficOffer, YouTubeAccount, User, TrafficMatch, ActionLog }
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const { getUserChannelsByFirebaseUid, resolveActionChannelId } = require('../services/channelAccessService');
+const { getSystemLimits } = require('../services/systemLimitsService');
 
 function handleChannelSelectionError(res, errorCode, noChannelMessage) {
     if (errorCode === 'NO_CHANNELS_CONNECTED') {
@@ -43,6 +44,7 @@ router.post('/', auth, async (req, res) => {
         }
 
         if (process.env.NODE_ENV !== 'test') {
+            const limitsConfig = await getSystemLimits({ ActionLog });
             const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
             const weeklyOffers = await TrafficOffer.count({
                 where: {
@@ -51,9 +53,25 @@ router.post('/', auth, async (req, res) => {
                 },
             });
 
-            if (weeklyOffers >= 5) {
+            if (weeklyOffers >= limitsConfig.limits.offersPerWeek) {
+                try {
+                    await sequelize.transaction(async (transaction) => {
+                        await ActionLog.create({
+                            userId: result.user.id,
+                            action: 'rate_limit_offer_create_blocked',
+                            details: {
+                                channelId: selected.channelId,
+                                weeklyOffers,
+                                limit: limitsConfig.limits.offersPerWeek,
+                            },
+                            ip: req.ip,
+                        }, { transaction });
+                    });
+                } catch (auditError) {
+                    console.error('Failed to write rate-limit audit log:', auditError);
+                }
                 return res.status(429).json({
-                    error: 'Maximum 5 offers per week. Try again later.',
+                    error: `Maximum ${limitsConfig.limits.offersPerWeek} offers per week. Try again later.`,
                 });
             }
         }
@@ -277,6 +295,7 @@ router.post('/:id/respond', auth, async (req, res) => {
         }
 
         if (process.env.NODE_ENV !== 'test') {
+            const limitsConfig = await getSystemLimits({ ActionLog });
             const activeMatches = await TrafficMatch.count({
                 where: {
                     [Op.or]: [
@@ -287,9 +306,25 @@ router.post('/:id/respond', auth, async (req, res) => {
                 },
             });
 
-            if (activeMatches >= 3) {
+            if (activeMatches >= limitsConfig.limits.activeExchangesPerChannel) {
+                try {
+                    await sequelize.transaction(async (transaction) => {
+                        await ActionLog.create({
+                            userId: result.user.id,
+                            action: 'rate_limit_match_create_blocked',
+                            details: {
+                                channelId: selected.channelId,
+                                activeMatches,
+                                limit: limitsConfig.limits.activeExchangesPerChannel,
+                            },
+                            ip: req.ip,
+                        }, { transaction });
+                    });
+                } catch (auditError) {
+                    console.error('Failed to write rate-limit audit log:', auditError);
+                }
                 return res.status(429).json({
-                    error: 'Maximum 3 active exchanges at the same time',
+                    error: `Maximum ${limitsConfig.limits.activeExchangesPerChannel} active exchanges at the same time`,
                 });
             }
         }

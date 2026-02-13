@@ -19,9 +19,13 @@ export default function SystemInsightsPage() {
         topIps: [],
         registrations7d: [],
         completedExchanges7d: [],
+        currentLimits: {},
     });
+    const [limits, setLimits] = useState({ offersPerWeek: 5, activeExchangesPerChannel: 3, reason: '' });
+    const [exportHistory, setExportHistory] = useState({ items: [], total: 0 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [savingLimits, setSavingLimits] = useState(false);
 
     useEffect(() => {
         load();
@@ -31,8 +35,21 @@ export default function SystemInsightsPage() {
         setLoading(true);
         setError('');
         try {
-            const response = await api.get('/admin/system/insights');
-            setData(response.data || {});
+            const [insightsRes, limitsRes, exportHistoryRes] = await Promise.all([
+                api.get('/admin/system/insights'),
+                api.get('/admin/system/limits'),
+                api.get('/admin/exports/history'),
+            ]);
+
+            const nextInsights = insightsRes.data || {};
+            const nextLimits = limitsRes.data?.limits || {};
+            setData(nextInsights);
+            setLimits({
+                offersPerWeek: Number(nextLimits.offersPerWeek || nextInsights.currentLimits?.offersPerWeek || 5),
+                activeExchangesPerChannel: Number(nextLimits.activeExchangesPerChannel || nextInsights.currentLimits?.activeExchangesPerChannel || 3),
+                reason: '',
+            });
+            setExportHistory(exportHistoryRes.data || { items: [], total: 0 });
         } catch (err) {
             setError(err.response?.data?.error || 'Не вдалося завантажити системні інсайти');
         } finally {
@@ -51,8 +68,26 @@ export default function SystemInsightsPage() {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
+            await load();
         } catch {
             setError('Не вдалося експортувати CSV');
+        }
+    }
+
+    async function saveLimits() {
+        setSavingLimits(true);
+        setError('');
+        try {
+            await api.patch('/admin/system/limits', {
+                offersPerWeek: Number(limits.offersPerWeek),
+                activeExchangesPerChannel: Number(limits.activeExchangesPerChannel),
+                reason: limits.reason,
+            });
+            await load();
+        } catch (err) {
+            setError(err.response?.data?.error || 'Не вдалося оновити ліміти');
+        } finally {
+            setSavingLimits(false);
         }
     }
 
@@ -72,10 +107,11 @@ export default function SystemInsightsPage() {
     }, [data.summary]);
 
     if (loading) return <section className="card">Завантаження системних даних...</section>;
-    if (error) return <section className="card error-text">{error}</section>;
 
     return (
         <div className="admin-page-grid">
+            {error ? <section className="card error-text">{error}</section> : null}
+
             <section className="card">
                 <div className="card-head">
                     <h2>Системні інсайти</h2>
@@ -89,6 +125,68 @@ export default function SystemInsightsPage() {
                 <p className="muted-text">Оновлено: {formatAdminDate(data.generatedAt)}</p>
                 <div className="summary-grid">
                     {metrics.map(([label, value]) => <Metric key={label} label={label} value={value} />)}
+                </div>
+            </section>
+
+            <section className="card two-col-grid">
+                <div>
+                    <h3>Антиспам ліміти</h3>
+                    <div className="settings-grid compact-top">
+                        <label>
+                            <span>Оферів на канал за 7 днів</span>
+                            <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={limits.offersPerWeek}
+                                onChange={(event) => setLimits((prev) => ({ ...prev, offersPerWeek: event.target.value }))}
+                            />
+                        </label>
+                        <label>
+                            <span>Активних обмінів на канал</span>
+                            <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={limits.activeExchangesPerChannel}
+                                onChange={(event) => setLimits((prev) => ({ ...prev, activeExchangesPerChannel: event.target.value }))}
+                            />
+                        </label>
+                        <label>
+                            <span>Причина зміни</span>
+                            <input
+                                type="text"
+                                value={limits.reason}
+                                onChange={(event) => setLimits((prev) => ({ ...prev, reason: event.target.value }))}
+                                placeholder="Наприклад: корекція навантаження"
+                            />
+                        </label>
+                    </div>
+                    <div className="action-row compact-top">
+                        <button className="btn btn-primary" disabled={savingLimits} onClick={saveLimits}>Зберегти ліміти</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3>Історія експортів</h3>
+                    <p className="muted-text">Всього: {exportHistory.total || 0}</p>
+                    <div className="table-wrap compact-table">
+                        <table>
+                            <thead>
+                                <tr><th>Час</th><th>Файл</th><th>Рядків</th><th>Хто</th></tr>
+                            </thead>
+                            <tbody>
+                                {(exportHistory.items || []).slice(0, 15).map((row) => (
+                                    <tr key={row.id}>
+                                        <td>{formatAdminDate(row.createdAt)}</td>
+                                        <td>{row.action}</td>
+                                        <td>{row.rowCount}</td>
+                                        <td>{row.user?.email || '-'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
