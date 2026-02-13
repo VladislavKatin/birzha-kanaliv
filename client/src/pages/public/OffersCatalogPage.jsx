@@ -13,6 +13,7 @@ import {
     getNicheOptions,
     getOfferTypeLabel,
     isDemoChannel,
+    splitOffersByChannelKind,
 } from '../../services/publicOffers';
 import './OffersCatalogPage.css';
 
@@ -23,10 +24,13 @@ export default function OffersCatalogPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [filter, setFilter] = useState({ niche: '', language: '' });
+    const [showDemoOffers, setShowDemoOffers] = useState(false);
 
     const nicheOptions = useMemo(() => getNicheOptions(), []);
     const languageOptions = useMemo(() => getLanguageOptions(), []);
     const query = useMemo(() => buildPublicOffersQuery(filter), [filter]);
+    const { realOffers, demoOffers } = useMemo(() => splitOffersByChannelKind(offers), [offers]);
+    const visibleOffers = showDemoOffers ? [...realOffers, ...demoOffers] : realOffers;
 
     useEffect(() => {
         let cancelled = false;
@@ -91,17 +95,25 @@ export default function OffersCatalogPage() {
                                 <option key={option.code} value={getLanguageSearchValue(option)} />
                             ))}
                         </datalist>
+                        {demoOffers.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowDemoOffers((value) => !value)}
+                            >
+                                {showDemoOffers ? 'Сховати DEMO' : `Показати DEMO (${demoOffers.length})`}
+                            </button>
+                        )}
                     </div>
 
                     {loading ? (
                         <div className="offers-catalog-empty">Завантаження каталогу...</div>
                     ) : error ? (
                         <div className="offers-catalog-empty">{error}</div>
-                    ) : offers.length === 0 ? (
+                    ) : visibleOffers.length === 0 ? (
                         <div className="offers-catalog-empty">Поки немає відкритих пропозицій.</div>
                     ) : (
                         <div className="offers-catalog-grid">
-                            {offers.map((offer) => (
+                            {visibleOffers.map((offer) => (
                                 <article key={offer.id} className="public-offer-card">
                                     <div className="public-offer-head">
                                         <img src={offer.channel?.channelAvatar || ''} alt="" />

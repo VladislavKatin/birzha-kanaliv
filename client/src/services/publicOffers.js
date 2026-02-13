@@ -89,6 +89,36 @@ export function isDemoChannel(channel) {
     return channelId.startsWith('UC_DEMO_');
 }
 
+function compareOffersByChannelStrength(a, b) {
+    const subscribersA = Number(a?.channel?.subscribers || 0);
+    const subscribersB = Number(b?.channel?.subscribers || 0);
+    if (subscribersA !== subscribersB) {
+        return subscribersB - subscribersA;
+    }
+
+    const createdAtA = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const createdAtB = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return createdAtB - createdAtA;
+}
+
+export function splitOffersByChannelKind(offers = []) {
+    const realOffers = [];
+    const demoOffers = [];
+
+    offers.forEach((offer) => {
+        if (isDemoChannel(offer?.channel)) {
+            demoOffers.push(offer);
+            return;
+        }
+        realOffers.push(offer);
+    });
+
+    realOffers.sort(compareOffersByChannelStrength);
+    demoOffers.sort(compareOffersByChannelStrength);
+
+    return { realOffers, demoOffers };
+}
+
 export function buildPublicOffersQuery(filter = {}) {
     const params = new URLSearchParams();
     const niche = filter.niche ? filter.niche.trim() : '';

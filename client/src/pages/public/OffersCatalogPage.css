@@ -38,6 +38,21 @@
     padding: 10px 12px;
 }
 
+.offers-catalog-filters button {
+    border: 1px solid #bfd6f0;
+    border-radius: 10px;
+    background: #edf5ff;
+    color: #1f4f83;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 14px;
+    cursor: pointer;
+}
+
+.offers-catalog-filters button:hover {
+    background: #e2efff;
+}
+
 .offers-catalog-grid {
     margin-top: 20px;
     display: grid;

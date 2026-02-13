@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
-import { isDemoChannel } from '../../services/publicOffers';
+import { isDemoChannel, splitOffersByChannelKind } from '../../services/publicOffers';
 import toast from 'react-hot-toast';
 import './OffersPage.css';
 
@@ -121,8 +121,7 @@ export default function OffersPage() {
         );
     }
 
-    const realOffers = offers.filter((offer) => !isDemoChannel(offer.channel));
-    const demoOffers = offers.filter((offer) => isDemoChannel(offer.channel));
+    const { realOffers, demoOffers } = splitOffersByChannelKind(offers);
     const visibleOffers = showDemoOffers ? [...realOffers, ...demoOffers] : realOffers;
 
     return (
