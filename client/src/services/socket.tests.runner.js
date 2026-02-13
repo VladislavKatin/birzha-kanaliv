@@ -4,6 +4,8 @@ import { runNavigationUnitTests } from './navigation.unit.spec.js';
 import { runNavigationFunctionalTests } from './navigation.functional.spec.js';
 import { runGlobalNotificationUnitTests } from './globalNotifications.unit.spec.js';
 import { runGlobalNotificationFunctionalTests } from './globalNotifications.functional.spec.js';
+import { runPwaManifestUnitTests } from './pwaManifest.unit.spec.js';
+import { runPwaManifestFunctionalTests } from './pwaManifest.functional.spec.js';
 
 async function run() {
     const tests = [
@@ -13,6 +15,8 @@ async function run() {
         { name: 'functional: post-auth navigation safety', fn: runNavigationFunctionalTests },
         { name: 'unit: global notification normalization', fn: runGlobalNotificationUnitTests },
         { name: 'functional: global notification key strategy', fn: runGlobalNotificationFunctionalTests },
+        { name: 'unit: pwa manifest icon path collection', fn: runPwaManifestUnitTests },
+        { name: 'functional: pwa manifest icon files exist', fn: runPwaManifestFunctionalTests },
     ];
 
     let failed = 0;
