@@ -89,6 +89,27 @@ export function isDemoChannel(channel) {
     return channelId.startsWith('UC_DEMO_');
 }
 
+export function uniqueOffersByChannel(offers = []) {
+    const latestByChannel = new Map();
+
+    offers.forEach((offer) => {
+        const key = offer?.channel?.channelId || offer?.channel?.id || offer?.channelId;
+        if (!key) {
+            return;
+        }
+
+        const existing = latestByChannel.get(key);
+        const existingCreatedAt = existing?.createdAt ? new Date(existing.createdAt).getTime() : 0;
+        const currentCreatedAt = offer?.createdAt ? new Date(offer.createdAt).getTime() : 0;
+
+        if (!existing || currentCreatedAt > existingCreatedAt) {
+            latestByChannel.set(key, offer);
+        }
+    });
+
+    return Array.from(latestByChannel.values());
+}
+
 function compareOffersByChannelStrength(a, b) {
     const subscribersA = Number(a?.channel?.subscribers || 0);
     const subscribersB = Number(b?.channel?.subscribers || 0);
@@ -102,10 +123,11 @@ function compareOffersByChannelStrength(a, b) {
 }
 
 export function splitOffersByChannelKind(offers = []) {
+    const uniqueOffers = uniqueOffersByChannel(offers);
     const realOffers = [];
     const demoOffers = [];
 
-    offers.forEach((offer) => {
+    uniqueOffers.forEach((offer) => {
         if (isDemoChannel(offer?.channel)) {
             demoOffers.push(offer);
             return;

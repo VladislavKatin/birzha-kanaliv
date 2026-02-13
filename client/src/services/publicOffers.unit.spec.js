@@ -9,6 +9,7 @@ import {
     isDemoChannel,
     resolveLanguageCode,
     splitOffersByChannelKind,
+    uniqueOffersByChannel,
 } from './publicOffers.js';
 
 export function runPublicOffersUnitTests() {
@@ -30,6 +31,15 @@ export function runPublicOffersUnitTests() {
     assert.equal(split.demoOffers.length, 1);
     assert.equal(split.realOffers[0].id, 'real-2');
     assert.equal(split.demoOffers[0].id, 'demo-1');
+
+    const unique = uniqueOffersByChannel([
+        { id: 'old', channel: { channelId: 'UC_REAL_DUP' }, createdAt: '2026-02-10T10:00:00.000Z' },
+        { id: 'new', channel: { channelId: 'UC_REAL_DUP' }, createdAt: '2026-02-12T10:00:00.000Z' },
+        { id: 'another', channel: { channelId: 'UC_REAL_OTHER' }, createdAt: '2026-02-11T10:00:00.000Z' },
+    ]);
+    assert.equal(unique.length, 2);
+    assert.equal(unique.some((offer) => offer.id === 'new'), true);
+    assert.equal(unique.some((offer) => offer.id === 'old'), false);
 
     const niches = getNicheOptions();
     assert.equal(niches.some((niche) => niche.value === 'other'), true);
