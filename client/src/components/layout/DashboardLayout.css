@@ -484,6 +484,27 @@
     display: none;
 }
 
+@media (max-width: 1240px) {
+    .topbar {
+        padding: 0 16px;
+    }
+
+    .topbar-right {
+        gap: 8px;
+    }
+
+    .topbar-link {
+        padding: 0 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 1120px) {
+    .topbar-greeting {
+        display: none;
+    }
+}
+
 @media (max-width: 960px) {
     .sidebar {
         transform: translateX(-100%);
