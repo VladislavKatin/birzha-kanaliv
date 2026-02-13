@@ -431,6 +431,12 @@
     gap: 20px;
 }
 
+.blog-list-action {
+    display: flex;
+    justify-content: center;
+    margin: -10px 0 22px;
+}
+
 .blog-card {
     border-radius: 18px;
     border: 1px solid var(--line);

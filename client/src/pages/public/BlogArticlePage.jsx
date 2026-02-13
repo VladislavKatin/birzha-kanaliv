@@ -38,7 +38,7 @@ export default function BlogArticlePage() {
         <PublicLayout>
             <article className="blog-article-page">
                 <div className="blog-article-inner">
-                    <button className="blog-back" onClick={() => navigate('/#blog')}>
+                    <button className="blog-back" onClick={() => navigate('/blog')}>
                         <ArrowLeft size={16} /> Назад до блогу
                     </button>
 
@@ -82,3 +82,4 @@ export default function BlogArticlePage() {
         </PublicLayout>
     );
 }
+

@@ -26,3 +26,4 @@ export function runSeoFunctionalTests() {
     assert.equal(articleSchema['@type'], 'BlogPosting');
     assert.equal(articleSchema.mainEntityOfPage, 'https://youtoobe.app/blog/youtube-collab-strategy-2026');
 }
+

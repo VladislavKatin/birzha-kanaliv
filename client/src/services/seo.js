@@ -39,7 +39,7 @@ export function buildBlogCollectionJsonLd(articles = []) {
         blogPost: articles.map(article => ({
             '@type': 'BlogPosting',
             headline: article.title,
-            datePublished: article.publishedAt,
+            datePublished: article.publishedAtIso || article.publishedAt,
             url: `${BASE_URL}/blog/${article.slug}`,
         })),
     };
@@ -56,7 +56,7 @@ export function buildBlogArticleJsonLd(article) {
         headline: article.title,
         description: article.seoDescription,
         image: toAbsoluteUrl(article.coverImage),
-        datePublished: article.publishedAt,
+        datePublished: article.publishedAtIso || article.publishedAt,
         author: {
             '@type': 'Organization',
             name: 'YouToobe',
@@ -135,3 +135,4 @@ export function applyJsonLd(id, schemaObject) {
     script.textContent = JSON.stringify(schemaObject);
     document.head.appendChild(script);
 }
+

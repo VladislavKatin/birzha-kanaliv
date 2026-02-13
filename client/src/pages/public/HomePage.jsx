@@ -339,6 +339,11 @@ export default function HomePage() {
                     <div className="section-inner">
                         <h2 className="section-title">Блог YouToobe</h2>
                         <p className="section-subtitle">Практичні матеріали для зростання YouTube-каналу в 2026 році</p>
+                        <div className="blog-list-action">
+                            <button className="hero-btn secondary" onClick={() => navigate('/blog')}>
+                                Усі статті
+                            </button>
+                        </div>
                         <div className="blog-grid">
                             {articles.map((article) => (
                                 <article key={article.slug} className="blog-card">

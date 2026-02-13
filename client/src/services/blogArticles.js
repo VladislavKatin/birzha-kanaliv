@@ -6,6 +6,7 @@
         coverImage: '/images/blog/youtube-collab-strategy-2026.svg',
         coverAlt: 'Illustration of YouTube collaboration strategy dashboard in blue and yellow',
         publishedAt: '13 лютого 2026',
+        publishedAtIso: '2026-02-13',
         readTime: '8 хв читання',
         tags: ['YouTube', 'Collab', 'Growth'],
         seoTitle: 'YouTube Collab Strategy 2026 - як обирати партнерів для росту каналу',
@@ -42,6 +43,7 @@
         coverImage: '/images/blog/youtube-trust-score-and-reviews.svg',
         coverAlt: 'Illustration of trust score and review cards for YouTube creators',
         publishedAt: '13 лютого 2026',
+        publishedAtIso: '2026-02-13',
         readTime: '7 хв читання',
         tags: ['Trust score', 'Reviews', 'YouTube'],
         seoTitle: 'Trust Score YouTube - як підвищити репутацію і якість партнерств',
@@ -81,7 +83,9 @@ export function getBlogArticlesPreview() {
         coverImage: article.coverImage,
         coverAlt: article.coverAlt,
         publishedAt: article.publishedAt,
+        publishedAtIso: article.publishedAtIso,
         readTime: article.readTime,
+        tags: article.tags,
     }));
 }
 
@@ -91,4 +95,18 @@ export function getBlogArticleBySlug(slug) {
 
 export function getAllBlogArticles() {
     return BLOG_ARTICLES;
+}
+
+export function getAllBlogTags() {
+    const tags = BLOG_ARTICLES.flatMap(article => article.tags || []);
+    const unique = Array.from(new Set(tags));
+    return ['All', ...unique];
+}
+
+export function filterBlogArticlesByTag(tag) {
+    if (!tag || tag === 'All') {
+        return getBlogArticlesPreview();
+    }
+
+    return getBlogArticlesPreview().filter(article => article.tags.includes(tag));
 }
