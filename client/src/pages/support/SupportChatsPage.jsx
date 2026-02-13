@@ -30,6 +30,7 @@ export default function SupportChatsPage() {
     const [loading, setLoading] = useState(true);
     const [messages, setMessages] = useState([]);
     const [myUserId, setMyUserId] = useState('');
+    const [viewMode, setViewMode] = useState('all');
     const [inputValue, setInputValue] = useState('');
     const [selectedImage, setSelectedImage] = useState('');
     const [sending, setSending] = useState(false);
@@ -97,10 +98,20 @@ export default function SupportChatsPage() {
         }
     }
 
+    const visibleMessages = useMemo(() => {
+        if (viewMode === 'admin') {
+            return messages.filter((message) => message.isAdmin);
+        }
+        if (viewMode === 'users') {
+            return messages.filter((message) => !message.isAdmin);
+        }
+        return messages;
+    }, [messages, viewMode]);
+
     const grouped = useMemo(() => {
         const result = [];
         let lastDate = '';
-        for (const message of messages) {
+        for (const message of visibleMessages) {
             const date = formatDate(message.createdAt);
             if (date !== lastDate) {
                 result.push({ type: 'date', date, id: `date-${date}` });
@@ -109,13 +120,36 @@ export default function SupportChatsPage() {
             result.push({ type: 'message', ...message });
         }
         return result;
-    }, [messages]);
+    }, [visibleMessages]);
 
     return (
         <div className="support-page">
             <div className="support-header">
                 <h1>Повідомлення</h1>
                 <p>Єдиний чат з адміністрацією: опишіть помилку або питання, додайте скріншот і надішліть повідомлення.</p>
+                <div className="support-chat-switcher">
+                    <button
+                        type="button"
+                        className={`support-chat-switch ${viewMode === 'all' ? 'active' : ''}`}
+                        onClick={() => setViewMode('all')}
+                    >
+                        Усі
+                    </button>
+                    <button
+                        type="button"
+                        className={`support-chat-switch ${viewMode === 'admin' ? 'active' : ''}`}
+                        onClick={() => setViewMode('admin')}
+                    >
+                        Адміністрація
+                    </button>
+                    <button
+                        type="button"
+                        className={`support-chat-switch ${viewMode === 'users' ? 'active' : ''}`}
+                        onClick={() => setViewMode('users')}
+                    >
+                        Користувачі
+                    </button>
+                </div>
             </div>
 
             <section className="card support-chat-card">
@@ -137,7 +171,10 @@ export default function SupportChatsPage() {
                                 return (
                                     <div key={item.id} className={`support-chat-message ${mine ? 'mine' : 'theirs'}`}>
                                         <div className="support-chat-bubble">
-                                            <div className="support-chat-author">{item.sender?.displayName || 'Користувач'}</div>
+                                            <div className="support-chat-author">
+                                                {item.sender?.displayName || 'Користувач'}
+                                                {item.isAdmin && <span className="support-chat-role">ADMIN</span>}
+                                            </div>
                                             {item.imageData && (
                                                 <a href={item.imageData} target="_blank" rel="noreferrer" className="support-chat-image-link">
                                                     <img src={item.imageData} alt="Вкладення" className="support-chat-image" />
