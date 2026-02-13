@@ -1,14 +1,14 @@
 /* ─── Exchanges Page ─────────────────────────────── */
 .exchanges-page {
-    max-width: 900px;
+    max-width: 980px;
 }
 
 .exchanges-header {
-    margin-bottom: 28px;
+    margin-bottom: 20px;
 }
 
 .exchanges-header h1 {
-    font-size: 28px;
+    font-size: clamp(24px, 2.6vw, 30px);
     font-weight: 800;
     letter-spacing: -0.03em;
     margin-bottom: 4px;
@@ -16,7 +16,7 @@
 
 .exchanges-subtitle {
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 15px;
 }
 
 .exchanges-list {
@@ -29,7 +29,9 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 18px;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
 }
 
 .exchange-partner {
@@ -84,6 +86,11 @@
 
 .exchange-actions {
     flex-shrink: 0;
+}
+
+.exchange-item:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-glow);
 }
 
 .exchange-reviewed {

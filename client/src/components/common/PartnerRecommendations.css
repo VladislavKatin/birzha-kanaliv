@@ -1,24 +1,24 @@
 .partner-recs {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 .partner-recs h3 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .recs-grid {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .rec-card {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
+    gap: 10px;
+    padding: 10px;
     background: var(--surface-2);
     border-radius: var(--radius-sm);
     transition: background var(--transition-fast);
@@ -29,8 +29,8 @@
 }
 
 .rec-avatar {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border-radius: var(--radius-full);
     object-fit: cover;
     flex-shrink: 0;
@@ -44,7 +44,7 @@
 }
 
 .rec-name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -52,17 +52,25 @@
 }
 
 .rec-subs {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
 }
 
 .rec-niche {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--brand-400);
 }
 
 .verified-dot {
     margin-right: 4px;
+    color: #15803d;
+    font-weight: 800;
+}
+
+.rec-card .btn {
+    min-height: 30px;
+    padding: 6px 10px;
+    font-size: 12px;
 }
 
 @media (max-width: 768px) {

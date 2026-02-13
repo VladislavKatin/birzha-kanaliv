@@ -229,23 +229,25 @@
 
 /* ─── Edit Profile ───────────────────────────────── */
 .edit-profile-page {
-    max-width: 780px;
+    max-width: 900px;
 }
 
 .edit-profile-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
 }
 
 .edit-profile-header h1 {
-    font-size: 26px;
+    font-size: clamp(24px, 2.5vw, 30px);
     font-weight: 800;
 }
 
 .edit-section {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
 }
 
 .edit-section h3 {
@@ -305,7 +307,7 @@
 
 .form-input,
 .form-textarea {
-    background: var(--surface-2);
+    background: #ffffff;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
@@ -397,8 +399,9 @@
     justify-content: space-between;
     gap: 12px;
     padding: 8px 12px;
-    background: var(--surface-2);
+    background: #f7fbff;
     border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
 }
 
 .privacy-field-label {

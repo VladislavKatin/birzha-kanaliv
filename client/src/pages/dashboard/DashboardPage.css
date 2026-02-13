@@ -30,7 +30,7 @@
 .dashboard-col-right {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 12px;
 }
 
 .dashboard-loading {
@@ -212,10 +212,11 @@
 }
 
 .stat-value {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--text-primary);
-    line-height: 1.25;
+    line-height: 1.3;
+    word-break: break-word;
 }
 
 .stat-label {

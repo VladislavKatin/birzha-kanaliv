@@ -1,35 +1,38 @@
 /* ─── Settings Pages ─────────────────────────────── */
 .settings-page {
-    max-width: 680px;
+    max-width: 860px;
 }
 
 .settings-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
 }
 
 .settings-header h1 {
-    font-size: 26px;
+    font-size: clamp(24px, 2.5vw, 30px);
     font-weight: 800;
 }
 
 .settings-section {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
 }
 
 .settings-section h3 {
     font-size: 16px;
     font-weight: 700;
     margin-bottom: 6px;
+    color: var(--text-primary);
 }
 
 .toggle-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 0;
+    padding: 12px 2px;
     border-bottom: 1px solid var(--border-color);
     font-size: 14px;
 }
@@ -74,12 +77,13 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    background: rgba(99, 102, 241, 0.08);
+    background: #edf4ff;
     padding: 10px 14px;
     border-radius: var(--radius-sm);
     margin-top: 8px;
     font-size: 13px;
     color: var(--text-secondary);
+    border: 1px solid var(--border-color);
 }
 
 .connect-hint a {

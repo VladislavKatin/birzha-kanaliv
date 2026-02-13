@@ -6,6 +6,7 @@ import './InfluenceChart.css';
 export default function InfluenceChart() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showInfo, setShowInfo] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -30,9 +31,25 @@ export default function InfluenceChart() {
     return (
         <div className="influence-chart card">
             <div className="chart-header">
-                <h3>Influence Score</h3>
+                <div className="chart-title-wrap">
+                    <h3>Influence Score</h3>
+                    <button
+                        type="button"
+                        className="chart-info-btn"
+                        onClick={() => setShowInfo((value) => !value)}
+                        aria-label="Що таке Influence Score"
+                    >
+                        ?
+                    </button>
+                </div>
                 <span className="chart-current-score">{currentScore}</span>
             </div>
+            {showInfo && (
+                <div className="chart-info-popover">
+                    Influence Score - інтегральна оцінка каналу від 0 до 100.
+                    Формується з активності в обмінах, завершених угод, відгуків, стабільності та взаємодій у чатах.
+                </div>
+            )}
             <div className="chart-container">
                 <ResponsiveContainer width="100%" height={200}>
                     <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
