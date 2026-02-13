@@ -18,7 +18,7 @@ export default function OffersPage() {
     const navigate = useNavigate();
     const [offers, setOffers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState({ type: 'subs', niche: '' });
+    const [filter, setFilter] = useState({ niche: '' });
     const [showCreate, setShowCreate] = useState(false);
     const [createForm, setCreateForm] = useState({ type: 'subs', description: '', niche: '', minSubscribers: 0, maxSubscribers: 0 });
     const [myChannels, setMyChannels] = useState([]);
@@ -32,7 +32,6 @@ export default function OffersPage() {
     async function loadOffers() {
         try {
             const params = new URLSearchParams();
-            if (filter.type) params.set('type', filter.type);
             if (filter.niche) params.set('niche', filter.niche);
             const res = await api.get(`/offers?${params.toString()}`);
             setOffers(res.data.offers || res.data || []);
@@ -117,14 +116,6 @@ export default function OffersPage() {
 
             {/* Filters */}
             <div className="offers-filters card">
-                <select
-                    className="filter-select"
-                    value={filter.type}
-                    onChange={(e) => setFilter(prev => ({ ...prev, type: e.target.value }))}
-                >
-                    <option value="subs">рџ‘Ґ РџС–РґРїРёСЃРЅРёРєРё</option>
-                    <option value="views">рџ‘Ѓ РџРµСЂРµРіР»СЏРґРё</option>
-                </select>
                 <input
                     type="text"
                     className="filter-input"

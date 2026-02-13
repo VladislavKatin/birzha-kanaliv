@@ -22,7 +22,7 @@ export default function OffersCatalogPage() {
     const [offers, setOffers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [filter, setFilter] = useState({ type: 'subs', niche: '', language: '' });
+    const [filter, setFilter] = useState({ niche: '', language: '' });
 
     const nicheOptions = useMemo(() => getNicheOptions(), []);
     const languageOptions = useMemo(() => getLanguageOptions(), []);
@@ -68,13 +68,6 @@ export default function OffersCatalogPage() {
                     </header>
 
                     <div className="offers-catalog-filters">
-                        <select
-                            value={filter.type}
-                            onChange={(event) => setFilter((prev) => ({ ...prev, type: event.target.value }))}
-                        >
-                            <option value="subs">Підписники</option>
-                            <option value="views">Перегляди</option>
-                        </select>
                         <select
                             value={filter.niche}
                             onChange={(event) => setFilter((prev) => ({ ...prev, niche: event.target.value }))}
