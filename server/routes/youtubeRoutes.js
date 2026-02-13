@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { User, YouTubeAccount, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
 const youtubeService = require('../services/youtubeService');
+const { logInfo, logWarn, logError } = require('../services/logger');
 
 /**
  * @route GET /api/youtube/connect
@@ -13,9 +14,10 @@ router.get('/connect', auth, (req, res) => {
     try {
         const state = req.firebaseUser.uid;
         const authUrl = youtubeService.getAuthUrl(state);
+        logInfo('youtube.connect.url.generated', { firebaseUid: state });
         res.json({ authUrl });
     } catch (error) {
-        console.error('YouTube connect error:', error);
+        logError('youtube.connect.url.failed', { firebaseUid: req.firebaseUser?.uid || null, error });
         res.status(500).json({ error: 'Failed to generate auth URL' });
     }
 });
@@ -31,6 +33,7 @@ router.get('/connect', auth, (req, res) => {
 router.get('/callback', async (req, res) => {
     try {
         const { code, state } = req.query;
+        logInfo('youtube.callback.request', { firebaseUid: state || null });
 
         if (!code || !state) {
             return res.status(400).json({ error: 'Missing code or state' });
@@ -65,7 +68,11 @@ router.get('/callback', async (req, res) => {
         try {
             analytics = await youtubeService.getChannelAnalytics(tokens.accessToken, channelInfo.channelId);
         } catch (e) {
-            console.warn('Could not fetch analytics during connect:', e.message);
+            logWarn('youtube.callback.analytics.partial_failure', {
+                firebaseUid: state,
+                channelId: channelInfo.channelId,
+                error: e,
+            });
         }
 
         // Get recent videos
@@ -73,7 +80,11 @@ router.get('/callback', async (req, res) => {
         try {
             recentVideos = await youtubeService.getRecentVideos(tokens.accessToken, channelInfo.channelId, 10);
         } catch (e) {
-            console.warn('Could not fetch videos during connect:', e.message);
+            logWarn('youtube.callback.videos.partial_failure', {
+                firebaseUid: state,
+                channelId: channelInfo.channelId,
+                error: e,
+            });
         }
 
         // Upsert YouTube account
@@ -116,9 +127,18 @@ router.get('/callback', async (req, res) => {
 
         // Redirect to client dashboard
         const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        logInfo('youtube.callback.success', {
+            firebaseUid: state,
+            userId: user.id,
+            channelId: channelInfo.channelId,
+            reusedExistingAccount: !!existingAccount,
+        });
         res.redirect(`${clientUrl}/dashboard?youtube=connected`);
     } catch (error) {
-        console.error('YouTube callback error:', error);
+        logError('youtube.callback.failed', {
+            firebaseUid: req.query?.state || null,
+            error,
+        });
         const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
         res.redirect(`${clientUrl}/dashboard?youtube=error`);
     }
@@ -187,7 +207,11 @@ router.post('/refresh', auth, async (req, res) => {
             accessToken = refreshed.accessToken;
             await account.update({ accessToken });
         } catch (e) {
-            console.warn('Token refresh failed, using existing token:', e.message);
+            logWarn('youtube.refresh.token.partial_failure', {
+                userId: user.id,
+                channelId: account.channelId,
+                error: e,
+            });
         }
 
         // Fetch fresh data
@@ -225,8 +249,16 @@ router.post('/refresh', auth, async (req, res) => {
         });
 
         res.json({ message: 'Analytics refreshed', flagged: isAnomalous });
+        logInfo('youtube.refresh.success', {
+            userId: user.id,
+            channelId: account.channelId,
+            flagged: isAnomalous,
+        });
     } catch (error) {
-        console.error('Refresh analytics error:', error);
+        logError('youtube.refresh.failed', {
+            firebaseUid: req.firebaseUser?.uid || null,
+            error,
+        });
         res.status(500).json({ error: 'Failed to refresh analytics' });
     }
 });

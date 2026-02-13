@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const { emitSwapStatusChanged, emitNotification } = require('../socketSetup');
 const { getUserChannelsByFirebaseUid } = require('../services/channelAccessService');
 const { completeMatchInTransaction } = require('../services/chatCompletionService');
+const { logInfo, logError } = require('../services/logger');
 
 router.get('/', auth, async (req, res) => {
     try {
@@ -95,6 +96,12 @@ router.put('/:id/accept', auth, async (req, res) => {
         }
 
         res.json({ match });
+        logInfo('match.lifecycle.accepted', {
+            matchId: match.id,
+            actorUserId: result.user.id,
+            targetChannelId: match.targetChannelId,
+            initiatorChannelId: match.initiatorChannelId,
+        });
 
         const io = req.app.get('io');
         emitSwapStatusChanged(io, match, 'accepted', result.user.id);
@@ -108,7 +115,11 @@ router.put('/:id/accept', auth, async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Accept match error:', error);
+        logError('match.lifecycle.accept.failed', {
+            matchId: req.params?.id || null,
+            firebaseUid: req.firebaseUser?.uid || null,
+            error,
+        });
         res.status(500).json({ error: 'Failed to accept match' });
     }
 });
@@ -156,6 +167,11 @@ router.put('/:id/reject', auth, async (req, res) => {
         }
 
         res.json({ match });
+        logInfo('match.lifecycle.rejected', {
+            matchId: match.id,
+            actorUserId: result.user.id,
+            status: match.status,
+        });
 
         const io = req.app.get('io');
         emitSwapStatusChanged(io, match, 'rejected', result.user.id);
@@ -170,7 +186,11 @@ router.put('/:id/reject', auth, async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Reject match error:', error);
+        logError('match.lifecycle.reject.failed', {
+            matchId: req.params?.id || null,
+            firebaseUid: req.firebaseUser?.uid || null,
+            error,
+        });
         res.status(500).json({ error: 'Failed to reject match' });
     }
 });
@@ -221,6 +241,13 @@ router.put('/:id/confirm', auth, async (req, res) => {
         });
 
         res.json({ match });
+        logInfo('match.lifecycle.confirmed', {
+            matchId: match.id,
+            actorUserId: result.user.id,
+            status: match.status,
+            initiatorConfirmed: match.initiatorConfirmed,
+            targetConfirmed: match.targetConfirmed,
+        });
 
         const io = req.app.get('io');
         if (match.status === 'completed') {
@@ -248,7 +275,11 @@ router.put('/:id/confirm', auth, async (req, res) => {
             }
         }
     } catch (error) {
-        console.error('Confirm match error:', error);
+        logError('match.lifecycle.confirm.failed', {
+            matchId: req.params?.id || null,
+            firebaseUid: req.firebaseUser?.uid || null,
+            error,
+        });
         res.status(500).json({ error: 'Failed to confirm match' });
     }
 });

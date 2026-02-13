@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { User, YouTubeAccount } = require('../models');
 const auth = require('../middleware/auth');
+const { logInfo, logError } = require('../services/logger');
 
 /**
  * @route POST /api/auth/login
@@ -11,8 +12,10 @@ const auth = require('../middleware/auth');
 router.post('/login', auth, async (req, res) => {
     try {
         const { uid, email, name, picture } = req.firebaseUser;
+        logInfo('auth.login.request', { firebaseUid: uid });
 
         let user = await User.findOne({ where: { firebaseUid: uid } });
+        let created = false;
 
         if (!user) {
             user = await User.create({
@@ -21,6 +24,7 @@ router.post('/login', auth, async (req, res) => {
                 displayName: name || email.split('@')[0],
                 photoURL: picture || null,
             });
+            created = true;
         }
 
         // Check if user has connected YouTube
@@ -46,8 +50,17 @@ router.post('/login', auth, async (req, res) => {
                 }
                 : null,
         });
+        logInfo('auth.login.success', {
+            firebaseUid: uid,
+            userId: user.id,
+            created,
+            youtubeConnected: !!youtubeAccount,
+        });
     } catch (error) {
-        console.error('Auth login error:', error);
+        logError('auth.login.failed', {
+            firebaseUid: req.firebaseUser?.uid || null,
+            error,
+        });
         res.status(500).json({ error: 'Authentication failed' });
     }
 });
@@ -60,6 +73,7 @@ router.post('/login', auth, async (req, res) => {
  */
 router.get('/me', auth, async (req, res) => {
     try {
+        logInfo('auth.me.request', { firebaseUid: req.firebaseUser.uid });
         const user = await User.findOne({
             where: { firebaseUid: req.firebaseUser.uid },
             include: [{ model: YouTubeAccount, as: 'youtubeAccount' }],
@@ -80,8 +94,16 @@ router.get('/me', auth, async (req, res) => {
             youtubeConnected: !!user.youtubeAccount,
             youtubeAccount: user.youtubeAccount || null,
         });
+        logInfo('auth.me.success', {
+            firebaseUid: req.firebaseUser.uid,
+            userId: user.id,
+            youtubeConnected: !!user.youtubeAccount,
+        });
     } catch (error) {
-        console.error('Auth me error:', error);
+        logError('auth.me.failed', {
+            firebaseUid: req.firebaseUser?.uid || null,
+            error,
+        });
         res.status(500).json({ error: 'Failed to get user info' });
     }
 });

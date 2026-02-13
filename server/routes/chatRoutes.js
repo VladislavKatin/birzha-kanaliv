@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { sequelize, ChatRoom, Message, TrafficMatch, TrafficOffer, YouTubeAccount, User, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
 const { completeMatchInTransaction } = require('../services/chatCompletionService');
+const { logInfo, logError } = require('../services/logger');
 
 /**
  * Verify that a user is a participant in a traffic match.
@@ -73,8 +74,17 @@ router.get('/:matchId/messages', auth, async (req, res) => {
             partner: partnerChannel,
             myUserId: result.user.id,
         });
+        logInfo('chat.messages.loaded', {
+            matchId: req.params.matchId,
+            userId: result.user.id,
+            messageCount: messages.length,
+        });
     } catch (error) {
-        console.error('Get chat messages error:', error);
+        logError('chat.messages.load.failed', {
+            matchId: req.params?.matchId || null,
+            firebaseUid: req.firebaseUser?.uid || null,
+            error,
+        });
         res.status(500).json({ error: 'Failed to get messages' });
     }
 });
@@ -113,8 +123,17 @@ router.post('/:matchId/messages', auth, async (req, res) => {
         });
 
         res.status(201).json({ message: fullMessage });
+        logInfo('chat.message.sent', {
+            matchId: req.params.matchId,
+            senderUserId: result.user.id,
+            messageId: message.id,
+        });
     } catch (error) {
-        console.error('Send message error:', error);
+        logError('chat.message.send.failed', {
+            matchId: req.params?.matchId || null,
+            firebaseUid: req.firebaseUser?.uid || null,
+            error,
+        });
         res.status(500).json({ error: 'Failed to send message' });
     }
 });
@@ -157,8 +176,19 @@ router.post('/:matchId/complete', auth, async (req, res) => {
                 targetConfirmed: match.targetConfirmed,
             },
         });
+        logInfo('chat.deal.complete.confirmed', {
+            matchId: match.id,
+            userId: result.user.id,
+            status: match.status,
+            initiatorConfirmed: match.initiatorConfirmed,
+            targetConfirmed: match.targetConfirmed,
+        });
     } catch (error) {
-        console.error('Complete deal error:', error);
+        logError('chat.deal.complete.failed', {
+            matchId: req.params?.matchId || null,
+            firebaseUid: req.firebaseUser?.uid || null,
+            error,
+        });
         res.status(500).json({ error: 'Failed to complete deal' });
     }
 });

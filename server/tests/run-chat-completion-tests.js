@@ -6,6 +6,8 @@ const { runReviewReadUnitTests } = require('./reviewRead.unit.spec');
 const { runReviewReadFunctionalTests } = require('./reviewRead.functional.spec');
 const { runChannelAccessUnitTests } = require('./channelAccess.unit.spec');
 const { runChannelAccessFunctionalTests } = require('./channelAccess.functional.spec');
+const { runLoggerUnitTests } = require('./logger.unit.spec');
+const { runLoggerFunctionalTests } = require('./logger.functional.spec');
 
 async function run() {
     const tests = [
@@ -17,6 +19,8 @@ async function run() {
         { name: 'functional: published reviews query contract', fn: runReviewReadFunctionalTests },
         { name: 'unit: channel selection rules', fn: runChannelAccessUnitTests },
         { name: 'functional: user channel lookup', fn: runChannelAccessFunctionalTests },
+        { name: 'unit: structured logger payload', fn: runLoggerUnitTests },
+        { name: 'functional: structured logger output', fn: runLoggerFunctionalTests },
     ];
 
     let failed = 0;
