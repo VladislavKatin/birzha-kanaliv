@@ -2,6 +2,7 @@
 import {
     auth,
     googleProvider,
+    getFirebaseConfigError,
     signInWithPopup,
     signInWithRedirect,
     getRedirectResult,
@@ -68,9 +69,29 @@ const useAuthStore = create((set, get) => ({
     signInWithGoogle: async () => {
         set({ error: null });
 
+        const configError = getFirebaseConfigError();
+        if (configError) {
+            const message = 'Firebase не налаштований у frontend .env';
+            set({ error: `${message}: ${configError}` });
+            throw new Error(configError);
+        }
+
         try {
             const result = await signInWithPopup(auth, googleProvider);
-            await get()._syncWithBackend();
+            try {
+                await get()._syncWithBackend();
+            } catch (syncError) {
+                const backendError = syncError?.response?.data?.error;
+                const status = syncError?.response?.status;
+                if (backendError) {
+                    set({ error: `Google вхід є, але backend sync не вдався: ${backendError}` });
+                } else if (status) {
+                    set({ error: `Google вхід є, але backend sync повернув HTTP ${status}` });
+                } else {
+                    set({ error: 'Google вхід є, але backend sync не вдався' });
+                }
+                throw syncError;
+            }
             return { user: result.user, method: 'popup' };
         } catch (err) {
             const code = String(err?.code || '');
@@ -91,6 +112,12 @@ const useAuthStore = create((set, get) => ({
                     set({ error: message });
                     throw redirectError;
                 }
+            }
+
+            const backendError = err?.response?.data?.error;
+            if (backendError) {
+                set({ error: `Помилка backend: ${backendError}` });
+                throw err;
             }
 
             const message = getErrorMessage(code);
@@ -142,6 +169,10 @@ function getErrorMessage(code) {
         'auth/operation-not-allowed': 'Google Sign-In не увімкнений у Firebase Authentication.',
         'auth/operation-not-supported-in-this-environment': 'Цей режим входу не підтримується в поточному середовищі браузера.',
         'auth/internal-error': 'Внутрішня помилка Firebase Auth. Спробуйте оновити сторінку.',
+        'auth/invalid-api-key': 'Невірний Firebase API key у frontend .env',
+        'auth/app-not-authorized': 'Цей додаток не авторизований у Firebase проекті',
+        'auth/project-not-found': 'Firebase проект не знайдено або вказаний невірний projectId',
+        'auth/configuration-not-found': 'Google Sign-In конфігурація не знайдена у Firebase',
     };
 
     return messages[code] || 'Не вдалося увійти через Google. Спробуйте ще раз.';
