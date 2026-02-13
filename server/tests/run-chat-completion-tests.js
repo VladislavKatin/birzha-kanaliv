@@ -1,10 +1,14 @@
-﻿const { runChatCompletionUnitTests } = require('./chatCompletion.unit.spec');
+const { runChatCompletionUnitTests } = require('./chatCompletion.unit.spec');
 const { runChatCompletionFunctionalTests } = require('./chatCompletion.functional.spec');
+const { runMigrationSeedUnitTests } = require('./migrationSeed.unit.spec');
+const { runMigrationSeedFunctionalTests } = require('./migrationSeed.functional.spec');
 
 async function run() {
     const tests = [
         { name: 'unit: determineConfirmationPatch', fn: runChatCompletionUnitTests },
         { name: 'functional: completeMatchInTransaction', fn: runChatCompletionFunctionalTests },
+        { name: 'unit: migration and seed exports', fn: runMigrationSeedUnitTests },
+        { name: 'functional: migration and seed transaction flow', fn: runMigrationSeedFunctionalTests },
     ];
 
     let failed = 0;
@@ -25,7 +29,7 @@ async function run() {
         return;
     }
 
-    console.log('All chat completion tests passed');
+    console.log('All server tests passed');
 }
 
 run();
