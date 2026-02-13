@@ -2,6 +2,7 @@
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
+const { normalizeIncomingMessagePayload } = require('../services/chatMessagePayload');
 const {
     sequelize,
     User,
@@ -699,6 +700,361 @@ router.patch('/matches/:id/status', auth, admin, async (req, res) => {
     } catch (error) {
         console.error('Admin match status update error:', error);
         res.status(500).json({ error: 'Failed to update match status' });
+    }
+});
+
+/**
+ * @route GET /api/admin/exchange-history
+ * @description Exchange history with analytics.
+ * @access Private (admin)
+ */
+router.get('/exchange-history', auth, admin, async (req, res) => {
+    try {
+        const { page, limit, offset } = parsePagination(req, 25, 100);
+        const status = String(req.query.status || '').trim();
+        const search = String(req.query.search || '').trim();
+
+        const where = {};
+        if (status) where.status = status;
+        if (search) {
+            where[Op.or] = [
+                { '$initiatorChannel.channelTitle$': { [Op.iLike]: `%${search}%` } },
+                { '$targetChannel.channelTitle$': { [Op.iLike]: `%${search}%` } },
+                { '$offer.description$': { [Op.iLike]: `%${search}%` } },
+            ];
+        }
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const { rows, count } = await TrafficMatch.findAndCountAll({
+                where,
+                include: [
+                    {
+                        model: TrafficOffer,
+                        as: 'offer',
+                        attributes: ['id', 'type', 'status', 'description', 'niche', 'language'],
+                    },
+                    {
+                        model: YouTubeAccount,
+                        as: 'initiatorChannel',
+                        attributes: ['id', 'channelTitle', 'subscribers'],
+                    },
+                    {
+                        model: YouTubeAccount,
+                        as: 'targetChannel',
+                        attributes: ['id', 'channelTitle', 'subscribers'],
+                    },
+                    {
+                        model: Review,
+                        as: 'reviews',
+                        attributes: ['id', 'rating', 'isPublished', 'createdAt'],
+                        required: false,
+                    },
+                ],
+                subQuery: false,
+                distinct: true,
+                order: [['updatedAt', 'DESC']],
+                limit,
+                offset,
+                transaction,
+            });
+
+            const statusRows = await TrafficMatch.findAll({
+                attributes: ['status', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+                group: ['status'],
+                raw: true,
+                transaction,
+            });
+
+            const completedCount = Number(
+                await TrafficMatch.count({ where: { status: 'completed' }, transaction }),
+            );
+            const reviewsCount = Number(await Review.count({ transaction }));
+            const avgRatingRaw = await Review.findOne({
+                attributes: [[sequelize.fn('AVG', sequelize.col('rating')), 'avgRating']],
+                raw: true,
+                transaction,
+            });
+            const avgRating = Number(avgRatingRaw?.avgRating || 0);
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_exchange_history_opened',
+                details: { page, limit, status: status || null, search: search || null },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                page,
+                limit,
+                total: count,
+                pages: Math.max(Math.ceil(count / limit), 1),
+                summary: {
+                    completedCount,
+                    reviewsCount,
+                    avgRating: Number.isFinite(avgRating) ? Number(avgRating.toFixed(2)) : 0,
+                    statuses: statusRows,
+                },
+                matches: rows.map((match) => {
+                    const reviews = Array.isArray(match.reviews) ? match.reviews : [];
+                    const rating = reviews.length
+                        ? reviews.reduce((sum, row) => sum + Number(row.rating || 0), 0) / reviews.length
+                        : 0;
+                    return {
+                        ...match.toJSON(),
+                        reviewsCount: reviews.length,
+                        avgRating: Number.isFinite(rating) ? Number(rating.toFixed(2)) : 0,
+                    };
+                }),
+            };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin exchange history error:', error);
+        res.status(500).json({ error: 'Failed to load exchange history' });
+    }
+});
+
+/**
+ * @route GET /api/admin/support/threads
+ * @description List support threads by user.
+ * @access Private (admin)
+ */
+router.get('/support/threads', auth, admin, async (req, res) => {
+    try {
+        const payload = await sequelize.transaction(async (transaction) => {
+            const users = await User.findAll({
+                where: { role: { [Op.ne]: 'admin' } },
+                attributes: ['id', 'displayName', 'email', 'role', 'createdAt'],
+                raw: true,
+                transaction,
+            });
+
+            const adminUsers = await User.findAll({
+                where: { role: 'admin' },
+                attributes: ['id'],
+                raw: true,
+                transaction,
+            });
+            const adminIds = new Set(adminUsers.map((row) => row.id));
+
+            const logs = await ActionLog.findAll({
+                where: { action: 'support_chat_message' },
+                include: [{ model: User, as: 'user', attributes: ['id', 'displayName', 'email', 'role'] }],
+                order: [['createdAt', 'ASC']],
+                limit: 2000,
+                transaction,
+            });
+
+            const userById = new Map(users.map((row) => [row.id, row]));
+            const threadsMap = new Map(
+                users.map((row) => [row.id, {
+                    user: row,
+                    lastMessageAt: null,
+                    lastMessage: '',
+                    totalMessages: 0,
+                }]),
+            );
+
+            logs.forEach((log) => {
+                const details = log.details || {};
+                const senderId = log.userId;
+                const senderRole = log.user?.role || 'user';
+                const text = String(details.text || '').trim();
+                const hasImage = !!details.imageData;
+
+                if (adminIds.has(senderId) || senderRole === 'admin') {
+                    const targetUserId = details.targetUserId || null;
+                    if (!targetUserId || !threadsMap.has(targetUserId)) {
+                        return;
+                    }
+                    const thread = threadsMap.get(targetUserId);
+                    thread.totalMessages += 1;
+                    thread.lastMessageAt = log.createdAt;
+                    thread.lastMessage = text || (hasImage ? '[image]' : '');
+                    return;
+                }
+
+                if (!userById.has(senderId)) {
+                    return;
+                }
+                const thread = threadsMap.get(senderId);
+                thread.totalMessages += 1;
+                thread.lastMessageAt = log.createdAt;
+                thread.lastMessage = text || (hasImage ? '[image]' : '');
+            });
+
+            const threads = Array.from(threadsMap.values())
+                .filter((thread) => thread.totalMessages > 0)
+                .sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0));
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_support_threads_opened',
+                details: { threadCount: threads.length },
+                ip: req.ip,
+            }, { transaction });
+
+            return { threads };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin support threads error:', error);
+        res.status(500).json({ error: 'Failed to load support threads' });
+    }
+});
+
+/**
+ * @route GET /api/admin/support/threads/:userId/messages
+ * @description Get support thread messages for a concrete user.
+ * @access Private (admin)
+ */
+router.get('/support/threads/:userId/messages', auth, admin, async (req, res) => {
+    try {
+        const payload = await sequelize.transaction(async (transaction) => {
+            const user = await User.findByPk(req.params.userId, {
+                attributes: ['id', 'displayName', 'email', 'role'],
+                transaction,
+            });
+            if (!user || user.role === 'admin') {
+                return null;
+            }
+
+            const adminUsers = await User.findAll({
+                where: { role: 'admin' },
+                attributes: ['id'],
+                raw: true,
+                transaction,
+            });
+            const adminIds = new Set(adminUsers.map((row) => row.id));
+
+            const logs = await ActionLog.findAll({
+                where: { action: 'support_chat_message' },
+                include: [{ model: User, as: 'user', attributes: ['id', 'displayName', 'email', 'role'] }],
+                order: [['createdAt', 'ASC']],
+                limit: 2000,
+                transaction,
+            });
+
+            const messages = logs
+                .filter((log) => {
+                    const details = log.details || {};
+                    if (log.userId === user.id) {
+                        return true;
+                    }
+                    if (!adminIds.has(log.userId)) {
+                        return false;
+                    }
+                    return details.targetUserId === user.id;
+                })
+                .map((log) => ({
+                    id: log.id,
+                    createdAt: log.createdAt,
+                    content: log.details?.text || '',
+                    imageData: log.details?.imageData || null,
+                    sender: {
+                        id: log.user?.id || null,
+                        displayName: log.user?.displayName || log.user?.email || 'User',
+                        role: log.user?.role || 'user',
+                    },
+                    isAdmin: log.user?.role === 'admin',
+                }));
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_support_thread_opened',
+                details: { targetUserId: user.id, messageCount: messages.length },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                user,
+                messages,
+            };
+        });
+
+        if (!payload) {
+            return res.status(404).json({ error: 'Support user not found' });
+        }
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin support thread load error:', error);
+        res.status(500).json({ error: 'Failed to load support thread' });
+    }
+});
+
+/**
+ * @route POST /api/admin/support/threads/:userId/messages
+ * @description Send support reply as admin.
+ * @access Private (admin)
+ */
+router.post('/support/threads/:userId/messages', auth, admin, async (req, res) => {
+    try {
+        let incoming;
+        try {
+            incoming = normalizeIncomingMessagePayload(req.body || {});
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const user = await User.findByPk(req.params.userId, {
+                attributes: ['id', 'displayName', 'email', 'role'],
+                transaction,
+            });
+            if (!user || user.role === 'admin') {
+                return null;
+            }
+
+            const messageLog = await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'support_chat_message',
+                details: {
+                    text: incoming.text || '',
+                    imageData: incoming.imageData || null,
+                    targetUserId: user.id,
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_support_reply_sent',
+                details: {
+                    targetUserId: user.id,
+                    supportMessageId: messageLog.id,
+                    hasImage: !!incoming.imageData,
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                user,
+                message: {
+                    id: messageLog.id,
+                    createdAt: messageLog.createdAt,
+                    content: incoming.text || '',
+                    imageData: incoming.imageData || null,
+                    sender: {
+                        id: req.dbUser.id,
+                        displayName: req.dbUser.displayName || req.dbUser.email,
+                        role: req.dbUser.role,
+                    },
+                    isAdmin: true,
+                },
+            };
+        });
+
+        if (!payload) {
+            return res.status(404).json({ error: 'Support user not found' });
+        }
+
+        res.status(201).json(payload);
+    } catch (error) {
+        console.error('Admin support reply error:', error);
+        res.status(500).json({ error: 'Failed to send support reply' });
     }
 });
 

@@ -1,4 +1,4 @@
-const router = require('express').Router();
+﻿const router = require('express').Router();
 const { Op } = require('sequelize');
 const { sequelize, User, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
@@ -55,6 +55,24 @@ router.get('/chat', auth, async (req, res) => {
                 transaction,
             });
 
+            const filteredLogs = logs.filter((log) => {
+                if (user.role === 'admin') {
+                    return true;
+                }
+
+                if (log.userId === user.id) {
+                    return true;
+                }
+
+                const senderIsAdmin = log.user?.role === 'admin';
+                if (!senderIsAdmin) {
+                    return false;
+                }
+
+                const targetUserId = log.details?.targetUserId || null;
+                return !targetUserId || targetUserId === user.id;
+            });
+
             await ActionLog.create({
                 userId: user.id,
                 action: 'support_chat_opened',
@@ -64,7 +82,7 @@ router.get('/chat', auth, async (req, res) => {
 
             return {
                 user,
-                messages: logs.map(mapSupportLogToMessage),
+                messages: filteredLogs.map(mapSupportLogToMessage),
             };
         });
 

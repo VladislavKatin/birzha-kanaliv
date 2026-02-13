@@ -19,6 +19,10 @@ const { runSupportChatUnitTests } = require('./supportChat.unit.spec');
 const { runSupportChatFunctionalTests } = require('./supportChat.functional.spec');
 const { runAdminModerationUnitTests } = require('./adminModeration.unit.spec');
 const { runAdminModerationFunctionalTests } = require('./adminModeration.functional.spec');
+const { runAdminHistoryUnitTests } = require('./adminHistory.unit.spec');
+const { runAdminHistoryFunctionalTests } = require('./adminHistory.functional.spec');
+const { runAdminSupportUnitTests } = require('./adminSupport.unit.spec');
+const { runAdminSupportFunctionalTests } = require('./adminSupport.functional.spec');
 
 async function run() {
     const tests = [
@@ -43,6 +47,10 @@ async function run() {
         { name: 'functional: support chat message flow', fn: runSupportChatFunctionalTests },
         { name: 'unit: admin moderation endpoint manifest', fn: runAdminModerationUnitTests },
         { name: 'functional: admin moderation flow', fn: runAdminModerationFunctionalTests },
+        { name: 'unit: admin exchange history endpoint manifest', fn: runAdminHistoryUnitTests },
+        { name: 'functional: admin exchange history flow', fn: runAdminHistoryFunctionalTests },
+        { name: 'unit: admin support endpoint manifest', fn: runAdminSupportUnitTests },
+        { name: 'functional: admin support inbox flow', fn: runAdminSupportFunctionalTests },
     ];
 
     let failed = 0;
