@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { YouTubeAccount, Review, User, TrafficMatch, TrafficOffer } = require('../models');
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
+const { listPublishedReviews } = require('../services/reviewReadService');
 
 /**
  * @route GET /api/channels
@@ -97,23 +98,13 @@ router.get('/:id', async (req, res) => {
         }
 
         // Get reviews for this channel
-        const reviews = await Review.findAll({
-            where: { toChannelId: channel.id },
-            include: [
-                {
-                    model: YouTubeAccount,
-                    as: 'fromChannel',
-                    attributes: ['channelTitle', 'channelAvatar'],
-                },
-            ],
-            order: [['createdAt', 'DESC']],
+        const { reviews, rating } = await listPublishedReviews({
+            Review,
+            YouTubeAccount,
+            channelId: channel.id,
+            fromChannelAttributes: ['channelTitle', 'channelAvatar'],
             limit: 20,
         });
-
-        // Calculate average rating
-        const avgRating = reviews.length > 0
-            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-            : 0;
 
         // Get swap history for this channel
         const swapHistory = await TrafficMatch.findAll({
@@ -136,10 +127,7 @@ router.get('/:id', async (req, res) => {
         res.json({
             channel,
             reviews,
-            rating: {
-                average: Math.round(avgRating * 10) / 10,
-                count: reviews.length,
-            },
+            rating,
             swapHistory,
         });
     } catch (error) {

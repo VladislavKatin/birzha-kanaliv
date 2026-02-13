@@ -2,6 +2,8 @@ const { runChatCompletionUnitTests } = require('./chatCompletion.unit.spec');
 const { runChatCompletionFunctionalTests } = require('./chatCompletion.functional.spec');
 const { runMigrationSeedUnitTests } = require('./migrationSeed.unit.spec');
 const { runMigrationSeedFunctionalTests } = require('./migrationSeed.functional.spec');
+const { runReviewReadUnitTests } = require('./reviewRead.unit.spec');
+const { runReviewReadFunctionalTests } = require('./reviewRead.functional.spec');
 
 async function run() {
     const tests = [
@@ -9,6 +11,8 @@ async function run() {
         { name: 'functional: completeMatchInTransaction', fn: runChatCompletionFunctionalTests },
         { name: 'unit: migration and seed exports', fn: runMigrationSeedUnitTests },
         { name: 'functional: migration and seed transaction flow', fn: runMigrationSeedFunctionalTests },
+        { name: 'unit: review read rating summary', fn: runReviewReadUnitTests },
+        { name: 'functional: published reviews query contract', fn: runReviewReadFunctionalTests },
     ];
 
     let failed = 0;

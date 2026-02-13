@@ -1,6 +1,7 @@
 const router = require('express').Router();
-const { Review, TrafficMatch, YouTubeAccount, User, ActionLog } = require('../models');
+const { sequelize, Review, TrafficMatch, YouTubeAccount, User, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
+const { listPublishedReviews } = require('../services/reviewReadService');
 
 /**
  * Get user and their primary YouTube channel.
@@ -71,22 +72,30 @@ router.post('/', auth, async (req, res) => {
             return res.status(409).json({ error: 'Ви вже залишили відгук для цього обміну' });
         }
 
-        const review = await Review.create({
-            matchId,
-            fromChannelId: result.account.id,
-            toChannelId,
-            rating,
-            comment,
-        });
+        const transaction = await sequelize.transaction();
 
-        await ActionLog.create({
-            userId: result.user.id,
-            action: 'review_created',
-            details: { reviewId: review.id, matchId, rating },
-            ip: req.ip,
-        });
+        try {
+            const review = await Review.create({
+                matchId,
+                fromChannelId: result.account.id,
+                toChannelId,
+                rating,
+                comment,
+            }, { transaction });
 
-        res.status(201).json({ review });
+            await ActionLog.create({
+                userId: result.user.id,
+                action: 'review_created',
+                details: { reviewId: review.id, matchId, rating },
+                ip: req.ip,
+            }, { transaction });
+
+            await transaction.commit();
+            res.status(201).json({ review });
+        } catch (txError) {
+            await transaction.rollback();
+            throw txError;
+        }
     } catch (error) {
         console.error('Create review error:', error);
         res.status(500).json({ error: 'Не вдалося залишити відгук' });
@@ -102,28 +111,16 @@ router.post('/', auth, async (req, res) => {
  */
 router.get('/channel/:channelId', async (req, res) => {
     try {
-        const reviews = await Review.findAll({
-            where: { toChannelId: req.params.channelId },
-            include: [
-                {
-                    model: YouTubeAccount,
-                    as: 'fromChannel',
-                    attributes: ['channelTitle', 'channelAvatar', 'subscribers'],
-                },
-            ],
-            order: [['createdAt', 'DESC']],
+        const { reviews, rating } = await listPublishedReviews({
+            Review,
+            YouTubeAccount,
+            channelId: req.params.channelId,
+            fromChannelAttributes: ['channelTitle', 'channelAvatar', 'subscribers'],
         });
-
-        const avgRating = reviews.length > 0
-            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-            : 0;
 
         res.json({
             reviews,
-            rating: {
-                average: Math.round(avgRating * 10) / 10,
-                count: reviews.length,
-            },
+            rating,
         });
     } catch (error) {
         console.error('Get reviews error:', error);
