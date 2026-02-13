@@ -30,12 +30,27 @@ function createRateLimiter({
     });
 }
 
+function isLocalRequest(req) {
+    const host = String(req.hostname || '').toLowerCase();
+    const ip = String(req.ip || '');
+    const forwardedFor = String(req.headers['x-forwarded-for'] || '');
+    return (
+        host === 'localhost' ||
+        host === '127.0.0.1' ||
+        ip === '127.0.0.1' ||
+        ip === '::1' ||
+        ip.endsWith(':127.0.0.1') ||
+        forwardedFor.includes('127.0.0.1') ||
+        forwardedFor.includes('::1')
+    );
+}
+
 /**
  * Default API limiter: 100 requests per 15 minutes.
  * Excludes /api/auth/*, which has a dedicated auth limiter.
  */
 const apiLimiter = createRateLimiter({
-    skip: (req) => req.path.startsWith('/auth'),
+    skip: (req) => req.path.startsWith('/auth') || isLocalRequest(req),
 });
 
 /** Strict auth limiter: 10 requests per 15 minutes */
@@ -43,6 +58,7 @@ const authLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
     max: 10,
     message: 'Too many auth attempts. Please try again in 15 minutes.',
+    skip: (req) => isLocalRequest(req),
 });
 
 /** Upload limiter: 5 requests per 15 minutes */
@@ -50,6 +66,7 @@ const uploadLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
     max: 5,
     message: 'Too many uploads. Please try again in 15 minutes.',
+    skip: (req) => isLocalRequest(req),
 });
 
 module.exports = { apiLimiter, authLimiter, uploadLimiter, createRateLimiter };
