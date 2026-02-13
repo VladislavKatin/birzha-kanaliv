@@ -19,7 +19,6 @@ const navItems = [
 ];
 
 const topLinks = [
-    { to: '/offers', label: 'Каталог' },
     { to: '/my-channels', label: 'Мої канали' },
     { to: '/exchanges', label: 'Обміни' },
     { to: '/blog', label: 'Блог' },
