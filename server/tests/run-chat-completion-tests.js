@@ -25,6 +25,8 @@ const { runAdminSupportUnitTests } = require('./adminSupport.unit.spec');
 const { runAdminSupportFunctionalTests } = require('./adminSupport.functional.spec');
 const { runAdminSystemUnitTests } = require('./adminSystem.unit.spec');
 const { runAdminSystemFunctionalTests } = require('./adminSystem.functional.spec');
+const { runAdminOpsUnitTests } = require('./adminOps.unit.spec');
+const { runAdminOpsFunctionalTests } = require('./adminOps.functional.spec');
 
 async function run() {
     const tests = [
@@ -55,6 +57,8 @@ async function run() {
         { name: 'functional: admin support inbox flow', fn: runAdminSupportFunctionalTests },
         { name: 'unit: admin system endpoint manifest', fn: runAdminSystemUnitTests },
         { name: 'functional: admin system insights flow', fn: runAdminSystemFunctionalTests },
+        { name: 'unit: admin operations endpoint manifest', fn: runAdminOpsUnitTests },
+        { name: 'functional: admin operations flow', fn: runAdminOpsFunctionalTests },
     ];
 
     let failed = 0;

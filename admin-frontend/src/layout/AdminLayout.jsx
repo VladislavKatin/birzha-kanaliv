@@ -1,5 +1,5 @@
 ﻿import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, MessageSquareText, RadioTower, ListChecks, RefreshCw, LogOut, History, Activity } from 'lucide-react';
+import { LayoutDashboard, Users, MessageSquareText, RadioTower, ListChecks, RefreshCw, LogOut, History, Activity, ShieldAlert, FlaskConical } from 'lucide-react';
 import { useAuth } from '../stores/AuthProvider';
 
 const navItems = [
@@ -10,6 +10,8 @@ const navItems = [
     { to: '/matches', label: 'Обміни', icon: RefreshCw },
     { to: '/history', label: 'Історія', icon: History },
     { to: '/system', label: 'Система', icon: Activity },
+    { to: '/incidents', label: 'Інциденти', icon: ShieldAlert },
+    { to: '/demo-content', label: 'Демо контент', icon: FlaskConical },
     { to: '/support', label: 'Чат підтримки', icon: MessageSquareText },
 ];
 

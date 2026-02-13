@@ -40,6 +40,22 @@ export default function SystemInsightsPage() {
         }
     }
 
+    async function exportCsv(path, filenamePrefix) {
+        try {
+            const response = await api.get(path, { responseType: 'blob' });
+            const url = window.URL.createObjectURL(response.data);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${filenamePrefix}-${Date.now()}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch {
+            setError('Не вдалося експортувати CSV');
+        }
+    }
+
     const metrics = useMemo(() => {
         const s = data.summary || {};
         return [
@@ -63,7 +79,12 @@ export default function SystemInsightsPage() {
             <section className="card">
                 <div className="card-head">
                     <h2>Системні інсайти</h2>
-                    <button className="btn btn-secondary" onClick={load}>Оновити</button>
+                    <div className="action-row">
+                        <button className="btn btn-secondary" onClick={() => exportCsv('/admin/exports/users.csv', 'users-report')}>Users CSV</button>
+                        <button className="btn btn-secondary" onClick={() => exportCsv('/admin/exports/exchanges.csv', 'exchanges-report')}>Exchanges CSV</button>
+                        <button className="btn btn-secondary" onClick={() => exportCsv('/admin/exports/support.csv', 'support-report')}>Support CSV</button>
+                        <button className="btn btn-secondary" onClick={load}>Оновити</button>
+                    </div>
                 </div>
                 <p className="muted-text">Оновлено: {formatAdminDate(data.generatedAt)}</p>
                 <div className="summary-grid">

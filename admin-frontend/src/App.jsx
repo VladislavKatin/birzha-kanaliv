@@ -10,6 +10,8 @@ import OffersModerationPage from './pages/OffersModerationPage';
 import MatchesPage from './pages/MatchesPage';
 import ExchangeHistoryPage from './pages/ExchangeHistoryPage';
 import SystemInsightsPage from './pages/SystemInsightsPage';
+import IncidentsPage from './pages/IncidentsPage';
+import DemoContentPage from './pages/DemoContentPage';
 
 function LoadingScreen() {
     return <div className="app-loader">Завантаження...</div>;
@@ -43,6 +45,8 @@ function AppRoutes() {
                 <Route path="/matches" element={<MatchesPage />} />
                 <Route path="/history" element={<ExchangeHistoryPage />} />
                 <Route path="/system" element={<SystemInsightsPage />} />
+                <Route path="/incidents" element={<IncidentsPage />} />
+                <Route path="/demo-content" element={<DemoContentPage />} />
                 <Route path="/support" element={<SupportPage />} />
             </Route>
             <Route path="*" element={<Navigate to={user && isAdmin ? '/dashboard' : '/auth'} replace />} />

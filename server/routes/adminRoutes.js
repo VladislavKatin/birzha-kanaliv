@@ -18,12 +18,25 @@ const {
 const ALLOWED_ROLES = new Set(['user', 'admin', 'suspended']);
 const ALLOWED_OFFER_STATUSES = new Set(['open', 'matched', 'completed']);
 const ALLOWED_MATCH_STATUSES = new Set(['pending', 'accepted', 'completed', 'rejected']);
+const DEMO_CHANNEL_PREFIX = 'UC_DEMO_';
 
 function parsePagination(req, defaultLimit = 20, maxLimit = 100) {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || defaultLimit, 1), maxLimit);
     const offset = (page - 1) * limit;
     return { page, limit, offset };
+}
+
+function csvEscape(value) {
+    const raw = value == null ? '' : String(value);
+    const escaped = raw.replaceAll('"', '""');
+    return `"${escaped}"`;
+}
+
+function toCsv(headers, rows) {
+    const headerLine = headers.map(csvEscape).join(',');
+    const lines = rows.map((row) => row.map(csvEscape).join(','));
+    return [headerLine, ...lines].join('\n');
 }
 
 /**
@@ -1335,6 +1348,399 @@ router.get('/system/insights', auth, admin, async (req, res) => {
     } catch (error) {
         console.error('Admin system insights error:', error);
         res.status(500).json({ error: 'Failed to load system insights' });
+    }
+});
+
+/**
+ * @route GET /api/admin/incidents
+ * @description Security/operations incident feed.
+ * @access Private (admin)
+ */
+router.get('/incidents', auth, admin, async (req, res) => {
+    try {
+        const range = String(req.query.range || '24h').trim();
+        const severity = String(req.query.severity || '').trim();
+        const from = range === '7d'
+            ? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+            : new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const actionFilter = {
+                [Op.or]: [
+                    { [Op.iLike]: '%failed%' },
+                    { [Op.iLike]: '%error%' },
+                    { [Op.iLike]: '%suspend%' },
+                    { [Op.iLike]: '%flag%' },
+                    { [Op.iLike]: '%rate_limit%' },
+                ],
+            };
+
+            const where = {
+                createdAt: { [Op.gte]: from },
+                action: actionFilter,
+            };
+
+            const logs = await ActionLog.findAll({
+                where,
+                include: [{ model: User, as: 'user', attributes: ['id', 'displayName', 'email', 'role'] }],
+                order: [['createdAt', 'DESC']],
+                limit: 200,
+                transaction,
+            });
+
+            const incidents = logs.map((log) => {
+                const action = String(log.action || '');
+                let level = 'low';
+                if (action.includes('failed') || action.includes('error')) level = 'high';
+                if (action.includes('suspend') || action.includes('flag')) level = 'medium';
+                return {
+                    id: log.id,
+                    createdAt: log.createdAt,
+                    level,
+                    action: log.action,
+                    ip: log.ip,
+                    details: log.details || {},
+                    user: log.user || null,
+                };
+            }).filter((incident) => !severity || incident.level === severity);
+
+            const topIps = await ActionLog.findAll({
+                attributes: ['ip', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+                where: {
+                    createdAt: { [Op.gte]: from },
+                    ip: { [Op.not]: null },
+                },
+                group: ['ip'],
+                order: [[sequelize.literal('count'), 'DESC']],
+                limit: 10,
+                raw: true,
+                transaction,
+            });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_incidents_opened',
+                details: { range, severity: severity || null, count: incidents.length },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                range,
+                from: from.toISOString(),
+                total: incidents.length,
+                incidents,
+                topIps,
+            };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin incidents error:', error);
+        res.status(500).json({ error: 'Failed to load incidents' });
+    }
+});
+
+/**
+ * @route GET /api/admin/demo/channels
+ * @description Demo channels and offers overview.
+ * @access Private (admin)
+ */
+router.get('/demo/channels', auth, admin, async (req, res) => {
+    try {
+        const payload = await sequelize.transaction(async (transaction) => {
+            const channels = await YouTubeAccount.findAll({
+                where: {
+                    channelId: {
+                        [Op.iLike]: `${DEMO_CHANNEL_PREFIX}%`,
+                    },
+                },
+                include: [{ model: User, as: 'owner', attributes: ['id', 'displayName', 'email'] }],
+                order: [['createdAt', 'DESC']],
+                transaction,
+            });
+
+            const channelIds = channels.map((channel) => channel.id);
+            const offers = channelIds.length
+                ? await TrafficOffer.findAll({
+                    where: { channelId: { [Op.in]: channelIds } },
+                    include: [{ model: YouTubeAccount, as: 'channel', attributes: ['id', 'channelTitle', 'channelId', 'isActive'] }],
+                    order: [['createdAt', 'DESC']],
+                    transaction,
+                })
+                : [];
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_demo_channels_opened',
+                details: { channels: channels.length, offers: offers.length },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                summary: {
+                    channels: channels.length,
+                    activeChannels: channels.filter((channel) => channel.isActive).length,
+                    offers: offers.length,
+                },
+                channels,
+                offers,
+            };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin demo channels error:', error);
+        res.status(500).json({ error: 'Failed to load demo channels' });
+    }
+});
+
+/**
+ * @route PATCH /api/admin/demo/channels/:id/active
+ * @description Toggle demo channel active status.
+ * @access Private (admin)
+ */
+router.patch('/demo/channels/:id/active', auth, admin, async (req, res) => {
+    try {
+        const isActive = Boolean(req.body.isActive);
+        const reason = String(req.body.reason || '').trim();
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const channel = await YouTubeAccount.findByPk(req.params.id, { transaction });
+            if (!channel) return null;
+            if (!String(channel.channelId || '').toUpperCase().startsWith(DEMO_CHANNEL_PREFIX)) {
+                return { invalid: true };
+            }
+
+            const previousIsActive = channel.isActive;
+            channel.isActive = isActive;
+            await channel.save({ transaction });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_demo_channel_active_changed',
+                details: {
+                    channelId: channel.id,
+                    previousIsActive,
+                    nextIsActive: channel.isActive,
+                    reason: reason || null,
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return channel;
+        });
+
+        if (!payload) return res.status(404).json({ error: 'Channel not found' });
+        if (payload.invalid) return res.status(400).json({ error: 'Channel is not marked as demo' });
+
+        res.json({ channel: payload });
+    } catch (error) {
+        console.error('Admin demo channel active update error:', error);
+        res.status(500).json({ error: 'Failed to update demo channel status' });
+    }
+});
+
+/**
+ * @route PATCH /api/admin/demo/offers/:id/status
+ * @description Update demo offer status.
+ * @access Private (admin)
+ */
+router.patch('/demo/offers/:id/status', auth, admin, async (req, res) => {
+    try {
+        const status = String(req.body.status || '').trim();
+        const reason = String(req.body.reason || '').trim();
+
+        if (!ALLOWED_OFFER_STATUSES.has(status)) {
+            return res.status(400).json({ error: 'Invalid offer status value' });
+        }
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const offer = await TrafficOffer.findByPk(req.params.id, {
+                include: [{ model: YouTubeAccount, as: 'channel', attributes: ['id', 'channelId'] }],
+                transaction,
+            });
+            if (!offer) return null;
+
+            const channelId = String(offer.channel?.channelId || '').toUpperCase();
+            if (!channelId.startsWith(DEMO_CHANNEL_PREFIX)) {
+                return { invalid: true };
+            }
+
+            const previousStatus = offer.status;
+            offer.status = status;
+            await offer.save({ transaction });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_demo_offer_status_changed',
+                details: {
+                    offerId: offer.id,
+                    previousStatus,
+                    nextStatus: offer.status,
+                    reason: reason || null,
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return offer;
+        });
+
+        if (!payload) return res.status(404).json({ error: 'Offer not found' });
+        if (payload.invalid) return res.status(400).json({ error: 'Offer does not belong to demo channel' });
+
+        res.json({ offer: payload });
+    } catch (error) {
+        console.error('Admin demo offer status update error:', error);
+        res.status(500).json({ error: 'Failed to update demo offer status' });
+    }
+});
+
+/**
+ * @route GET /api/admin/exports/users.csv
+ * @description Export users report in CSV format.
+ * @access Private (admin)
+ */
+router.get('/exports/users.csv', auth, admin, async (req, res) => {
+    try {
+        const csv = await sequelize.transaction(async (transaction) => {
+            const users = await User.findAll({
+                attributes: ['id', 'email', 'displayName', 'role', 'createdAt'],
+                order: [['createdAt', 'DESC']],
+                transaction,
+            });
+
+            const userIds = users.map((user) => user.id);
+            const channels = userIds.length
+                ? await YouTubeAccount.findAll({
+                    attributes: ['userId', [sequelize.fn('COUNT', sequelize.col('id')), 'channelCount']],
+                    where: { userId: { [Op.in]: userIds } },
+                    group: ['userId'],
+                    raw: true,
+                    transaction,
+                })
+                : [];
+            const channelsMap = new Map(channels.map((row) => [row.userId, Number(row.channelCount || 0)]));
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_export_users_csv',
+                details: { rowCount: users.length },
+                ip: req.ip,
+            }, { transaction });
+
+            return toCsv(
+                ['id', 'email', 'displayName', 'role', 'channelCount', 'createdAt'],
+                users.map((user) => [
+                    user.id,
+                    user.email,
+                    user.displayName || '',
+                    user.role,
+                    channelsMap.get(user.id) || 0,
+                    user.createdAt?.toISOString?.() || '',
+                ]),
+            );
+        });
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="users-${Date.now()}.csv"`);
+        res.send(csv);
+    } catch (error) {
+        console.error('Admin users csv export error:', error);
+        res.status(500).json({ error: 'Failed to export users csv' });
+    }
+});
+
+/**
+ * @route GET /api/admin/exports/exchanges.csv
+ * @description Export exchanges report in CSV format.
+ * @access Private (admin)
+ */
+router.get('/exports/exchanges.csv', auth, admin, async (req, res) => {
+    try {
+        const csv = await sequelize.transaction(async (transaction) => {
+            const matches = await TrafficMatch.findAll({
+                include: [
+                    { model: TrafficOffer, as: 'offer', attributes: ['id', 'type', 'status'] },
+                    { model: YouTubeAccount, as: 'initiatorChannel', attributes: ['channelTitle', 'channelId'] },
+                    { model: YouTubeAccount, as: 'targetChannel', attributes: ['channelTitle', 'channelId'] },
+                ],
+                order: [['updatedAt', 'DESC']],
+                transaction,
+            });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_export_exchanges_csv',
+                details: { rowCount: matches.length },
+                ip: req.ip,
+            }, { transaction });
+
+            return toCsv(
+                ['id', 'status', 'offerType', 'offerStatus', 'initiator', 'target', 'updatedAt'],
+                matches.map((match) => [
+                    match.id,
+                    match.status,
+                    match.offer?.type || '',
+                    match.offer?.status || '',
+                    match.initiatorChannel?.channelTitle || '',
+                    match.targetChannel?.channelTitle || '',
+                    match.updatedAt?.toISOString?.() || '',
+                ]),
+            );
+        });
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="exchanges-${Date.now()}.csv"`);
+        res.send(csv);
+    } catch (error) {
+        console.error('Admin exchanges csv export error:', error);
+        res.status(500).json({ error: 'Failed to export exchanges csv' });
+    }
+});
+
+/**
+ * @route GET /api/admin/exports/support.csv
+ * @description Export support chat report in CSV format.
+ * @access Private (admin)
+ */
+router.get('/exports/support.csv', auth, admin, async (req, res) => {
+    try {
+        const csv = await sequelize.transaction(async (transaction) => {
+            const logs = await ActionLog.findAll({
+                where: { action: 'support_chat_message' },
+                include: [{ model: User, as: 'user', attributes: ['id', 'displayName', 'email', 'role'] }],
+                order: [['createdAt', 'DESC']],
+                limit: 5000,
+                transaction,
+            });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_export_support_csv',
+                details: { rowCount: logs.length },
+                ip: req.ip,
+            }, { transaction });
+
+            return toCsv(
+                ['id', 'createdAt', 'senderEmail', 'senderRole', 'targetUserId', 'hasImage', 'content'],
+                logs.map((log) => [
+                    log.id,
+                    log.createdAt?.toISOString?.() || '',
+                    log.user?.email || '',
+                    log.user?.role || '',
+                    log.details?.targetUserId || '',
+                    !!log.details?.imageData,
+                    log.details?.text || '',
+                ]),
+            );
+        });
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="support-${Date.now()}.csv"`);
+        res.send(csv);
+    } catch (error) {
+        console.error('Admin support csv export error:', error);
+        res.status(500).json({ error: 'Failed to export support csv' });
     }
 });
 
