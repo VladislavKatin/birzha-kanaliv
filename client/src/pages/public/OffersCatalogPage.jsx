@@ -8,6 +8,9 @@ import {
     buildOfferDetailsPath,
     buildPublicOffersQuery,
     formatPublicNumber,
+    getLanguageOptions,
+    getLanguageSearchValue,
+    getNicheOptions,
     getOfferTypeLabel,
     isDemoChannel,
 } from '../../services/publicOffers';
@@ -21,6 +24,8 @@ export default function OffersCatalogPage() {
     const [error, setError] = useState('');
     const [filter, setFilter] = useState({ type: '', niche: '', language: '' });
 
+    const nicheOptions = useMemo(() => getNicheOptions(), []);
+    const languageOptions = useMemo(() => getLanguageOptions(), []);
     const query = useMemo(() => buildPublicOffersQuery(filter), [filter]);
 
     useEffect(() => {
@@ -71,18 +76,29 @@ export default function OffersCatalogPage() {
                             <option value="subs">Підписники</option>
                             <option value="views">Перегляди</option>
                         </select>
-                        <input
-                            type="text"
-                            placeholder="Ніша"
+                        <select
                             value={filter.niche}
                             onChange={(event) => setFilter((prev) => ({ ...prev, niche: event.target.value }))}
-                        />
+                        >
+                            <option value="">Ніша каналу</option>
+                            {nicheOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
                         <input
                             type="text"
-                            placeholder="Мова"
+                            list="offers-language-options"
+                            placeholder="Мова каналу"
                             value={filter.language}
                             onChange={(event) => setFilter((prev) => ({ ...prev, language: event.target.value }))}
                         />
+                        <datalist id="offers-language-options">
+                            {languageOptions.map((option) => (
+                                <option key={option.code} value={getLanguageSearchValue(option)} />
+                            ))}
+                        </datalist>
                     </div>
 
                     {loading ? (
