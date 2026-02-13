@@ -5,6 +5,9 @@ import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import UsersPage from './pages/UsersPage';
 import SupportPage from './pages/SupportPage';
+import ChannelsPage from './pages/ChannelsPage';
+import OffersModerationPage from './pages/OffersModerationPage';
+import MatchesPage from './pages/MatchesPage';
 
 function LoadingScreen() {
     return <div className="app-loader">Завантаження...</div>;
@@ -33,6 +36,9 @@ function AppRoutes() {
             <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/users" element={<UsersPage />} />
+                <Route path="/channels" element={<ChannelsPage />} />
+                <Route path="/offers" element={<OffersModerationPage />} />
+                <Route path="/matches" element={<MatchesPage />} />
                 <Route path="/support" element={<SupportPage />} />
             </Route>
             <Route path="*" element={<Navigate to={user && isAdmin ? '/dashboard' : '/auth'} replace />} />

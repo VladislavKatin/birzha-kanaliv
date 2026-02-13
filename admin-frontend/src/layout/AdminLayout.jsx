@@ -1,10 +1,13 @@
 ﻿import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, MessageSquareText, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, MessageSquareText, RadioTower, ListChecks, RefreshCw, LogOut } from 'lucide-react';
 import { useAuth } from '../stores/AuthProvider';
 
 const navItems = [
     { to: '/dashboard', label: 'Аналітика', icon: LayoutDashboard },
     { to: '/users', label: 'Користувачі', icon: Users },
+    { to: '/channels', label: 'Канали', icon: RadioTower },
+    { to: '/offers', label: 'Офери', icon: ListChecks },
+    { to: '/matches', label: 'Обміни', icon: RefreshCw },
     { to: '/support', label: 'Чат підтримки', icon: MessageSquareText },
 ];
 

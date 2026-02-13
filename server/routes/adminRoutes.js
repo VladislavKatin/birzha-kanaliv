@@ -15,6 +15,15 @@ const {
 } = require('../models');
 
 const ALLOWED_ROLES = new Set(['user', 'admin', 'suspended']);
+const ALLOWED_OFFER_STATUSES = new Set(['open', 'matched', 'completed']);
+const ALLOWED_MATCH_STATUSES = new Set(['pending', 'accepted', 'completed', 'rejected']);
+
+function parsePagination(req, defaultLimit = 20, maxLimit = 100) {
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || defaultLimit, 1), maxLimit);
+    const offset = (page - 1) * limit;
+    return { page, limit, offset };
+}
 
 /**
  * @route GET /api/admin/overview
@@ -347,6 +356,349 @@ router.patch('/users/:id/suspend', auth, admin, async (req, res) => {
     } catch (error) {
         console.error('Admin user suspension update error:', error);
         res.status(500).json({ error: 'Failed to update user suspension status' });
+    }
+});
+
+/**
+ * @route GET /api/admin/channels
+ * @description List channels for moderation.
+ * @access Private (admin)
+ */
+router.get('/channels', auth, admin, async (req, res) => {
+    try {
+        const { page, limit, offset } = parsePagination(req, 25, 100);
+        const search = String(req.query.search || '').trim();
+        const niche = String(req.query.niche || '').trim();
+        const language = String(req.query.language || '').trim();
+        const flagged = String(req.query.flagged || '').trim();
+
+        const where = {};
+        if (niche) where.niche = niche;
+        if (language) where.language = language;
+        if (flagged === 'true') where.isFlagged = true;
+        if (flagged === 'false') where.isFlagged = false;
+        if (search) {
+            where[Op.or] = [
+                { channelTitle: { [Op.iLike]: `%${search}%` } },
+                { channelId: { [Op.iLike]: `%${search}%` } },
+            ];
+        }
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const { rows, count } = await YouTubeAccount.findAndCountAll({
+                where,
+                include: [{ model: User, as: 'owner', attributes: ['id', 'displayName', 'email', 'role'] }],
+                order: [['createdAt', 'DESC']],
+                limit,
+                offset,
+                transaction,
+            });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_channels_list_opened',
+                details: { page, limit, search: search || null, niche: niche || null, language: language || null, flagged: flagged || null },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                page,
+                limit,
+                total: count,
+                pages: Math.max(Math.ceil(count / limit), 1),
+                channels: rows,
+            };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin channels list error:', error);
+        res.status(500).json({ error: 'Failed to load admin channels' });
+    }
+});
+
+/**
+ * @route PATCH /api/admin/channels/:id/flag
+ * @description Toggle channel moderation flag.
+ * @access Private (admin)
+ */
+router.patch('/channels/:id/flag', auth, admin, async (req, res) => {
+    try {
+        const isFlagged = Boolean(req.body.isFlagged);
+        const reason = String(req.body.reason || '').trim();
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const channel = await YouTubeAccount.findByPk(req.params.id, { transaction });
+            if (!channel) return null;
+
+            const previous = { isFlagged: channel.isFlagged, flagReason: channel.flagReason || null };
+            channel.isFlagged = isFlagged;
+            channel.flagReason = isFlagged ? (reason || 'Flagged by admin') : null;
+            await channel.save({ transaction });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_channel_flag_changed',
+                details: {
+                    channelId: channel.id,
+                    previous,
+                    next: { isFlagged: channel.isFlagged, flagReason: channel.flagReason || null },
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return channel;
+        });
+
+        if (!payload) return res.status(404).json({ error: 'Channel not found' });
+        res.json({ channel: payload });
+    } catch (error) {
+        console.error('Admin channel flag update error:', error);
+        res.status(500).json({ error: 'Failed to update channel flag' });
+    }
+});
+
+/**
+ * @route PATCH /api/admin/channels/:id/active
+ * @description Toggle channel active status.
+ * @access Private (admin)
+ */
+router.patch('/channels/:id/active', auth, admin, async (req, res) => {
+    try {
+        const isActive = Boolean(req.body.isActive);
+        const reason = String(req.body.reason || '').trim();
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const channel = await YouTubeAccount.findByPk(req.params.id, { transaction });
+            if (!channel) return null;
+
+            const previousIsActive = channel.isActive;
+            channel.isActive = isActive;
+            await channel.save({ transaction });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_channel_active_changed',
+                details: {
+                    channelId: channel.id,
+                    previousIsActive,
+                    nextIsActive: channel.isActive,
+                    reason: reason || null,
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return channel;
+        });
+
+        if (!payload) return res.status(404).json({ error: 'Channel not found' });
+        res.json({ channel: payload });
+    } catch (error) {
+        console.error('Admin channel active update error:', error);
+        res.status(500).json({ error: 'Failed to update channel status' });
+    }
+});
+
+/**
+ * @route GET /api/admin/offers
+ * @description List offers for moderation.
+ * @access Private (admin)
+ */
+router.get('/offers', auth, admin, async (req, res) => {
+    try {
+        const { page, limit, offset } = parsePagination(req, 25, 100);
+        const status = String(req.query.status || '').trim();
+        const type = String(req.query.type || '').trim();
+        const search = String(req.query.search || '').trim();
+
+        const where = {};
+        if (status) where.status = status;
+        if (type) where.type = type;
+        if (search) where.description = { [Op.iLike]: `%${search}%` };
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const { rows, count } = await TrafficOffer.findAndCountAll({
+                where,
+                include: [
+                    {
+                        model: YouTubeAccount,
+                        as: 'channel',
+                        attributes: ['id', 'channelId', 'channelTitle', 'subscribers', 'niche', 'language', 'isFlagged', 'isActive'],
+                        include: [{ model: User, as: 'owner', attributes: ['id', 'displayName', 'email', 'role'] }],
+                    },
+                ],
+                order: [['createdAt', 'DESC']],
+                limit,
+                offset,
+                transaction,
+            });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_offers_list_opened',
+                details: { page, limit, status: status || null, type: type || null, search: search || null },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                page,
+                limit,
+                total: count,
+                pages: Math.max(Math.ceil(count / limit), 1),
+                offers: rows,
+            };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin offers list error:', error);
+        res.status(500).json({ error: 'Failed to load admin offers' });
+    }
+});
+
+/**
+ * @route PATCH /api/admin/offers/:id/status
+ * @description Change offer status.
+ * @access Private (admin)
+ */
+router.patch('/offers/:id/status', auth, admin, async (req, res) => {
+    try {
+        const status = String(req.body.status || '').trim();
+        const reason = String(req.body.reason || '').trim();
+
+        if (!ALLOWED_OFFER_STATUSES.has(status)) {
+            return res.status(400).json({ error: 'Invalid offer status value' });
+        }
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const offer = await TrafficOffer.findByPk(req.params.id, { transaction });
+            if (!offer) return null;
+
+            const previousStatus = offer.status;
+            offer.status = status;
+            await offer.save({ transaction });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_offer_status_changed',
+                details: {
+                    offerId: offer.id,
+                    previousStatus,
+                    nextStatus: offer.status,
+                    reason: reason || null,
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return offer;
+        });
+
+        if (!payload) return res.status(404).json({ error: 'Offer not found' });
+        res.json({ offer: payload });
+    } catch (error) {
+        console.error('Admin offer status update error:', error);
+        res.status(500).json({ error: 'Failed to update offer status' });
+    }
+});
+
+/**
+ * @route GET /api/admin/matches
+ * @description List matches for moderation.
+ * @access Private (admin)
+ */
+router.get('/matches', auth, admin, async (req, res) => {
+    try {
+        const { page, limit, offset } = parsePagination(req, 25, 100);
+        const status = String(req.query.status || '').trim();
+
+        const where = {};
+        if (status) where.status = status;
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const { rows, count } = await TrafficMatch.findAndCountAll({
+                where,
+                include: [
+                    { model: TrafficOffer, as: 'offer', attributes: ['id', 'type', 'status', 'description'] },
+                    { model: YouTubeAccount, as: 'initiatorChannel', attributes: ['id', 'channelTitle', 'subscribers'] },
+                    { model: YouTubeAccount, as: 'targetChannel', attributes: ['id', 'channelTitle', 'subscribers'] },
+                ],
+                order: [['updatedAt', 'DESC']],
+                limit,
+                offset,
+                transaction,
+            });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_matches_list_opened',
+                details: { page, limit, status: status || null },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                page,
+                limit,
+                total: count,
+                pages: Math.max(Math.ceil(count / limit), 1),
+                matches: rows,
+            };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin matches list error:', error);
+        res.status(500).json({ error: 'Failed to load admin matches' });
+    }
+});
+
+/**
+ * @route PATCH /api/admin/matches/:id/status
+ * @description Change match status.
+ * @access Private (admin)
+ */
+router.patch('/matches/:id/status', auth, admin, async (req, res) => {
+    try {
+        const status = String(req.body.status || '').trim();
+        const reason = String(req.body.reason || '').trim();
+
+        if (!ALLOWED_MATCH_STATUSES.has(status)) {
+            return res.status(400).json({ error: 'Invalid match status value' });
+        }
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const match = await TrafficMatch.findByPk(req.params.id, { transaction });
+            if (!match) return null;
+
+            const previousStatus = match.status;
+            match.status = status;
+            if (status === 'completed' && !match.completedAt) {
+                match.completedAt = new Date();
+            }
+            if (status !== 'completed') {
+                match.completedAt = null;
+            }
+            await match.save({ transaction });
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_match_status_changed',
+                details: {
+                    matchId: match.id,
+                    previousStatus,
+                    nextStatus: match.status,
+                    reason: reason || null,
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return match;
+        });
+
+        if (!payload) return res.status(404).json({ error: 'Match not found' });
+        res.json({ match: payload });
+    } catch (error) {
+        console.error('Admin match status update error:', error);
+        res.status(500).json({ error: 'Failed to update match status' });
     }
 });
 
