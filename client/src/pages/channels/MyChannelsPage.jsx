@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
@@ -17,8 +17,8 @@ export default function MyChannelsPage() {
 
     async function loadChannels() {
         try {
-            const res = await api.get('/channels/my');
-            setChannels(res.data.channels || []);
+            const response = await api.get('/channels/my');
+            setChannels(response.data.channels || []);
         } catch (error) {
             console.error('Failed to load channels:', error);
         } finally {
@@ -29,7 +29,7 @@ export default function MyChannelsPage() {
     async function handleToggleActive(channelId, isActive) {
         try {
             await api.put(`/channels/${channelId}`, { isActive });
-            setChannels(prev => prev.map(c => c.id === channelId ? { ...c, isActive } : c));
+            setChannels((prev) => prev.map((channel) => (channel.id === channelId ? { ...channel, isActive } : channel)));
         } catch (error) {
             console.error('Toggle failed:', error);
         }
@@ -38,7 +38,7 @@ export default function MyChannelsPage() {
     async function handleDelete(channelId) {
         try {
             await api.delete(`/channels/${channelId}`);
-            setChannels(prev => prev.filter(c => c.id !== channelId));
+            setChannels((prev) => prev.filter((channel) => channel.id !== channelId));
         } catch (error) {
             console.error('Delete failed:', error);
         }
@@ -61,7 +61,7 @@ export default function MyChannelsPage() {
                     <p className="channels-subtitle">Управління підключеними YouTube-каналами</p>
                 </div>
                 <button className="btn btn-primary" onClick={connectYouTube}>
-                    ➕ Підключити канал
+                    Підключити канал
                 </button>
             </div>
 
@@ -69,14 +69,14 @@ export default function MyChannelsPage() {
                 <div className="channels-empty card">
                     <span className="channels-empty-icon">📺</span>
                     <h3>У вас ще немає каналів</h3>
-                    <p>Підключіть свій YouTube-канал для початку роботи</p>
+                    <p>Підключіть свій YouTube-канал для початку роботи.</p>
                     <button className="btn btn-primary" onClick={connectYouTube}>
-                        Підключити YouTube канал
+                        Підключити YouTube-канал
                     </button>
                 </div>
             ) : (
                 <div className="channels-grid">
-                    {channels.map(channel => (
+                    {channels.map((channel) => (
                         <ChannelCard
                             key={channel.id}
                             channel={channel}

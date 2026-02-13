@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import TrustLevelCard from './TrustLevelCard';
@@ -49,18 +49,18 @@ export default function DashboardPage() {
         <div className="dashboard-page">
             <div className="dashboard-header">
                 <h1>Дашборд</h1>
-                <p className="dashboard-subtitle">Огляд активності вашого акаунта на платформі</p>
+                <p className="dashboard-subtitle">Найважливіші метрики та події вашого акаунта</p>
             </div>
 
             <div className="dashboard-grid">
                 <div className="dashboard-col-left">
-                    <TrustLevelCard trustLevel={stats?.trustLevel} />
-                    <PartnerRecommendations />
+                    <StatsGrid stats={stats?.stats} />
+                    <RecentActivity events={activity} />
                 </div>
                 <div className="dashboard-col-right">
-                    <StatsGrid stats={stats?.stats} />
+                    <TrustLevelCard trustLevel={stats?.trustLevel} />
                     <InfluenceChart />
-                    <RecentActivity events={activity} />
+                    <PartnerRecommendations />
                 </div>
             </div>
         </div>

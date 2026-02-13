@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+﻿import { useEffect, useRef, useState } from 'react';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import useGlobalSocket from '../../hooks/useGlobalSocket';
@@ -16,6 +16,13 @@ const navItems = [
     { path: '/exchanges', label: 'Обміни', description: 'Активні угоди та їх статус', icon: 'handshake' },
     { path: '/profile/edit', label: 'Профіль', description: 'Редагування інформації про вас', icon: 'user' },
     { path: '/settings/notifications', label: 'Сповіщення', description: 'Канали отримання сповіщень', icon: 'bell' },
+];
+
+const topLinks = [
+    { to: '/offers', label: 'Каталог' },
+    { to: '/my-channels', label: 'Мої канали' },
+    { to: '/exchanges', label: 'Обміни' },
+    { to: '/blog', label: 'Блог' },
 ];
 
 export default function DashboardLayout() {
@@ -52,12 +59,12 @@ export default function DashboardLayout() {
 
             <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <div className="sidebar-logo">
+                    <Link to="/" className="sidebar-logo" onClick={() => setSidebarOpen(false)} aria-label="Перейти на лендинг">
                         <span className="logo-icon" aria-hidden="true">
                             <Icon name="youtube" size={18} />
                         </span>
                         <span className="logo-text">Біржа Каналів</span>
-                    </div>
+                    </Link>
                 </div>
 
                 <nav className="sidebar-nav">
@@ -102,6 +109,14 @@ export default function DashboardLayout() {
                     <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Меню">
                         <Icon name="filter" size={18} />
                     </button>
+
+                    <div className="topbar-links" aria-label="Швидка навігація">
+                        {topLinks.map((item) => (
+                            <Link key={item.to} to={item.to} className="topbar-link">
+                                {item.label}
+                            </Link>
+                        ))}
+                    </div>
 
                     <div className="topbar-right">
                         <button

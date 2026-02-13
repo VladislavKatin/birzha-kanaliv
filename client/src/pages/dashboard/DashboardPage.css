@@ -7,7 +7,7 @@
 }
 
 .dashboard-header h1 {
-    font-size: clamp(26px, 3vw, 34px);
+    font-size: clamp(24px, 2.5vw, 30px);
     font-weight: 800;
     letter-spacing: -0.03em;
     margin-bottom: 4px;
@@ -16,12 +16,12 @@
 
 .dashboard-subtitle {
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 340px 1fr;
+    grid-template-columns: 1.15fr 0.85fr;
     gap: 20px;
     align-items: start;
 }
@@ -76,7 +76,7 @@
 }
 
 .trust-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -212,7 +212,7 @@
 }
 
 .stat-value {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.25;
@@ -229,7 +229,7 @@
 }
 
 .activity-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     margin-bottom: 14px;
     color: var(--text-primary);
@@ -285,7 +285,7 @@
 }
 
 .activity-item-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--text-primary);
     white-space: nowrap;
@@ -294,7 +294,7 @@
 }
 
 .activity-item-preview {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;

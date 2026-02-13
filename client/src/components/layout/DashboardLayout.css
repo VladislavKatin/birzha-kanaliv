@@ -15,6 +15,7 @@
     --shadow-glow: 0 10px 30px rgba(0, 91, 187, 0.14);
     --shadow-md: 0 10px 24px rgba(16, 47, 86, 0.08);
     --shadow-lg: 0 20px 40px rgba(16, 47, 86, 0.14);
+    font-size: 14px;
 
     display: flex;
     min-height: 100vh;
@@ -95,6 +96,7 @@
     display: flex;
     align-items: center;
     gap: 11px;
+    text-decoration: none;
 }
 
 .logo-icon {
@@ -168,12 +170,11 @@
 
 .nav-desc {
     font-size: 11px;
-    line-height: 1.25;
+    line-height: 1.35;
     color: var(--text-muted);
     margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .nav-item.active .nav-desc {
@@ -286,6 +287,33 @@
     align-items: center;
     gap: 12px;
     position: relative;
+}
+
+.topbar-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+.topbar-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-2);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.topbar-link:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    background: #ffffff;
 }
 
 .notifications-btn {
@@ -446,6 +474,10 @@
 
     .topbar {
         padding: 0 14px;
+    }
+
+    .topbar-links {
+        display: none;
     }
 
     .topbar-greeting {

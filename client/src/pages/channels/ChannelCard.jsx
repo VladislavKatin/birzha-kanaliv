@@ -1,22 +1,22 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import './ChannelsPage.css';
 
 function formatNumber(num) {
     if (!num) return '0';
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
 }
 
 function getInfluenceScore(channel) {
-    const subs = channel.subscribers || 0;
+    const subscribers = channel.subscribers || 0;
     const avgViews = channel.avgViews30d || 0;
-    const er = subs > 0 ? (avgViews / subs) * 100 : 0;
+    const engagementRate = subscribers > 0 ? (avgViews / subscribers) * 100 : 0;
 
-    if (er > 20 && subs > 10000) return { score: 'A+', color: 'var(--score-a-plus)' };
-    if (er > 10 && subs > 5000) return { score: 'A', color: 'var(--score-a)' };
-    if (er > 5 && subs > 1000) return { score: 'B', color: 'var(--score-b)' };
-    if (er > 2) return { score: 'C', color: 'var(--score-c)' };
+    if (engagementRate > 20 && subscribers > 10000) return { score: 'A+', color: 'var(--score-a-plus)' };
+    if (engagementRate > 10 && subscribers > 5000) return { score: 'A', color: 'var(--score-a)' };
+    if (engagementRate > 5 && subscribers > 1000) return { score: 'B', color: 'var(--score-b)' };
+    if (engagementRate > 2) return { score: 'C', color: 'var(--score-c)' };
     return { score: 'D', color: 'var(--score-d)' };
 }
 
@@ -42,9 +42,13 @@ export default function ChannelCard({ channel, onToggleActive, onDelete, onViewD
                         <div className="channel-card-name-row">
                             <h3 className="channel-card-name">{channel.channelTitle}</h3>
                             {channel.verified ? (
-                                <span className="verified-badge" title="Верифікований">✅</span>
+                                <span className="verified-badge" title="Верифікований">
+                                    ✅
+                                </span>
                             ) : (
-                                <span className="unverified-badge" title="Не верифікований">❌</span>
+                                <span className="unverified-badge" title="Не верифікований">
+                                    ❌
+                                </span>
                             )}
                         </div>
                         {channel.niche && <span className="channel-card-niche">{channel.niche}</span>}
@@ -71,34 +75,41 @@ export default function ChannelCard({ channel, onToggleActive, onDelete, onViewD
                         <input
                             type="checkbox"
                             checked={channel.isActive ?? true}
-                            onChange={(e) => onToggleActive(channel.id, e.target.checked)}
+                            onChange={(event) => onToggleActive(channel.id, event.target.checked)}
                         />
                         <span className="toggle-slider" />
-                        <span className="toggle-label">
-                            {channel.isActive ? 'Активний' : 'Неактивний'}
-                        </span>
+                        <span className="toggle-label">{channel.isActive ? 'Активний' : 'Неактивний'}</span>
                     </label>
                 </div>
 
                 <div className="channel-card-actions">
                     <button className="btn btn-secondary btn-sm" onClick={onViewDetail}>
-                        📊 Детальна аналітика
+                        Детальна аналітика
                     </button>
                     <button className="btn btn-danger btn-sm" onClick={() => setShowDeleteModal(true)}>
-                        🗑 Видалити
+                        Видалити
                     </button>
                 </div>
             </div>
 
-            {/* Delete confirmation modal */}
             {showDeleteModal && (
                 <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                    <div className="modal-content" onClick={(event) => event.stopPropagation()}>
                         <h3>Видалити канал?</h3>
-                        <p>Ви впевнені, що хочете видалити <strong>{channel.channelTitle}</strong>? Цю дію не можна скасувати.</p>
+                        <p>
+                            Ви впевнені, що хочете видалити <strong>{channel.channelTitle}</strong>? Цю дію неможливо скасувати.
+                        </p>
                         <div className="modal-actions">
-                            <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>Скасувати</button>
-                            <button className="btn btn-danger" onClick={() => { onDelete(channel.id); setShowDeleteModal(false); }}>
+                            <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
+                                Скасувати
+                            </button>
+                            <button
+                                className="btn btn-danger"
+                                onClick={() => {
+                                    onDelete(channel.id);
+                                    setShowDeleteModal(false);
+                                }}
+                            >
                                 Видалити
                             </button>
                         </div>
