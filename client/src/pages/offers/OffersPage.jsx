@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
@@ -30,18 +30,7 @@ export default function OffersPage() {
     const [myChannels, setMyChannels] = useState([]);
     const [selectedChannelId, setSelectedChannelId] = useState('');
 
-    useEffect(() => {
-        loadOffers();
-        if (user) {
-            loadMyChannels();
-        }
-    }, []);
-
-    useEffect(() => {
-        loadOffers();
-    }, [filter]);
-
-    async function loadOffers() {
+    const loadOffers = useCallback(async () => {
         try {
             const params = new URLSearchParams();
             if (filter.niche) {
@@ -55,9 +44,9 @@ export default function OffersPage() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [filter.niche]);
 
-    async function loadMyChannels() {
+    const loadMyChannels = useCallback(async () => {
         try {
             const response = await api.get('/channels/my');
             const channels = response.data.channels || [];
@@ -68,7 +57,17 @@ export default function OffersPage() {
         } catch (error) {
             console.error('Failed to load channels:', error);
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        loadOffers();
+    }, [loadOffers]);
+
+    useEffect(() => {
+        if (user) {
+            loadMyChannels();
+        }
+    }, [user, loadMyChannels]);
 
     async function handleCreateOffer() {
         if (!selectedChannelId) {
@@ -219,11 +218,7 @@ export default function OffersPage() {
 
                         <div className="form-group">
                             <label className="form-label">Тип обміну</label>
-                            <select
-                                className="filter-select full-width"
-                                value={createForm.type}
-                                onChange={(event) => setCreateForm((prev) => ({ ...prev, type: event.target.value }))}
-                            >
+                            <select className="filter-select full-width" value={createForm.type} onChange={(event) => setCreateForm((prev) => ({ ...prev, type: event.target.value }))}>
                                 <option value="subs">Підписники</option>
                                 <option value="views">Перегляди</option>
                             </select>
@@ -258,9 +253,7 @@ export default function OffersPage() {
                                     type="number"
                                     className="filter-input full-width"
                                     value={createForm.minSubscribers}
-                                    onChange={(event) =>
-                                        setCreateForm((prev) => ({ ...prev, minSubscribers: parseInt(event.target.value, 10) || 0 }))
-                                    }
+                                    onChange={(event) => setCreateForm((prev) => ({ ...prev, minSubscribers: parseInt(event.target.value, 10) || 0 }))}
                                 />
                             </div>
                             <div className="form-group">
@@ -269,9 +262,7 @@ export default function OffersPage() {
                                     type="number"
                                     className="filter-input full-width"
                                     value={createForm.maxSubscribers}
-                                    onChange={(event) =>
-                                        setCreateForm((prev) => ({ ...prev, maxSubscribers: parseInt(event.target.value, 10) || 0 }))
-                                    }
+                                    onChange={(event) => setCreateForm((prev) => ({ ...prev, maxSubscribers: parseInt(event.target.value, 10) || 0 }))}
                                 />
                             </div>
                         </div>

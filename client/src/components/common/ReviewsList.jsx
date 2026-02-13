@@ -1,59 +1,82 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import api from '../../services/api';
+
+function renderStars(rating) {
+    const safeRating = Math.max(0, Math.min(5, Number(rating) || 0));
+    return `${'★'.repeat(safeRating)}${'☆'.repeat(5 - safeRating)}`;
+}
 
 export default function ReviewsList({ channelIds }) {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadReviews();
-    }, [channelIds]);
+        let cancelled = false;
 
-    async function loadReviews() {
-        if (!channelIds?.length) { setLoading(false); return; }
-        try {
-            // Load reviews for all channels
-            const all = [];
-            for (const cid of channelIds) {
-                const res = await api.get(`/reviews/channel/${cid}`);
-                all.push(...(res.data.reviews || []));
+        async function loadReviews() {
+            if (!channelIds?.length) {
+                if (!cancelled) {
+                    setLoading(false);
+                    setReviews([]);
+                }
+                return;
             }
-            // Sort by date, deduplicate by id
-            const unique = [];
-            const seen = new Set();
-            for (const r of all.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))) {
-                if (!seen.has(r.id)) { seen.add(r.id); unique.push(r); }
+
+            setLoading(true);
+            try {
+                const all = [];
+                for (const cid of channelIds) {
+                    const res = await api.get(`/reviews/channel/${cid}`);
+                    all.push(...(res.data.reviews || []));
+                }
+
+                const unique = [];
+                const seen = new Set();
+                for (const review of all.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))) {
+                    if (!seen.has(review.id)) {
+                        seen.add(review.id);
+                        unique.push(review);
+                    }
+                }
+
+                if (!cancelled) {
+                    setReviews(unique);
+                }
+            } catch (error) {
+                console.error('Failed to load reviews:', error);
+                if (!cancelled) {
+                    setReviews([]);
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
             }
-            setReviews(unique);
-        } catch (error) {
-            console.error('Failed to load reviews:', error);
-        } finally {
-            setLoading(false);
         }
-    }
+
+        loadReviews();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [channelIds]);
 
     if (loading) return <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Завантаження відгуків...</p>;
     if (reviews.length === 0) return <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Ще немає відгуків</p>;
 
     return (
         <div className="reviews-list">
-            {reviews.map(r => (
-                <div key={r.id} className="review-item">
+            {reviews.map((review) => (
+                <div key={review.id} className="review-item">
                     <div className="review-header">
-                        <img
-                            src={r.fromChannel?.channelAvatar || ''}
-                            alt=""
-                            className="review-avatar"
-                        />
+                        <img src={review.fromChannel?.channelAvatar || ''} alt="" className="review-avatar" />
                         <div className="review-meta">
-                            <span className="review-author">{r.fromChannel?.channelTitle || 'Канал'}</span>
-                            <span className="review-date">{new Date(r.createdAt).toLocaleDateString('uk-UA')}</span>
+                            <span className="review-author">{review.fromChannel?.channelTitle || 'Канал'}</span>
+                            <span className="review-date">{new Date(review.createdAt).toLocaleDateString('uk-UA')}</span>
                         </div>
-                        <div className="review-stars">
-                            {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
-                        </div>
+                        <div className="review-stars">{renderStars(review.rating)}</div>
                     </div>
-                    {r.comment && <p className="review-text">{r.comment}</p>}
+                    {review.comment && <p className="review-text">{review.comment}</p>}
                 </div>
             ))}
         </div>

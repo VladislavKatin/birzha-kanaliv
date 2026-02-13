@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -17,12 +17,12 @@ export default function NotificationSettingsPage() {
 
     useEffect(() => {
         if (dbUser?.notificationPrefs) {
-            setPrefs(prev => ({ ...prev, ...dbUser.notificationPrefs }));
+            setPrefs((prev) => ({ ...prev, ...dbUser.notificationPrefs }));
         }
     }, [dbUser]);
 
     function toggle(key) {
-        setPrefs(prev => ({ ...prev, [key]: !prev[key] }));
+        setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
     }
 
     async function handleSave() {
@@ -30,7 +30,7 @@ export default function NotificationSettingsPage() {
         try {
             await api.put('/profile/notifications', { notificationPrefs: prefs });
             toast.success('Сповіщення збережено');
-        } catch (error) {
+        } catch {
             toast.error('Не вдалося зберегти');
         } finally {
             setSaving(false);
@@ -42,14 +42,13 @@ export default function NotificationSettingsPage() {
             <div className="settings-header">
                 <h1>Сповіщення</h1>
                 <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-                    {saving ? 'Збереження...' : '💾 Зберегти'}
+                    {saving ? 'Збереження...' : 'Зберегти'}
                 </button>
             </div>
 
-            {/* Telegram */}
             <div className="card settings-section">
-                <h3>✈️ Telegram</h3>
-                <p className="section-desc">Отримуйте миттєві сповіщення через Telegram-бот</p>
+                <h3>Telegram</h3>
+                <p className="section-desc">Отримуйте миттєві сповіщення через Telegram-бота</p>
                 <div className="toggle-row">
                     <span>Telegram-сповіщення</span>
                     <button className={`toggle-switch ${prefs.telegram ? 'on' : ''}`} onClick={() => toggle('telegram')}>
@@ -58,14 +57,17 @@ export default function NotificationSettingsPage() {
                 </div>
                 {prefs.telegram && (
                     <div className="connect-hint">
-                        <span>🔗</span> Для активації перейдіть у бот <a href="https://t.me/youtoobe_bot" target="_blank" rel="noopener noreferrer">@youtoobe_bot</a> та надішліть /start
+                        <span>Посилання:</span>{' '}
+                        <a href="https://t.me/youtoobe_bot" target="_blank" rel="noopener noreferrer">
+                            @youtoobe_bot
+                        </a>{' '}
+                        та команда `/start`
                     </div>
                 )}
             </div>
 
-            {/* Web Push */}
             <div className="card settings-section">
-                <h3>🔔 Push-сповіщення</h3>
+                <h3>Push-сповіщення</h3>
                 <p className="section-desc">Сповіщення в браузері навіть коли вкладка закрита</p>
                 <div className="toggle-row">
                     <span>Push-сповіщення</span>
@@ -75,9 +77,8 @@ export default function NotificationSettingsPage() {
                 </div>
             </div>
 
-            {/* Email */}
             <div className="card settings-section">
-                <h3>📧 Email-сповіщення</h3>
+                <h3>Email-сповіщення</h3>
                 <p className="section-desc">Оберіть, про що вас сповіщати на email</p>
                 <div className="toggle-row">
                     <span>Нова пропозиція обміну</span>

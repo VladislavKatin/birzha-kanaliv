@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -6,7 +6,7 @@ import './SwapsPage.css';
 
 function formatNumber(num) {
     if (!num) return '0';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
 }
 
@@ -35,8 +35,8 @@ export default function OutgoingSwapsPage() {
 
     async function loadSwaps() {
         try {
-            const res = await api.get('/swaps/outgoing');
-            setSwaps(res.data.swaps || []);
+            const response = await api.get('/swaps/outgoing');
+            setSwaps(response.data.swaps || []);
         } catch (error) {
             console.error('Failed to load outgoing swaps:', error);
         } finally {
@@ -48,8 +48,8 @@ export default function OutgoingSwapsPage() {
         try {
             await api.post(`/swaps/${swapId}/decline`);
             toast.success('Пропозицію скасовано');
-            setSwaps(prev => prev.filter(s => s.id !== swapId));
-        } catch (error) {
+            setSwaps((prev) => prev.filter((item) => item.id !== swapId));
+        } catch {
             toast.error('Не вдалося скасувати пропозицію');
         }
     }
@@ -66,7 +66,7 @@ export default function OutgoingSwapsPage() {
     return (
         <div className="swaps-page">
             <div className="swaps-header">
-                <h1>Вихідні пропозиції</h1>
+                <h1>Вихідні запити</h1>
                 <p className="swaps-subtitle">Ваші відгуки на пропозиції обміну</p>
             </div>
 
@@ -74,20 +74,21 @@ export default function OutgoingSwapsPage() {
                 <div className="swaps-empty card">
                     <span className="swaps-empty-icon">📤</span>
                     <h3>Немає вихідних пропозицій</h3>
-                    <p>Знайдіть партнера в <button className="link-btn" onClick={() => navigate('/offers')}>каталозі пропозицій</button></p>
+                    <p>
+                        Знайдіть партнера в{' '}
+                        <button className="link-btn" onClick={() => navigate('/offers')}>
+                            каталозі пропозицій
+                        </button>
+                    </p>
                 </div>
             ) : (
                 <div className="swaps-list">
-                    {swaps.map(swap => {
+                    {swaps.map((swap) => {
                         const status = statusLabels[swap.status] || statusLabels.pending;
                         return (
                             <div key={swap.id} className="swap-item card">
                                 <div className="swap-item-channel">
-                                    <img
-                                        src={swap.targetChannel?.channelAvatar || ''}
-                                        alt=""
-                                        className="swap-item-avatar"
-                                    />
+                                    <img src={swap.targetChannel?.channelAvatar || ''} alt="" className="swap-item-avatar" />
                                     <div className="swap-item-info">
                                         <span className="swap-item-name">{swap.targetChannel?.channelTitle || 'Канал'}</span>
                                         <span className="swap-item-subs">{formatNumber(swap.targetChannel?.subscribers)} підписників</span>
@@ -103,18 +104,12 @@ export default function OutgoingSwapsPage() {
 
                                 <div className="swap-item-actions">
                                     {swap.status === 'accepted' ? (
-                                        <button
-                                            className="btn btn-primary btn-sm"
-                                            onClick={() => navigate(`/chat/${swap.id}`)}
-                                        >
-                                            💬 Перейти до чату
+                                        <button className="btn btn-primary btn-sm" onClick={() => navigate(`/chat/${swap.id}`)}>
+                                            Перейти до чату
                                         </button>
                                     ) : (
-                                        <button
-                                            className="btn btn-secondary btn-sm"
-                                            onClick={() => handleCancel(swap.id)}
-                                        >
-                                            ❌ Скасувати
+                                        <button className="btn btn-secondary btn-sm" onClick={() => handleCancel(swap.id)}>
+                                            Скасувати
                                         </button>
                                     )}
                                 </div>

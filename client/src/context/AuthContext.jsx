@@ -1,3 +1,4 @@
+﻿/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 import {
     auth,
@@ -18,7 +19,6 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Sync with backend after Firebase auth
     async function syncWithBackend() {
         try {
             const response = await api.post('/auth/login', {});
@@ -28,10 +28,10 @@ export function AuthProvider({ children }) {
             return response.data;
         } catch (err) {
             console.error('Backend sync failed:', err);
+            return null;
         }
     }
 
-    // Listen for auth state changes
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             setUser(firebaseUser);
@@ -44,10 +44,10 @@ export function AuthProvider({ children }) {
             }
             setLoading(false);
         });
+
         return () => unsubscribe();
     }, []);
 
-    // Sign in with Google
     async function signInWithGoogle() {
         setError(null);
         try {
@@ -60,7 +60,6 @@ export function AuthProvider({ children }) {
         }
     }
 
-    // Sign out
     async function signOut() {
         try {
             await firebaseSignOut(auth);
@@ -73,7 +72,6 @@ export function AuthProvider({ children }) {
         }
     }
 
-    // Connect YouTube channel
     async function connectYouTube() {
         try {
             const response = await api.get('/youtube/connect');
@@ -84,7 +82,6 @@ export function AuthProvider({ children }) {
         }
     }
 
-    // Refresh user data (after YouTube connect callback)
     async function refreshUserData() {
         if (user) {
             await syncWithBackend();
@@ -97,6 +94,7 @@ export function AuthProvider({ children }) {
             'auth/network-request-failed': 'Помилка мережі',
             'auth/too-many-requests': 'Забагато спроб. Спробуйте пізніше',
         };
+
         return messages[code] || 'Сталася помилка. Спробуйте ще раз.';
     }
 
@@ -113,11 +111,7 @@ export function AuthProvider({ children }) {
         refreshUserData,
     };
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

@@ -32,11 +32,14 @@ function createRateLimiter({
 
 function isLocalRequest(req) {
     const host = String(req.hostname || '').toLowerCase();
+    const origin = String(req.headers.origin || '').toLowerCase();
     const ip = String(req.ip || '');
     const forwardedFor = String(req.headers['x-forwarded-for'] || '');
     return (
         host === 'localhost' ||
         host === '127.0.0.1' ||
+        origin.startsWith('http://localhost:') ||
+        origin.startsWith('http://127.0.0.1:') ||
         ip === '127.0.0.1' ||
         ip === '::1' ||
         ip.endsWith(':127.0.0.1') ||

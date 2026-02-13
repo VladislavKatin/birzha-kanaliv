@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import useSocket from '../../hooks/useSocket';
@@ -49,15 +49,7 @@ export default function ChatPage() {
     const [sending, setSending] = useState(false);
     const [showDisclaimer, setShowDisclaimer] = useState(false);
 
-    useEffect(() => {
-        loadChat();
-    }, [transactionId]);
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [socketMessages]);
-
-    async function loadChat() {
+    const loadChat = useCallback(async () => {
         try {
             const response = await api.get(`/chat/${transactionId}/messages`);
             setChatData(response.data);
@@ -68,7 +60,15 @@ export default function ChatPage() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [transactionId, setMessages]);
+
+    useEffect(() => {
+        loadChat();
+    }, [loadChat]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [socketMessages]);
 
     function scrollToBottom() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -357,3 +357,4 @@ export default function ChatPage() {
         </div>
     );
 }
+

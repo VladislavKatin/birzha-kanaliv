@@ -168,7 +168,7 @@ router.post('/:matchId/complete', auth, async (req, res) => {
         const { match, channelIds } = result;
 
         if (match.status !== 'accepted') {
-            return res.status(400).json({ error: 'РћР±РјС–РЅ РјР°С” Р±СѓС‚Рё РїСЂРёР№РЅСЏС‚РёР№ РґР»СЏ Р·Р°РІРµСЂС€РµРЅРЅСЏ' });
+            return res.status(400).json({ error: 'Обмін має бути прийнятий для завершення' });
         }
 
         const isInitiator = channelIds.includes(match.initiatorChannelId);

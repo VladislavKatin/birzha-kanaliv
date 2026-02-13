@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../../services/api';
@@ -6,19 +6,20 @@ import './ChannelsPage.css';
 
 function formatNumber(num) {
     if (!num) return '0';
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
 }
 
 function getInfluenceScore(channel) {
     const subs = channel.subscribers || 0;
     const avgViews = channel.avgViews30d || 0;
-    const er = subs > 0 ? (avgViews / subs) * 100 : 0;
-    if (er > 20 && subs > 10000) return { score: 'A+', color: 'var(--score-a-plus)' };
-    if (er > 10 && subs > 5000) return { score: 'A', color: 'var(--score-a)' };
-    if (er > 5 && subs > 1000) return { score: 'B', color: 'var(--score-b)' };
-    if (er > 2) return { score: 'C', color: 'var(--score-c)' };
+    const engagement = subs > 0 ? (avgViews / subs) * 100 : 0;
+
+    if (engagement > 20 && subs > 10000) return { score: 'A+', color: 'var(--score-a-plus)' };
+    if (engagement > 10 && subs > 5000) return { score: 'A', color: 'var(--score-a)' };
+    if (engagement > 5 && subs > 1000) return { score: 'B', color: 'var(--score-b)' };
+    if (engagement > 2) return { score: 'C', color: 'var(--score-c)' };
     return { score: 'D', color: 'var(--score-d)' };
 }
 
@@ -29,20 +30,20 @@ export default function ChannelDetailPage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    useEffect(() => {
-        loadChannel();
-    }, [id]);
-
-    async function loadChannel() {
+    const loadChannel = useCallback(async () => {
         try {
-            const res = await api.get(`/channels/${id}`);
-            setData(res.data);
+            const response = await api.get(`/channels/${id}`);
+            setData(response.data);
         } catch (error) {
             console.error('Failed to load channel:', error);
         } finally {
             setLoading(false);
         }
-    }
+    }, [id]);
+
+    useEffect(() => {
+        loadChannel();
+    }, [loadChannel]);
 
     async function handleRefresh() {
         setRefreshing(true);
@@ -59,7 +60,7 @@ export default function ChannelDetailPage() {
     async function handleToggleActive(isActive) {
         try {
             await api.put(`/channels/${id}`, { isActive });
-            setData(prev => ({ ...prev, channel: { ...prev.channel, isActive } }));
+            setData((prev) => ({ ...prev, channel: { ...prev.channel, isActive } }));
         } catch (error) {
             console.error('Toggle failed:', error);
         }
@@ -67,6 +68,7 @@ export default function ChannelDetailPage() {
 
     async function handleDelete() {
         if (!confirm('Видалити канал? Цю дію не можна скасувати.')) return;
+
         try {
             await api.delete(`/channels/${id}`);
             navigate('/my-channels');
@@ -95,23 +97,23 @@ export default function ChannelDetailPage() {
         );
     }
 
-    const { channel, reviews, rating, swapHistory } = data;
+    const { channel, rating, swapHistory } = data;
     const influence = getInfluenceScore(channel);
 
-    // Generate mock chart data from current stats (since we don't have historical data)
-    const chartData = Array.from({ length: 28 }, (_, i) => ({
-        day: `Д${i + 1}`,
-        subs: Math.max(0, (channel.subscribers || 0) - (channel.subGrowth30d || 0) + Math.round(((channel.subGrowth30d || 0) / 28) * (i + 1) + (Math.random() - 0.5) * 20)),
+    const chartData = Array.from({ length: 28 }, (_, index) => ({
+        day: `Д${index + 1}`,
+        subs: Math.max(
+            0,
+            (channel.subscribers || 0) - (channel.subGrowth30d || 0) + Math.round(((channel.subGrowth30d || 0) / 28) * (index + 1) + (Math.random() - 0.5) * 20),
+        ),
     }));
 
     return (
         <div className="channel-detail-page">
-            {/* Back button */}
             <button className="btn btn-secondary btn-sm" onClick={() => navigate('/my-channels')} style={{ marginBottom: 20 }}>
                 ← Назад до каналів
             </button>
 
-            {/* Header */}
             <div className="channel-detail-header card">
                 <img
                     src={channel.channelAvatar || `https://ui-avatars.com/api/?name=${channel.channelTitle}&background=4f46e5&color=fff`}
@@ -124,7 +126,7 @@ export default function ChannelDetailPage() {
                         <div className="influence-badge-lg" style={{ background: influence.color }}>
                             {influence.score}
                         </div>
-                        {channel.verified && <span className="verified-badge">✅ Верифікований</span>}
+                        {channel.verified && <span className="verified-badge">Верифікований</span>}
                     </div>
                     {channel.description && <p className="channel-detail-desc">{channel.description}</p>}
                     <div className="channel-detail-meta">
@@ -135,7 +137,6 @@ export default function ChannelDetailPage() {
                 </div>
             </div>
 
-            {/* Stats */}
             <div className="channel-detail-stats">
                 <div className="detail-stat card">
                     <span className="detail-stat-value">{formatNumber(channel.subscribers)}</span>
@@ -154,17 +155,16 @@ export default function ChannelDetailPage() {
                     <span className="detail-stat-label">Ріст підписників/30д</span>
                 </div>
                 <div className="detail-stat card">
-                    <span className="detail-stat-value">{channel.ctr ? channel.ctr.toFixed(1) + '%' : '—'}</span>
+                    <span className="detail-stat-value">{channel.ctr ? `${channel.ctr.toFixed(1)}%` : '—'}</span>
                     <span className="detail-stat-label">CTR</span>
                 </div>
                 <div className="detail-stat card">
-                    <span className="detail-stat-value">{rating?.average || 0} ⭐</span>
+                    <span className="detail-stat-value">{rating?.average || 0} ★</span>
                     <span className="detail-stat-label">Рейтинг ({rating?.count || 0})</span>
                 </div>
             </div>
 
-            {/* Subscribers Chart */}
-            <div className="card" style={{ padding: '24px' }}>
+            <div className="card" style={{ padding: 24 }}>
                 <h3 style={{ marginBottom: 16, fontSize: 15, fontWeight: 600 }}>Динаміка підписників (28 днів)</h3>
                 <ResponsiveContainer width="100%" height={250}>
                     <LineChart data={chartData}>
@@ -184,13 +184,12 @@ export default function ChannelDetailPage() {
                 </ResponsiveContainer>
             </div>
 
-            {/* Recent Videos */}
             {channel.recentVideos && channel.recentVideos.length > 0 && (
                 <div className="card" style={{ padding: 24 }}>
                     <h3 style={{ marginBottom: 16, fontSize: 15, fontWeight: 600 }}>Останні відео</h3>
                     <div className="recent-videos-list">
-                        {channel.recentVideos.slice(0, 5).map((video, i) => (
-                            <div key={i} className="recent-video-item">
+                        {channel.recentVideos.slice(0, 5).map((video, index) => (
+                            <div key={index} className="recent-video-item">
                                 {video.thumbnail && <img src={video.thumbnail} alt="" className="video-thumb" />}
                                 <div className="video-info">
                                     <span className="video-title">{video.title || 'Без назви'}</span>
@@ -204,20 +203,15 @@ export default function ChannelDetailPage() {
                 </div>
             )}
 
-            {/* Swap History */}
             {swapHistory && swapHistory.length > 0 && (
                 <div className="card" style={{ padding: 24 }}>
                     <h3 style={{ marginBottom: 16, fontSize: 15, fontWeight: 600 }}>Історія обмінів</h3>
                     <div className="swap-history-list">
-                        {swapHistory.map(swap => {
+                        {swapHistory.map((swap) => {
                             const partner = swap.initiatorChannelId === channel.id ? swap.targetChannel : swap.initiatorChannel;
                             return (
                                 <div key={swap.id} className="swap-history-item">
-                                    <img
-                                        src={partner?.channelAvatar || ''}
-                                        alt=""
-                                        className="swap-partner-avatar"
-                                    />
+                                    <img src={partner?.channelAvatar || ''} alt="" className="swap-partner-avatar" />
                                     <div className="swap-partner-info">
                                         <span className="swap-partner-name">{partner?.channelTitle || 'Канал'}</span>
                                         <span className="swap-partner-subs">{formatNumber(partner?.subscribers || 0)} підписників</span>
@@ -232,34 +226,28 @@ export default function ChannelDetailPage() {
                 </div>
             )}
 
-            {/* Settings */}
             <div className="channel-settings card">
                 <h3 style={{ marginBottom: 16, fontSize: 15, fontWeight: 600 }}>Налаштування</h3>
                 <div className="settings-row">
                     <label className="toggle-switch">
-                        <input
-                            type="checkbox"
-                            checked={channel.isActive ?? true}
-                            onChange={(e) => handleToggleActive(e.target.checked)}
-                        />
+                        <input type="checkbox" checked={channel.isActive ?? true} onChange={(event) => handleToggleActive(event.target.checked)} />
                         <span className="toggle-slider" />
                         <span className="toggle-label">Активний для обміну</span>
                     </label>
                 </div>
                 <div className="settings-actions">
                     <button className="btn btn-secondary" onClick={handleRefresh} disabled={refreshing}>
-                        {refreshing ? '⏳ Оновлення...' : '🔄 Оновити статистику'}
+                        {refreshing ? 'Оновлення...' : 'Оновити статистику'}
                     </button>
                     <button className="btn btn-danger" onClick={handleDelete}>
-                        🗑 Видалити канал
+                        Видалити канал
                     </button>
                 </div>
                 {channel.lastAnalyticsUpdate && (
-                    <p className="settings-note">
-                        Останнє оновлення: {new Date(channel.lastAnalyticsUpdate).toLocaleString('uk-UA')}
-                    </p>
+                    <p className="settings-note">Останнє оновлення: {new Date(channel.lastAnalyticsUpdate).toLocaleString('uk-UA')}</p>
                 )}
             </div>
         </div>
     );
 }
+

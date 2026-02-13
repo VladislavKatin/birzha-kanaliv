@@ -1,17 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+﻿import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import './ExchangesPage.css';
 
 function formatNumber(num) {
     if (!num) return '0';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
 }
 
 export default function ExchangesPage() {
-    const navigate = useNavigate();
     const [exchanges, setExchanges] = useState([]);
     const [loading, setLoading] = useState(true);
     const [reviewForm, setReviewForm] = useState(null);
@@ -22,8 +20,8 @@ export default function ExchangesPage() {
 
     async function loadExchanges() {
         try {
-            const res = await api.get('/exchanges');
-            setExchanges(res.data.exchanges || []);
+            const response = await api.get('/exchanges');
+            setExchanges(response.data.exchanges || []);
         } catch (error) {
             console.error('Failed to load exchanges:', error);
         } finally {
@@ -33,6 +31,7 @@ export default function ExchangesPage() {
 
     async function submitReview() {
         if (!reviewForm) return;
+
         try {
             await api.post('/reviews', {
                 matchId: reviewForm.exchangeId,
@@ -73,53 +72,45 @@ export default function ExchangesPage() {
                 </div>
             ) : (
                 <div className="exchanges-list">
-                    {exchanges.map(exchange => (
+                    {exchanges.map((exchange) => (
                         <div key={exchange.id} className="exchange-item card">
                             <div className="exchange-partner">
-                                <img
-                                    src={exchange.partner?.channelAvatar || ''}
-                                    alt=""
-                                    className="exchange-partner-avatar"
-                                />
+                                <img src={exchange.partner?.channelAvatar || ''} alt="" className="exchange-partner-avatar" />
                                 <div className="exchange-partner-info">
-                                    <span className="exchange-partner-name">
-                                        {exchange.partner?.channelTitle || 'Канал'}
-                                    </span>
-                                    <span className="exchange-partner-subs">
-                                        {formatNumber(exchange.partner?.subscribers)} підписників
-                                    </span>
+                                    <span className="exchange-partner-name">{exchange.partner?.channelTitle || 'Канал'}</span>
+                                    <span className="exchange-partner-subs">{formatNumber(exchange.partner?.subscribers)} підписників</span>
                                 </div>
                             </div>
 
                             <div className="exchange-meta">
                                 {exchange.offer && (
                                     <span className="exchange-type">
-                                        {exchange.offer.type === 'subs' ? '👥 Підписники' : '👁 Перегляди'}
+                                        {exchange.offer.type === 'subs' ? 'Підписники' : 'Перегляди'}
                                     </span>
                                 )}
                                 <span className="exchange-date">
-                                    {exchange.completedAt
-                                        ? new Date(exchange.completedAt).toLocaleDateString('uk-UA')
-                                        : '—'}
+                                    {exchange.completedAt ? new Date(exchange.completedAt).toLocaleDateString('uk-UA') : '—'}
                                 </span>
                             </div>
 
                             <div className="exchange-actions">
                                 {exchange.hasReviewed ? (
-                                    <span className="exchange-reviewed">✅ Відгук залишено</span>
+                                    <span className="exchange-reviewed">Відгук залишено</span>
                                 ) : (
                                     <button
                                         className="btn btn-primary btn-sm"
-                                        onClick={() => setReviewForm({
-                                            exchangeId: exchange.id,
-                                            toChannelId: exchange.partner?.id,
-                                            fromChannelId: exchange.myChannelId,
-                                            partnerName: exchange.partner?.channelTitle,
-                                            rating: 5,
-                                            comment: '',
-                                        })}
+                                        onClick={() =>
+                                            setReviewForm({
+                                                exchangeId: exchange.id,
+                                                toChannelId: exchange.partner?.id,
+                                                fromChannelId: exchange.myChannelId,
+                                                partnerName: exchange.partner?.channelTitle,
+                                                rating: 5,
+                                                comment: '',
+                                            })
+                                        }
                                     >
-                                        ⭐ Залишити відгук
+                                        Залишити відгук
                                     </button>
                                 )}
                             </div>
@@ -128,20 +119,19 @@ export default function ExchangesPage() {
                 </div>
             )}
 
-            {/* Review Modal */}
             {reviewForm && (
                 <div className="modal-overlay" onClick={() => setReviewForm(null)}>
-                    <div className="modal-content review-modal" onClick={e => e.stopPropagation()}>
+                    <div className="modal-content review-modal" onClick={(event) => event.stopPropagation()}>
                         <h3>Відгук про {reviewForm.partnerName}</h3>
 
                         <div className="review-rating">
-                            {[1, 2, 3, 4, 5].map(star => (
+                            {[1, 2, 3, 4, 5].map((star) => (
                                 <button
                                     key={star}
                                     className={`star-btn ${star <= reviewForm.rating ? 'active' : ''}`}
-                                    onClick={() => setReviewForm(prev => ({ ...prev, rating: star }))}
+                                    onClick={() => setReviewForm((prev) => ({ ...prev, rating: star }))}
                                 >
-                                    ⭐
+                                    ★
                                 </button>
                             ))}
                         </div>
@@ -150,7 +140,7 @@ export default function ExchangesPage() {
                             className="review-textarea"
                             placeholder="Ваш коментар (необов'язково)..."
                             value={reviewForm.comment}
-                            onChange={(e) => setReviewForm(prev => ({ ...prev, comment: e.target.value }))}
+                            onChange={(event) => setReviewForm((prev) => ({ ...prev, comment: event.target.value }))}
                             rows={4}
                         />
 

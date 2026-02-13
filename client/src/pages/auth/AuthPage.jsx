@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import { resolvePostAuthPath } from '../../services/navigation';
@@ -11,11 +11,11 @@ export default function AuthPage() {
     const [isLoading, setIsLoading] = useState(false);
     const nextPath = resolvePostAuthPath(location.search, '/dashboard');
 
-    // If already logged in, redirect
-    if (!loading && user) {
-        navigate(nextPath, { replace: true });
-        return null;
-    }
+    useEffect(() => {
+        if (!loading && user) {
+            navigate(nextPath, { replace: true });
+        }
+    }, [loading, user, navigate, nextPath]);
 
     const handleGoogleSignIn = async () => {
         setIsLoading(true);

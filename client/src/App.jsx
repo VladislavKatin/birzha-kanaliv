@@ -11,6 +11,7 @@ import BlogArticlePage from './pages/public/BlogArticlePage';
 import FaqPage from './pages/public/FaqPage';
 import OffersCatalogPage from './pages/public/OffersCatalogPage';
 import OfferDetailsPage from './pages/public/OfferDetailsPage';
+import NotFoundPage from './pages/public/NotFoundPage';
 import AuthPage from './pages/auth/AuthPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import MyChannelsPage from './pages/channels/MyChannelsPage';
@@ -82,6 +83,7 @@ export default function App() {
                         </Route>
                         <Route path="/chat/:transactionId" element={<ChatPage />} />
                     </Route>
+                    <Route path="*" element={<NotFoundPage />} />
                 </Routes>
             </AuthInit>
         </BrowserRouter>
