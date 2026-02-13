@@ -127,7 +127,7 @@
 
 .nav-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
     padding: 10px 13px;
     border-radius: 12px;
@@ -153,6 +153,31 @@
     height: 22px;
     display: inline-flex;
     color: currentColor;
+    margin-top: 1px;
+}
+
+.nav-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.nav-label {
+    line-height: 1.2;
+}
+
+.nav-desc {
+    font-size: 11px;
+    line-height: 1.25;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-item.active .nav-desc {
+    color: color-mix(in srgb, var(--brand-600) 78%, #ffffff 22%);
 }
 
 .sidebar-footer {

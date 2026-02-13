@@ -4,13 +4,12 @@ import api from '../../services/api';
 import TrustLevelCard from './TrustLevelCard';
 import StatsGrid from './StatsGrid';
 import RecentActivity from './RecentActivity';
-import QuickActions from './QuickActions';
 import InfluenceChart from '../../components/common/InfluenceChart';
 import PartnerRecommendations from '../../components/common/PartnerRecommendations';
 import './DashboardPage.css';
 
 export default function DashboardPage() {
-    const { youtubeConnected, refreshUserData } = useAuthStore();
+    const { refreshUserData } = useAuthStore();
     const [stats, setStats] = useState(null);
     const [activity, setActivity] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -56,7 +55,6 @@ export default function DashboardPage() {
             <div className="dashboard-grid">
                 <div className="dashboard-col-left">
                     <TrustLevelCard trustLevel={stats?.trustLevel} />
-                    <QuickActions youtubeConnected={youtubeConnected} />
                     <PartnerRecommendations />
                 </div>
                 <div className="dashboard-col-right">

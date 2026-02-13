@@ -8,14 +8,14 @@ import Icon from '../common/Icon';
 import './DashboardLayout.css';
 
 const navItems = [
-    { path: '/dashboard', label: 'Дашборд', icon: 'dashboard' },
-    { path: '/my-channels', label: 'Мої канали', icon: 'youtube' },
-    { path: '/dashboard/offers', label: 'Пропозиції', icon: 'search' },
-    { path: '/swaps/incoming', label: 'Вхідні запити', icon: 'messages' },
-    { path: '/swaps/outgoing', label: 'Вихідні запити', icon: 'message' },
-    { path: '/exchanges', label: 'Обміни', icon: 'handshake' },
-    { path: '/profile/edit', label: 'Профіль', icon: 'user' },
-    { path: '/settings/notifications', label: 'Сповіщення', icon: 'bell' },
+    { path: '/dashboard', label: 'Дашборд', description: 'Загальна статистика акаунта', icon: 'dashboard' },
+    { path: '/my-channels', label: 'Мої канали', description: 'Керування та синхронізація каналів', icon: 'youtube' },
+    { path: '/dashboard/offers', label: 'Пропозиції', description: 'Каталог і створення обмінів', icon: 'search' },
+    { path: '/swaps/incoming', label: 'Вхідні запити', description: 'Нові запити від інших каналів', icon: 'messages' },
+    { path: '/swaps/outgoing', label: 'Вихідні запити', description: 'Ваші надіслані пропозиції', icon: 'message' },
+    { path: '/exchanges', label: 'Обміни', description: 'Активні угоди та їх статус', icon: 'handshake' },
+    { path: '/profile/edit', label: 'Профіль', description: 'Редагування інформації про вас', icon: 'user' },
+    { path: '/settings/notifications', label: 'Сповіщення', description: 'Канали отримання сповіщень', icon: 'bell' },
 ];
 
 export default function DashboardLayout() {
@@ -71,7 +71,10 @@ export default function DashboardLayout() {
                             <span className="nav-icon">
                                 <Icon name={item.icon} size={18} />
                             </span>
-                            <span className="nav-label">{item.label}</span>
+                            <span className="nav-text">
+                                <span className="nav-label">{item.label}</span>
+                                <span className="nav-desc">{item.description}</span>
+                            </span>
                         </NavLink>
                     ))}
                 </nav>
