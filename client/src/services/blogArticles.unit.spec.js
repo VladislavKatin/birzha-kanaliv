@@ -13,7 +13,7 @@ export function runBlogArticlesUnitTests() {
     assert.equal(previews[0].slug, 'youtube-collab-strategy-2026');
 
     const article = getBlogArticleBySlug('youtube-trust-score-and-reviews');
-    assert.equal(article.tags.includes('Trust score'), true);
+    assert.equal(article.tags.includes('Репутація'), true);
     assert.equal(article.sections.length > 0, true);
     assert.equal(Array.isArray(article.faq), true);
     assert.equal(Array.isArray(article.chart.data), true);
@@ -21,9 +21,9 @@ export function runBlogArticlesUnitTests() {
     const tags = getAllBlogTags();
     assert.equal(tags.includes('All'), true);
     assert.equal(tags.includes('YouTube'), true);
-    assert.equal(tags.includes('Monetization'), true);
+    assert.equal(tags.includes('Монетизація'), true);
 
-    const filtered = filterBlogArticlesByTag('Reviews');
+    const filtered = filterBlogArticlesByTag('Відгуки');
     assert.equal(filtered.length, 1);
     assert.equal(filtered[0].slug, 'youtube-trust-score-and-reviews');
 
