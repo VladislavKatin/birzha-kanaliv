@@ -1,7 +1,7 @@
 const router = require('express').Router();
-const { ChatRoom, Message, TrafficMatch, YouTubeAccount, User } = require('../models');
-const { Op } = require('sequelize');
+const { sequelize, ChatRoom, Message, TrafficMatch, TrafficOffer, YouTubeAccount, User, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
+const { completeMatchInTransaction } = require('../services/chatCompletionService');
 
 /**
  * Verify that a user is a participant in a traffic match.
@@ -139,19 +139,15 @@ router.post('/:matchId/complete', auth, async (req, res) => {
 
         const isInitiator = channelIds.includes(match.initiatorChannelId);
 
-        if (isInitiator) {
-            await match.update({ initiatorConfirmed: true });
-        } else {
-            await match.update({ targetConfirmed: true });
-        }
-
-        await match.reload();
-
-        if (match.initiatorConfirmed && match.targetConfirmed) {
-            await match.update({ status: 'completed', completedAt: new Date() });
-            const offer = await (await import('../models')).TrafficOffer.findByPk(match.offerId);
-            if (offer) await offer.update({ status: 'completed' });
-        }
+        await completeMatchInTransaction({
+            match,
+            isInitiator,
+            actorUserId: result.user.id,
+            ip: req.ip,
+            sequelize,
+            TrafficOffer,
+            ActionLog,
+        });
 
         res.json({
             match: {
