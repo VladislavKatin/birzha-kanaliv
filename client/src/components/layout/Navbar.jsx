@@ -1,22 +1,33 @@
-import { Link, useNavigate } from 'react-router-dom';
+﻿import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../../services/firebase';
 import { buildAuthRedirectPath } from '../../services/navigation';
+import { getLandingNavLinks } from '../../services/homeLanding';
 import './PublicLayout.css';
 
 export default function Navbar() {
     const navigate = useNavigate();
     const user = auth.currentUser;
+    const navLinks = getLandingNavLinks();
 
     return (
         <nav className="navbar">
             <div className="navbar-inner">
-                <Link to="/" className="navbar-logo">
-                    <span className="navbar-logo-icon">▶</span>
-                    <span className="navbar-logo-text">Біржа Каналів</span>
+                <Link to="/" className="navbar-logo" aria-label="YouToobe Home">
+                    <span className="youtube-logo-mark" aria-hidden="true">
+                        <span className="youtube-logo-play" />
+                    </span>
+                    <span className="navbar-logo-text">YouToobe</span>
                 </Link>
 
-                <div className="navbar-links">
-                    <Link to={buildAuthRedirectPath('/offers')} className="navbar-link">Пропозиції</Link>
+                <div className="navbar-links" aria-label="Landing anchors">
+                    {navLinks.map((item) => (
+                        <a key={item.href} href={item.href} className="navbar-link">
+                            {item.label}
+                        </a>
+                    ))}
+                    <Link to={buildAuthRedirectPath('/offers')} className="navbar-link">
+                        Пропозиції
+                    </Link>
                 </div>
 
                 <div className="navbar-actions">

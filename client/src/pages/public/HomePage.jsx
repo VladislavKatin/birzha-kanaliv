@@ -1,65 +1,83 @@
-﻿import { useNavigate } from 'react-router-dom';
+﻿import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+    ArrowRight,
+    BadgeCheck,
+    BarChart3,
+    CircleHelp,
+    Handshake,
+    Languages,
+    MessageCircleMore,
+    RefreshCcw,
+    Rocket,
+    Search,
+    ShieldCheck,
+    Sparkles,
+    UserRoundPlus,
+} from 'lucide-react';
 import PublicLayout from '../../components/layout/PublicLayout';
 import { getLandingCtaPaths, getLandingMetricsSummary } from '../../services/homeLanding';
+import { getBlogArticlesPreview } from '../../services/blogArticles';
+import { applyPageSeo, applyJsonLd, buildBlogCollectionJsonLd } from '../../services/seo';
 import './HomePage.css';
 
 const steps = [
     {
         num: '01',
-        icon: '🔐',
+        icon: UserRoundPlus,
         title: 'Реєстрація',
         desc: 'Увійдіть через Google та підключіть свій YouTube-канал за 30 секунд.',
     },
     {
         num: '02',
-        icon: '📣',
+        icon: Rocket,
         title: 'Створіть пропозицію',
-        desc: 'Вкажіть тип обміну, нішу та вимоги до партнера.',
+        desc: 'Вкажіть формат обміну, нішу, мову та бажані параметри партнера.',
     },
     {
         num: '03',
-        icon: '🤝',
+        icon: Search,
         title: 'Знайдіть партнера',
-        desc: 'Переглядайте релевантні пропозиції та надсилайте запити.',
+        desc: 'Система показує релевантні канали, а ви швидко погоджуєте умови.',
     },
     {
         num: '04',
-        icon: '📈',
+        icon: Handshake,
         title: 'Зростайте разом',
-        desc: 'Підтверджуйте обмін, залишайте відгуки, підвищуйте trust score.',
+        desc: 'Підтверджуйте обмін та фіксуйте результат із прозорим lifecycle.',
     },
 ];
 
 const features = [
     {
-        icon: '🛡️',
+        icon: ShieldCheck,
         title: 'Верифікація каналів',
-        desc: 'Кожен канал проходить перевірку через YouTube API.',
+        desc: 'Кожен канал перевіряється перед участю в обмінах.',
     },
     {
-        icon: '📊',
+        icon: BarChart3,
         title: 'Прозора аналітика',
-        desc: 'Підписники, перегляди, динаміка зростання та історія активності.',
+        desc: 'Оцінюйте релевантність партнера за метриками і динамікою.',
     },
     {
-        icon: '⭐',
-        title: 'Рейтинг та відгуки',
-        desc: 'Репутація на базі завершених обмінів та публічних оцінок.',
+        icon: BadgeCheck,
+        title: 'Рейтинг довіри',
+        desc: 'Репутація формується з історії успішних обмінів.',
     },
     {
-        icon: '🔄',
-        title: 'Безпечний процес',
-        desc: 'Обмін завершується лише після підтвердження двох сторін.',
+        icon: RefreshCcw,
+        title: 'Керований процес',
+        desc: 'Кожен етап угоди має статус та контроль обох сторін.',
     },
     {
-        icon: '💬',
+        icon: MessageCircleMore,
         title: 'Вбудований чат',
-        desc: 'Обговорюйте деталі партнерства без переходів у сторонні месенджери.',
+        desc: 'Усі деталі партнерства в одному вікні без сторонніх месенджерів.',
     },
     {
-        icon: '🌍',
-        title: 'Глобальна нішева мережа',
-        desc: 'Працюйте з партнерами вашої мови й тематики або відкривайте нові ринки.',
+        icon: Languages,
+        title: 'Нішева мережа',
+        desc: 'Працюйте з українською аудиторією або виходьте на нові ринки.',
     },
 ];
 
@@ -73,44 +91,37 @@ const stats = [
 const personas = [
     {
         title: 'Для авторів-початківців',
-        desc: 'Перші партнерства, швидкий social proof та безпечні обміни без накруток.',
+        desc: 'Швидкий старт, перші партнерства і стабільний social proof без сірого трафіку.',
     },
     {
         title: 'Для команд та студій',
-        desc: 'Системна робота з кількома каналами та прозорий контроль активних swap flow.',
+        desc: 'Керуйте кількома каналами, централізуйте домовленості та контроль прогресу.',
     },
     {
-        title: 'Для експертних медіа',
-        desc: 'Нішеві колаборації з фокусом на якість аудиторії, а не просто на охоплення.',
+        title: 'Для нішевих медіа',
+        desc: 'Фокус на якості аудиторії та довгострокових колабораціях.',
     },
 ];
 
 const faq = [
     {
         q: 'Це безпечно для каналу?',
-        a: 'Так. Ви працюєте лише з верифікованими каналами, а завершення обміну контролюється обома сторонами.',
+        a: 'Так. Ви працюєте з перевіреними учасниками, а угоди мають взаємне підтвердження.',
     },
     {
         q: 'Чи можна працювати з кількома каналами?',
-        a: 'Так. Платформа підтримує multi-channel сценарій: ви можете вибирати конкретний канал для кожної дії.',
+        a: 'Так. Доступний multi-channel сценарій: окремий канал для кожної дії в платформі.',
     },
     {
-        q: 'Коли зʼявляються відгуки?',
-        a: 'Відгуки публікуються із затримкою. Непубліковані відгуки не відображаються у публічних профілях.',
+        q: 'Скільки часу до першого обміну?',
+        a: 'Зазвичай першу релевантну угоду знаходять протягом перших 24-72 годин.',
     },
-];
-
-const trustSignals = [
-    'Verified via YouTube API',
-    'Realtime chat + notifications',
-    'Delayed public reviews',
-    'Safe two-side confirmation',
 ];
 
 const outcomes = [
     {
         metric: '3x',
-        label: 'швидше знаходять релевантний канал-партнер',
+        label: 'швидше знаходять релевантного партнера',
     },
     {
         metric: '94%',
@@ -124,7 +135,10 @@ const outcomes = [
 
 export default function HomePage() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { authPath, offersPath } = getLandingCtaPaths();
+    const articles = getBlogArticlesPreview();
+
     const metricsSummary = getLandingMetricsSummary({
         stats,
         steps,
@@ -132,47 +146,75 @@ export default function HomePage() {
         faq,
     });
 
+    useEffect(() => {
+        applyPageSeo({
+            title: 'YouToobe - Біржа YouTube-обмінів для українських креаторів',
+            description: 'YouToobe допомагає YouTube-креаторам знаходити надійних партнерів, запускати обміни та масштабувати канал органічно.',
+            keywords: [
+                'YouTube обмін',
+                'колаборації YouTube',
+                'просування YouTube каналу',
+                'партнерство для креаторів',
+                'біржа каналів',
+            ],
+            path: '/',
+            type: 'website',
+        });
+
+        applyJsonLd('home-blog-schema', buildBlogCollectionJsonLd(articles));
+    }, [articles]);
+
+    useEffect(() => {
+        if (!location.hash) {
+            return;
+        }
+
+        const sectionId = location.hash.replace('#', '');
+        const section = document.getElementById(sectionId);
+
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [location.hash]);
+
     return (
         <PublicLayout>
             <div className="home-page">
-                <section className="hero">
+                <section className="hero" id="hero">
                     <div className="hero-grid section-inner">
                         <div className="hero-copy">
-                            <div className="hero-badge">Платформа для YouTube-креаторів</div>
+                            <div className="hero-badge">
+                                <Sparkles size={14} /> Платформа для YouTube-креаторів
+                            </div>
                             <h1 className="hero-title">
-                                Біржа обмінів
+                                Обмінюйтеся
                                 <span className="hero-gradient"> якісною аудиторією </span>
-                                між каналами
+                                швидко та безпечно
                             </h1>
                             <p className="hero-subtitle">
-                                Знаходьте перевірених партнерів, керуйте угодами в одному інтерфейсі та масштабуйте канал органічно.
+                                Сучасна біржа партнерств для українських YouTube-каналів: від першого контакту до підтвердженого результату.
                             </p>
                             <div className="hero-actions">
                                 <button className="hero-btn primary" onClick={() => navigate(authPath)}>
                                     Почати безкоштовно
                                 </button>
                                 <button className="hero-btn secondary" onClick={() => navigate(offersPath)}>
-                                    Переглянути пропозиції
+                                    Дивитись пропозиції
                                 </button>
                             </div>
-                            <ul className="hero-trust-list">
-                                {trustSignals.map((item) => (
-                                    <li key={item}>{item}</li>
-                                ))}
-                            </ul>
                         </div>
 
-                        <div className="hero-panel card" aria-label="Platform highlights">
+                        <div className="hero-panel" aria-label="Platform highlights">
                             <h3>Що всередині платформи</h3>
                             <ul>
-                                <li>Smart matching за нішею та мовою</li>
-                                <li>Прозорий swap lifecycle</li>
-                                <li>Realtime-чат та сповіщення</li>
-                                <li>Trust score і delayed reviews</li>
+                                <li>Smart matching за нішею, мовою та форматом</li>
+                                <li>Прозорий swap lifecycle по етапах</li>
+                                <li>Realtime-чат і миттєві сповіщення</li>
+                                <li>Рейтинг довіри та контроль якості угод</li>
                             </ul>
                             <div className="hero-panel-metric">
                                 <strong>+27%</strong>
-                                <span>середнє зростання охоплень за 30 днів для активних користувачів</span>
+                                <span>середнє зростання охоплення за 30 днів для активних користувачів</span>
                             </div>
                             <div className="hero-panel-divider" />
                             <div className="hero-panel-outcomes">
@@ -184,12 +226,6 @@ export default function HomePage() {
                                 ))}
                             </div>
                         </div>
-                    </div>
-
-                    <div className="hero-decoration" aria-hidden="true">
-                        <div className="hero-blob blob-1" />
-                        <div className="hero-blob blob-2" />
-                        <div className="hero-blob blob-3" />
                     </div>
                 </section>
 
@@ -207,7 +243,7 @@ export default function HomePage() {
                     </div>
                 </section>
 
-                <section className="stats-section">
+                <section className="stats-section" id="advantages">
                     <div className="stats-inner section-inner">
                         {stats.map((item) => (
                             <div key={item.label} className="stats-item">
@@ -218,10 +254,10 @@ export default function HomePage() {
                     </div>
                 </section>
 
-                <section className="personas-section">
+                <section className="personas-section" id="who-is-for">
                     <div className="section-inner">
                         <h2 className="section-title">Кому підходить</h2>
-                        <p className="section-subtitle">Сценарії використання для різних типів команд</p>
+                        <p className="section-subtitle">Сценарії для різних команд і рівнів досвіду</p>
                         <div className="personas-grid">
                             {personas.map((item) => (
                                 <article key={item.title} className="persona-card">
@@ -233,19 +269,25 @@ export default function HomePage() {
                     </div>
                 </section>
 
-                <section className="steps-section">
+                <section className="steps-section" id="how-it-works">
                     <div className="section-inner">
                         <h2 className="section-title">Як це працює</h2>
-                        <p className="section-subtitle">Від реєстрації до першого обміну за 4 кроки</p>
+                        <p className="section-subtitle">Від реєстрації до першої угоди за 4 кроки</p>
                         <div className="steps-grid">
-                            {steps.map((step) => (
-                                <div key={step.num} className="step-card">
-                                    <div className="step-num">{step.num}</div>
-                                    <div className="step-icon">{step.icon}</div>
-                                    <h3 className="step-title">{step.title}</h3>
-                                    <p className="step-desc">{step.desc}</p>
-                                </div>
-                            ))}
+                            {steps.map((step) => {
+                                const Icon = step.icon;
+
+                                return (
+                                    <div key={step.num} className="step-card">
+                                        <div className="step-num">{step.num}</div>
+                                        <div className="step-icon" aria-hidden="true">
+                                            <Icon size={22} strokeWidth={2.2} />
+                                        </div>
+                                        <h3 className="step-title">{step.title}</h3>
+                                        <p className="step-desc">{step.desc}</p>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </section>
@@ -255,13 +297,19 @@ export default function HomePage() {
                         <h2 className="section-title">Чому обирають нас</h2>
                         <p className="section-subtitle">Інструменти, які закривають повний цикл партнерства</p>
                         <div className="features-grid">
-                            {features.map((feature) => (
-                                <div key={feature.title} className="feature-card">
-                                    <div className="feature-icon">{feature.icon}</div>
-                                    <h3 className="feature-title">{feature.title}</h3>
-                                    <p className="feature-desc">{feature.desc}</p>
-                                </div>
-                            ))}
+                            {features.map((feature) => {
+                                const Icon = feature.icon;
+
+                                return (
+                                    <article key={feature.title} className="feature-card">
+                                        <div className="feature-icon" aria-hidden="true">
+                                            <Icon size={22} strokeWidth={2.2} />
+                                        </div>
+                                        <h3 className="feature-title">{feature.title}</h3>
+                                        <p className="feature-desc">{feature.desc}</p>
+                                    </article>
+                                );
+                            })}
                         </div>
                     </div>
                 </section>
@@ -271,29 +319,60 @@ export default function HomePage() {
                         <div className="compare-col">
                             <h3>Без платформи</h3>
                             <ul>
-                                <li>Ручний пошук партнерів у чатах</li>
-                                <li>Немає перевірки якості аудиторії</li>
-                                <li>Втрата контексту по угодах</li>
+                                <li>Ручний пошук партнерів у десятках чатів</li>
+                                <li>Складно оцінити якість аудиторії до угоди</li>
+                                <li>Втрата контексту та ризик зриву домовленостей</li>
                             </ul>
                         </div>
                         <div className="compare-col better">
-                            <h3>З Біржею Каналів</h3>
+                            <h3>З YouToobe</h3>
                             <ul>
-                                <li>Каталог релевантних пропозицій</li>
-                                <li>Прозорі метрики та рейтинг довіри</li>
-                                <li>Керований lifecycle від запиту до review</li>
+                                <li>Каталог релевантних пропозицій і швидкий відгук</li>
+                                <li>Прозорі метрики, рейтинги та історія взаємодії</li>
+                                <li>Керований процес від запиту до фінального review</li>
                             </ul>
                         </div>
                     </div>
                 </section>
 
-                <section className="faq-section">
+                <section className="blog-section" id="blog">
+                    <div className="section-inner">
+                        <h2 className="section-title">Блог YouToobe</h2>
+                        <p className="section-subtitle">Практичні матеріали для зростання YouTube-каналу в 2026 році</p>
+                        <div className="blog-grid">
+                            {articles.map((article) => (
+                                <article key={article.slug} className="blog-card">
+                                    <img src={article.coverImage} alt={article.coverAlt} loading="lazy" />
+                                    <div className="blog-card-body">
+                                        <div className="blog-card-meta">
+                                            <span>{article.publishedAt}</span>
+                                            <span>{article.readTime}</span>
+                                        </div>
+                                        <h3>{article.title}</h3>
+                                        <p>{article.excerpt}</p>
+                                        <button
+                                            className="blog-link"
+                                            onClick={() => navigate(`/blog/${article.slug}`)}
+                                            aria-label={`Read article ${article.title}`}
+                                        >
+                                            Читати статтю <ArrowRight size={16} />
+                                        </button>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                <section className="faq-section" id="faq">
                     <div className="section-inner">
                         <h2 className="section-title">Поширені питання</h2>
                         <div className="faq-list">
                             {faq.map((item) => (
                                 <details key={item.q} className="faq-item">
-                                    <summary>{item.q}</summary>
+                                    <summary>
+                                        <CircleHelp size={16} /> {item.q}
+                                    </summary>
                                     <p>{item.a}</p>
                                 </details>
                             ))}

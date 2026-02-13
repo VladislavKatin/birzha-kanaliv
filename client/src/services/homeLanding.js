@@ -7,6 +7,16 @@ export function getLandingCtaPaths() {
     };
 }
 
+export function getLandingNavLinks() {
+    return [
+        { label: 'Як це працює', href: '/#how-it-works' },
+        { label: 'Кому підходить', href: '/#who-is-for' },
+        { label: 'Переваги', href: '/#advantages' },
+        { label: 'Блог', href: '/#blog' },
+        { label: 'FAQ', href: '/#faq' },
+    ];
+}
+
 export function getLandingMetricsSummary(content) {
     const data = content || {};
 

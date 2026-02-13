@@ -1,11 +1,15 @@
 ﻿import assert from 'node:assert/strict';
-import { getLandingCtaPaths, getLandingMetricsSummary } from './homeLanding.js';
+import { getLandingCtaPaths, getLandingMetricsSummary, getLandingNavLinks } from './homeLanding.js';
 
 export function runHomeLandingUnitTests() {
     const paths = getLandingCtaPaths();
 
     assert.equal(paths.authPath, '/auth');
     assert.equal(paths.offersPath, '/auth?next=%2Foffers');
+
+    const navLinks = getLandingNavLinks();
+    assert.equal(navLinks.length, 5);
+    assert.equal(navLinks[0].href, '/#how-it-works');
 
     assert.deepEqual(
         getLandingMetricsSummary({

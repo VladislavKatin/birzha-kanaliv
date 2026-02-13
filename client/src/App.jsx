@@ -5,6 +5,7 @@ import useAuthStore from './stores/authStore';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
 import HomePage from './pages/public/HomePage';
+import BlogArticlePage from './pages/public/BlogArticlePage';
 import AuthPage from './pages/auth/AuthPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import MyChannelsPage from './pages/channels/MyChannelsPage';
@@ -47,6 +48,7 @@ export default function App() {
                 <Routes>
                     {/* Public routes */}
                     <Route path="/" element={<HomePage />} />
+                    <Route path="/blog/:slug" element={<BlogArticlePage />} />
                     <Route path="/auth" element={<AuthPage />} />
 
                     {/* Protected dashboard routes */}
