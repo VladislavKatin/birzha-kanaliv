@@ -118,9 +118,6 @@ export default function DashboardLayout() {
                                 {item.label}
                             </Link>
                         ))}
-                        <Link to="/support/chats#dev-chat" className="topbar-link">
-                            Чат з розробниками
-                        </Link>
                     </div>
 
                     <div className="topbar-right">
