@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { User, YouTubeAccount, ActionLog } = require('../models');
+const { sequelize, User, YouTubeAccount, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
 const youtubeService = require('../services/youtubeService');
 const { logInfo, logWarn, logError } = require('../services/logger');
