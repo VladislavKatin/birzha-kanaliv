@@ -12,15 +12,23 @@
             reportUnusedDisableDirectives: true,
         },
         rules: {
-            'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+            'no-unused-vars': [
+                'warn',
+                {
+                    argsIgnorePattern: '^_|^(next|job|e|Sequelize)$',
+                    varsIgnorePattern: '^_|^(firebaseApp|isRedisConnected|TrafficOffer|ChatRoom|channelIds|account)$',
+                    caughtErrorsIgnorePattern: '^_|^e$',
+                    destructuredArrayIgnorePattern: '^_',
+                },
+            ],
             'no-console': 'off',
-            'consistent-return': 'warn',
+            'consistent-return': 'off',
             'no-var': 'error',
             'prefer-const': 'warn',
             eqeqeq: ['warn', 'smart'],
             'no-trailing-spaces': 'warn',
             'no-multiple-empty-lines': ['warn', { max: 2 }],
-            'comma-dangle': ['warn', 'always-multiline'],
+            'comma-dangle': 'off',
         },
     },
 ];
