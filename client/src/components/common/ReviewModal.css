@@ -1,0 +1,62 @@
+/* ─── Review Modal ───────────────────────────────── */
+.review-modal {
+    max-width: 460px;
+}
+
+.star-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 16px 0;
+}
+
+.star-btn {
+    background: none;
+    border: none;
+    font-size: 32px;
+    cursor: pointer;
+    color: var(--surface-4);
+    transition: all var(--transition-fast);
+    padding: 2px 4px;
+    line-height: 1;
+}
+
+.star-btn.active {
+    color: #fbbf24;
+}
+
+.star-btn:hover {
+    transform: scale(1.15);
+}
+
+.rating-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-left: 8px;
+}
+
+.review-textarea {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.review-textarea:focus {
+    outline: none;
+    border-color: var(--brand-500);
+}
+
+.review-notice {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    background: rgba(245, 158, 11, 0.08);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+}

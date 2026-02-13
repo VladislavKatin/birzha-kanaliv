@@ -1,0 +1,29 @@
+{
+    "name": "youtoobe",
+    "version": "1.0.0",
+    "description": "ViewExchange / Youtoobe - YouTube Creator Marketplace",
+    "scripts": {
+        "start": "start.bat",
+        "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+        "dev:server": "cd server && npm run dev",
+        "dev:client": "cd client && npm run dev",
+        "build": "cd client && npm run build",
+        "migrate": "cd server && npm run migrate",
+        "migrate:undo": "cd server && npm run migrate:undo",
+        "seed": "cd server && npm run seed",
+        "seed:undo": "cd server && npm run seed:undo",
+        "setup": "cd server && npm run migrate && npm run seed",
+        "install:all": "npm install && cd client && npm install && cd ../server && npm install"
+    },
+    "keywords": [
+        "youtube",
+        "creators",
+        "marketplace",
+        "exchange"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "concurrently": "^9.2.1"
+    }
+}

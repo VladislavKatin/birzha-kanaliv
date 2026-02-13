@@ -1,0 +1,32 @@
+.influence-chart {
+    margin-bottom: 16px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.chart-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.chart-current-score {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--brand-400);
+}
+
+.chart-container {
+    width: 100%;
+}
+
+.influence-chart-loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
