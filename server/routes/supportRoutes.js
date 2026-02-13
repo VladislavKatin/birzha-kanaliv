@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { Op } = require('sequelize');
 const { sequelize, User, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
 const { normalizeIncomingMessagePayload } = require('../services/chatMessagePayload');
@@ -33,8 +34,21 @@ router.get('/chat', auth, async (req, res) => {
                 return { user: null, messages: [] };
             }
 
+            const adminUsers = await User.findAll({
+                where: { role: 'admin' },
+                attributes: ['id'],
+                transaction,
+            });
+            const adminIds = adminUsers.map((admin) => admin.id);
+            const visibleUserIds = user.role === 'admin'
+                ? null
+                : Array.from(new Set([user.id, ...adminIds]));
+
             const logs = await ActionLog.findAll({
-                where: { action: 'support_chat_message' },
+                where: {
+                    action: 'support_chat_message',
+                    ...(visibleUserIds ? { userId: { [Op.in]: visibleUserIds } } : {}),
+                },
                 include: [{ model: User, as: 'user', attributes: ['id', 'displayName', 'photoURL', 'role'] }],
                 order: [['createdAt', 'ASC']],
                 limit: 250,
