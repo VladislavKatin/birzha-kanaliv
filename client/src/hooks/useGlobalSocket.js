@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { io } from 'socket.io-client';
 import { auth } from '../services/firebase';
+import { createAuthenticatedSocket } from '../services/socket';
 
 /**
  * Global socket hook for app-wide events: notifications, presence, swap status.
@@ -21,11 +21,7 @@ export default function useGlobalSocket() {
             const user = auth.currentUser;
             if (!user) return;
 
-            const token = await user.getIdToken();
-            const socket = io(window.location.origin, {
-                auth: { token },
-                transports: ['websocket', 'polling'],
-            });
+            const socket = await createAuthenticatedSocket(() => user.getIdToken());
 
             socket.on('connect', () => {
                 setConnected(true);
