@@ -95,12 +95,12 @@
 }
 
 .swap-item-subs {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
 }
 
 .swap-item-niche {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--brand-400);
     margin-top: 2px;
 }
@@ -114,12 +114,12 @@
 }
 
 .swap-item-type {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
 }
 
 .swap-item-desc {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
     max-width: 200px;
     white-space: nowrap;
@@ -128,7 +128,7 @@
 }
 
 .swap-item-time {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 

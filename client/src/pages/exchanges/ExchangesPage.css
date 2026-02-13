@@ -60,7 +60,7 @@
 }
 
 .exchange-partner-subs {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
 }
 
@@ -73,12 +73,12 @@
 }
 
 .exchange-type {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
 }
 
 .exchange-date {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 
@@ -87,7 +87,7 @@
 }
 
 .exchange-reviewed {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text-muted);
 }
 
