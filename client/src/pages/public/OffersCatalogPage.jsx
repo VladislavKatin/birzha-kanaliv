@@ -22,7 +22,7 @@ export default function OffersCatalogPage() {
     const [offers, setOffers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [filter, setFilter] = useState({ type: '', niche: '', language: '' });
+    const [filter, setFilter] = useState({ type: 'subs', niche: '', language: '' });
 
     const nicheOptions = useMemo(() => getNicheOptions(), []);
     const languageOptions = useMemo(() => getLanguageOptions(), []);
@@ -72,7 +72,6 @@ export default function OffersCatalogPage() {
                             value={filter.type}
                             onChange={(event) => setFilter((prev) => ({ ...prev, type: event.target.value }))}
                         >
-                            <option value="">Усі типи</option>
                             <option value="subs">Підписники</option>
                             <option value="views">Перегляди</option>
                         </select>
@@ -116,7 +115,11 @@ export default function OffersCatalogPage() {
                                         <div>
                                             <h3>
                                                 {offer.channel?.channelTitle || 'Канал'}
-                                                {isDemoChannel(offer.channel) && <span className="demo-badge">DEMO</span>}
+                                                {isDemoChannel(offer.channel) && (
+                                                    <span className="demo-badge" title="Демо-канал" aria-label="Демо-канал">
+                                                        ◉
+                                                    </span>
+                                                )}
                                             </h3>
                                             <p>{formatPublicNumber(offer.channel?.subscribers)} підписників</p>
                                         </div>

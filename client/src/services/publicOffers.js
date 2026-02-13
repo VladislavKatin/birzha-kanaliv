@@ -9,7 +9,7 @@
     { value: 'music', label: 'Музика' },
     { value: 'health', label: 'Здоров’я' },
     { value: 'entertainment', label: 'Розваги' },
-    { value: 'other', label: 'Інше / Другое' },
+    { value: 'other', label: 'Інше' },
 ];
 
 const LANGUAGE_OPTIONS = [
@@ -86,8 +86,7 @@ export function getOfferTypeLabel(type) {
 
 export function isDemoChannel(channel) {
     const channelId = channel?.channelId || '';
-    const channelTitle = channel?.channelTitle || '';
-    return channelId.startsWith('UC_DEMO_') || channelTitle.includes('[DEMO]');
+    return channelId.startsWith('UC_DEMO_');
 }
 
 export function buildPublicOffersQuery(filter = {}) {

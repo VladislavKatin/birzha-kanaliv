@@ -128,7 +128,11 @@ export default function OfferDetailsPage() {
                                 <div>
                                     <h1>
                                         {offer.channel?.channelTitle || 'Канал'}
-                                        {isDemoChannel(offer.channel) && <span className="demo-badge">DEMO</span>}
+                                        {isDemoChannel(offer.channel) && (
+                                            <span className="demo-badge" title="Демо-канал" aria-label="Демо-канал">
+                                                ◉
+                                            </span>
+                                        )}
                                     </h1>
                                     <p>{formatPublicNumber(offer.channel?.subscribers)} підписників • {formatPublicNumber(offer.channel?.totalViews)} переглядів</p>
                                 </div>

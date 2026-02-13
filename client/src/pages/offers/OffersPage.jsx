@@ -18,7 +18,7 @@ export default function OffersPage() {
     const navigate = useNavigate();
     const [offers, setOffers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState({ type: '', niche: '' });
+    const [filter, setFilter] = useState({ type: 'subs', niche: '' });
     const [showCreate, setShowCreate] = useState(false);
     const [createForm, setCreateForm] = useState({ type: 'subs', description: '', niche: '', minSubscribers: 0, maxSubscribers: 0 });
     const [myChannels, setMyChannels] = useState([]);
@@ -122,7 +122,6 @@ export default function OffersPage() {
                     value={filter.type}
                     onChange={(e) => setFilter(prev => ({ ...prev, type: e.target.value }))}
                 >
-                    <option value="">Р’СЃС– С‚РёРїРё</option>
                     <option value="subs">рџ‘Ґ РџС–РґРїРёСЃРЅРёРєРё</option>
                     <option value="views">рџ‘Ѓ РџРµСЂРµРіР»СЏРґРё</option>
                 </select>
@@ -155,7 +154,11 @@ export default function OffersPage() {
                                 <div className="offer-card-channel">
                                     <span className="offer-card-name">
                                         {offer.channel?.channelTitle || 'РљР°РЅР°Р»'}
-                                        {isDemoChannel(offer.channel) && <span className="offer-demo-badge">DEMO</span>}
+                                        {isDemoChannel(offer.channel) && (
+                                            <span className="offer-demo-badge" title="Демо-канал" aria-label="Демо-канал">
+                                                ◉
+                                            </span>
+                                        )}
                                     </span>
                                     <span className="offer-card-subs">
                                         {formatNumber(offer.channel?.subscribers)} РїС–РґРїРёСЃРЅРёРєС–РІ
