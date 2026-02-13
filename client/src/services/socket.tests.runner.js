@@ -6,6 +6,8 @@ import { runGlobalNotificationUnitTests } from './globalNotifications.unit.spec.
 import { runGlobalNotificationFunctionalTests } from './globalNotifications.functional.spec.js';
 import { runPwaManifestUnitTests } from './pwaManifest.unit.spec.js';
 import { runPwaManifestFunctionalTests } from './pwaManifest.functional.spec.js';
+import { runHomeLandingUnitTests } from './homeLanding.unit.spec.js';
+import { runHomeLandingFunctionalTests } from './homeLanding.functional.spec.js';
 
 async function run() {
     const tests = [
@@ -17,6 +19,8 @@ async function run() {
         { name: 'functional: global notification key strategy', fn: runGlobalNotificationFunctionalTests },
         { name: 'unit: pwa manifest icon path collection', fn: runPwaManifestUnitTests },
         { name: 'functional: pwa manifest icon files exist', fn: runPwaManifestFunctionalTests },
+        { name: 'unit: home landing cta and metrics', fn: runHomeLandingUnitTests },
+        { name: 'functional: home landing readiness rules', fn: runHomeLandingFunctionalTests },
     ];
 
     let failed = 0;
