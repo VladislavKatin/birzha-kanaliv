@@ -5,18 +5,21 @@
     "scripts": {
         "start": "start.bat",
         "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+        "dev:full": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:admin\"",
         "dev:server": "cd server && npm run dev",
         "dev:client": "cd client && npm run dev",
+        "dev:admin": "cd admin-frontend && npm run dev",
         "test": "npm run test:server && npm run test:client",
         "test:server": "cd server && npm test",
         "test:client": "cd client && npm test",
         "build": "cd client && npm run build",
+        "build:admin": "cd admin-frontend && npm run build",
         "migrate": "cd server && npm run migrate",
         "migrate:undo": "cd server && npm run migrate:undo",
         "seed": "cd server && npm run seed",
         "seed:undo": "cd server && npm run seed:undo",
         "setup": "cd server && npm run migrate && npm run seed",
-        "install:all": "npm install && cd client && npm install && cd ../server && npm install"
+        "install:all": "npm install && cd client && npm install && cd ../server && npm install && cd ../admin-frontend && npm install"
     },
     "keywords": [
         "youtube",
