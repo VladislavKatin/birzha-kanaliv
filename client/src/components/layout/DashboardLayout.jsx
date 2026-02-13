@@ -14,14 +14,14 @@ const navItems = [
     { path: '/swaps/incoming', label: 'Вхідні запити', description: 'Нові запити від інших каналів', icon: 'messages' },
     { path: '/swaps/outgoing', label: 'Вихідні запити', description: 'Ваші надіслані пропозиції', icon: 'message' },
     { path: '/exchanges', label: 'Обміни', description: 'Активні угоди та їх статус', icon: 'handshake' },
-    { path: '/support/chats', label: 'Повідомлення', description: 'Звернення до адміністратора', icon: 'messages' },
+    { path: '/support/chats', label: 'Повідомлення', description: 'Чати користувачів і підтримка', icon: 'messages' },
     { path: '/profile/edit', label: 'Профіль', description: 'Редагування інформації про вас', icon: 'user' },
     { path: '/settings/notifications', label: 'Сповіщення', description: 'Канали отримання сповіщень', icon: 'bell' },
 ];
 
 const topLinks = [
     { to: '/faq', label: 'FAQ' },
-    { to: '/support/chats', label: 'Знайшли помилку' },
+    { to: '/support/chats', label: 'Повідомлення' },
 ];
 
 export default function DashboardLayout() {
