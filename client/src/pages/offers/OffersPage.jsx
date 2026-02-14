@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+п»їimport { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
@@ -9,6 +9,7 @@ import {
     getLanguageSearchValue,
     getNicheOptions,
     isDemoChannel,
+    normalizeOfferDescription,
     resolveLanguageCode,
     splitOffersByChannelKind,
 } from '../../services/publicOffers';
@@ -82,7 +83,7 @@ export default function OffersPage() {
 
     async function handleRespond(offerId) {
         if (!selectedChannelId) {
-            toast.error('Спочатку підключіть канал.');
+            toast.error('РЎРїРѕС‡Р°С‚РєСѓ РїС–РґРєР»СЋС‡С–С‚СЊ РєР°РЅР°Р».');
             return;
         }
 
@@ -93,10 +94,10 @@ export default function OffersPage() {
         setRespondingOfferId(offerId);
         try {
             await api.post(`/offers/${offerId}/respond`, { channelId: selectedChannelId });
-            toast.success('Відгук надіслано.');
+            toast.success('Р’С–РґРіСѓРє РЅР°РґС–СЃР»Р°РЅРѕ.');
             loadOffers();
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Не вдалося надіслати відгук.');
+            toast.error(error.response?.data?.error || 'РќРµ РІРґР°Р»РѕСЃСЏ РЅР°РґС–СЃР»Р°С‚Рё РІС–РґРіСѓРє.');
         } finally {
             setRespondingOfferId('');
         }
@@ -106,7 +107,7 @@ export default function OffersPage() {
         return (
             <div className="dashboard-loading">
                 <div className="loading-pulse" />
-                <p>Завантаження пропозицій...</p>
+                <p>Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ РїСЂРѕРїРѕР·РёС†С–Р№...</p>
             </div>
         );
     }
@@ -118,8 +119,8 @@ export default function OffersPage() {
         <div className="offers-page">
             <div className="offers-header">
                 <div>
-                    <h1>Каталог пропозицій</h1>
-                    <p className="offers-subtitle">Активні канали відображаються автоматично. Реальні канали показані першими.</p>
+                    <h1>РљР°С‚Р°Р»РѕРі РїСЂРѕРїРѕР·РёС†С–Р№</h1>
+                    <p className="offers-subtitle">РђРєС‚РёРІРЅС– РєР°РЅР°Р»Рё РІС–РґРѕР±СЂР°Р¶Р°СЋС‚СЊСЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РЅРѕ. Р РµР°Р»СЊРЅС– РєР°РЅР°Р»Рё РїРѕРєР°Р·Р°РЅС– РїРµСЂС€РёРјРё.</p>
                 </div>
             </div>
 
@@ -131,7 +132,7 @@ export default function OffersPage() {
                         setFilter((prev) => ({ ...prev, niche: event.target.value }));
                     }}
                 >
-                    <option value="">Ніша каналу</option>
+                    <option value="">РќС–С€Р° РєР°РЅР°Р»Сѓ</option>
                     {nicheOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                             {option.label}
@@ -142,7 +143,7 @@ export default function OffersPage() {
                     type="text"
                     className="filter-input"
                     list="dashboard-offers-language-options"
-                    placeholder="Мова каналу"
+                    placeholder="РњРѕРІР° РєР°РЅР°Р»Сѓ"
                     value={filter.language}
                     onChange={(event) => {
                         setFilter((prev) => ({ ...prev, language: event.target.value }));
@@ -161,7 +162,7 @@ export default function OffersPage() {
                     >
                         {myChannels.map((channel) => (
                             <option key={channel.id} value={channel.id}>
-                                Мій канал: {channel.channelTitle}
+                                РњС–Р№ РєР°РЅР°Р»: {channel.channelTitle}
                             </option>
                         ))}
                     </select>
@@ -171,8 +172,8 @@ export default function OffersPage() {
             {visibleOffers.length === 0 ? (
                 <div className="swaps-empty card">
                     <span className="swaps-empty-icon">!</span>
-                    <h3>Пропозицій поки немає</h3>
-                    <p>Активуйте канал у розділі «Мої канали», щоб він з?явився тут.</p>
+                    <h3>РџСЂРѕРїРѕР·РёС†С–Р№ РїРѕРєРё РЅРµРјР°С”</h3>
+                    <p>РђРєС‚РёРІСѓР№С‚Рµ РєР°РЅР°Р» Сѓ СЂРѕР·РґС–Р»С– В«РњРѕС— РєР°РЅР°Р»РёВ», С‰РѕР± РІС–РЅ Р·'СЏРІРёРІСЃСЏ С‚СѓС‚.</p>
                 </div>
             ) : (
                 <div className="offers-grid">
@@ -182,30 +183,32 @@ export default function OffersPage() {
                                 <img src={offer.channel?.channelAvatar || ''} alt="" className="offer-card-avatar" />
                                 <div className="offer-card-channel">
                                     <span className="offer-card-name">
-                                        {offer.channel?.channelTitle || 'Канал'}
+                                        {offer.channel?.channelTitle || 'РљР°РЅР°Р»'}
                                         {isDemoChannel(offer.channel) && (
-                                            <span className="offer-demo-badge" title="Демо-канал" aria-label="Демо-канал">
+                                            <span className="offer-demo-badge" title="Р”РµРјРѕ-РєР°РЅР°Р»" aria-label="Р”РµРјРѕ-РєР°РЅР°Р»">
                                                 DEMO
                                             </span>
                                         )}
                                     </span>
-                                    <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} підписників</span>
+                                    <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} РїС–РґРїРёСЃРЅРёРєС–РІ</span>
                                 </div>
-                                <span className={`offer-type-badge ${offer.type}`}>{offer.type === 'subs' ? 'Підписники' : 'Перегляди'}</span>
+                                <span className={`offer-type-badge ${offer.type}`}>{offer.type === 'subs' ? 'РџС–РґРїРёСЃРЅРёРєРё' : 'РџРµСЂРµРіР»СЏРґРё'}</span>
                             </div>
 
-                            {offer.description && <p className="offer-card-desc">{offer.description}</p>}
+                            {offer.description && (
+                                <p className="offer-card-desc">{normalizeOfferDescription(offer.description, offer.channel?.channelTitle)}</p>
+                            )}
 
                             <div className="offer-card-tags">
                                 {offer.niche && <span className="meta-tag">{offer.niche}</span>}
                                 {offer.language && <span className="meta-tag">{offer.language}</span>}
-                                {offer.minSubscribers > 0 && <span className="meta-tag">від {formatNumber(offer.minSubscribers)} підпис.</span>}
-                                {offer.channel?.totalViews > 0 && <span className="meta-tag">{formatNumber(offer.channel.totalViews)} переглядів</span>}
+                                {offer.minSubscribers > 0 && <span className="meta-tag">РІС–Рґ {formatNumber(offer.minSubscribers)} РїС–РґРїРёСЃ.</span>}
+                                {offer.channel?.totalViews > 0 && <span className="meta-tag">{formatNumber(offer.channel.totalViews)} РїРµСЂРµРіР»СЏРґС–РІ</span>}
                             </div>
 
                             <div className="offer-card-actions">
                                 <button className="btn btn-secondary btn-sm" onClick={() => navigate(buildOfferDetailsPath(offer.id))}>
-                                    Деталі
+                                    Р”РµС‚Р°Р»С–
                                 </button>
                                 {user ? (
                                     <button
@@ -213,11 +216,11 @@ export default function OffersPage() {
                                         onClick={() => handleRespond(offer.id)}
                                         disabled={respondingOfferId === offer.id || offer.status !== 'open'}
                                     >
-                                        {respondingOfferId === offer.id ? 'Надсилаємо...' : offer.status === 'open' ? 'Відгукнутися' : 'Недоступно'}
+                                        {respondingOfferId === offer.id ? 'РќР°РґСЃРёР»Р°С”РјРѕ...' : offer.status === 'open' ? 'Р’С–РґРіСѓРєРЅСѓС‚РёСЃСЏ' : 'РќРµРґРѕСЃС‚СѓРїРЅРѕ'}
                                     </button>
                                 ) : (
                                     <button className="btn btn-secondary btn-sm" onClick={() => navigate('/auth')}>
-                                        Увійти для відгуку
+                                        РЈРІС–Р№С‚Рё РґР»СЏ РІС–РґРіСѓРєСѓ
                                     </button>
                                 )}
                             </div>

@@ -13,6 +13,7 @@ import {
     getNicheOptions,
     getOfferTypeLabel,
     isDemoChannel,
+    normalizeOfferDescription,
 } from '../../services/publicOffers';
 import './OffersCatalogPage.css';
 
@@ -154,7 +155,11 @@ export default function OffersCatalogPage() {
                                         <span>{getOfferTypeLabel(offer.type)}</span>
                                     </div>
 
-                                    {offer.description && <p className="public-offer-desc">{offer.description}</p>}
+                                    {offer.description && (
+                                        <p className="public-offer-desc">
+                                            {normalizeOfferDescription(offer.description, offer.channel?.channelTitle)}
+                                        </p>
+                                    )}
 
                                     <div className="public-offer-meta">
                                         {offer.niche && <span>{offer.niche}</span>}

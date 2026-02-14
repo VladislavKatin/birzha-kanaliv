@@ -10,6 +10,7 @@ import {
     formatPublicNumber,
     getOfferTypeLabel,
     isDemoChannel,
+    normalizeOfferDescription,
 } from '../../services/publicOffers';
 import './OfferDetailsPage.css';
 
@@ -142,7 +143,7 @@ export default function OfferDetailsPage() {
                             <div className="offer-details-grid">
                                 <div>
                                     <h3>Опис пропозиції</h3>
-                                    <p>{offer.description || 'Опис не вказаний.'}</p>
+                                    <p>{normalizeOfferDescription(offer.description, offer.channel?.channelTitle) || 'Опис не вказаний.'}</p>
                                 </div>
                                 <div>
                                     <h3>Параметри обміну</h3>

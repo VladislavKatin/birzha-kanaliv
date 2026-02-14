@@ -84,6 +84,25 @@ export function getOfferTypeLabel(type) {
     return type === 'views' ? 'Перегляди' : 'Підписники';
 }
 
+export function normalizeOfferDescription(description, channelTitle = '') {
+    const raw = String(description || '').trim();
+    if (!raw) {
+        return '';
+    }
+
+    // Guard against broken charset artifacts from old cached/legacy records.
+    const looksBroken =
+        /�{2,}/.test(raw) ||
+        /^\?{3,}/.test(raw) ||
+        /^(?:[^\p{L}\p{N}]{0,2}[�?]){4,}/u.test(raw);
+
+    if (looksBroken) {
+        return `Автоматична пропозиція каналу ${channelTitle || 'без назви'}.`;
+    }
+
+    return raw;
+}
+
 export function isDemoChannel(channel) {
     const channelId = channel?.channelId || '';
     return channelId.startsWith('UC_DEMO_');
