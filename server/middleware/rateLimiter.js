@@ -24,7 +24,7 @@ function createRateLimiter({
         standardHeaders: true,
         legacyHeaders: false,
         message: { error: message },
-        skip,
+        skip: (req) => req.method === 'OPTIONS' || skip(req),
         // When Redis is available, uncomment:
         // store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
     });

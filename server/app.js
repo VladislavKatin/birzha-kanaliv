@@ -24,7 +24,9 @@ function corsOriginValidator(origin, callback) {
         return callback(null, true);
     }
 
-    return callback(new Error(`CORS origin not allowed: ${origin}`), false);
+    const error = new Error(`CORS origin not allowed: ${origin}`);
+    error.status = 403;
+    return callback(error, false);
 }
 
 // Middleware

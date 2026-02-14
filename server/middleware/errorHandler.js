@@ -4,20 +4,20 @@ module.exports = (err, req, res, next) => {
     // Sequelize validation errors
     if (err.name === 'SequelizeValidationError') {
         return res.status(400).json({
-            error: 'Помилка валідації',
-            details: err.errors.map(e => e.message)
+            error: 'Validation error',
+            details: err.errors.map((e) => e.message),
         });
     }
 
     // Sequelize unique constraint
     if (err.name === 'SequelizeUniqueConstraintError') {
         return res.status(400).json({
-            error: 'Запис з такими даними вже існує'
+            error: 'A record with these values already exists',
         });
     }
 
     // Default error
-    res.status(err.status || 500).json({
-        error: err.message || 'Внутрішня помилка сервера'
+    return res.status(err.status || 500).json({
+        error: err.message || 'Internal server error',
     });
 };
