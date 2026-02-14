@@ -1,9 +1,17 @@
-п»їimport { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
-import { buildOfferDetailsPath, getNicheOptions, isDemoChannel, splitOffersByChannelKind } from '../../services/publicOffers';
+import {
+    buildOfferDetailsPath,
+    getLanguageOptions,
+    getLanguageSearchValue,
+    getNicheOptions,
+    isDemoChannel,
+    resolveLanguageCode,
+    splitOffersByChannelKind,
+} from '../../services/publicOffers';
 import './OffersPage.css';
 
 function formatNumber(num) {
@@ -18,20 +26,13 @@ export default function OffersPage() {
     const navigate = useNavigate();
     const [offers, setOffers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState({ niche: '' });
-    const [isCreating, setIsCreating] = useState(false);
+    const [filter, setFilter] = useState({ niche: '', language: '' });
     const [respondingOfferId, setRespondingOfferId] = useState('');
-    const [showCreate, setShowCreate] = useState(false);
-    const [createForm, setCreateForm] = useState({
-        type: 'subs',
-        description: '',
-        niche: '',
-        minSubscribers: 0,
-        maxSubscribers: 0,
-    });
     const [myChannels, setMyChannels] = useState([]);
     const [selectedChannelId, setSelectedChannelId] = useState('');
+
     const nicheOptions = getNicheOptions();
+    const languageOptions = getLanguageOptions();
 
     const loadOffers = useCallback(async () => {
         try {
@@ -39,6 +40,12 @@ export default function OffersPage() {
             if (filter.niche) {
                 params.set('niche', filter.niche);
             }
+
+            const languageCode = resolveLanguageCode(filter.language);
+            if (languageCode) {
+                params.set('language', languageCode);
+            }
+
             params.set('includeAll', 'true');
             params.set('limit', '200');
             const response = await api.get(`/offers?${params.toString()}`);
@@ -48,7 +55,7 @@ export default function OffersPage() {
         } finally {
             setLoading(false);
         }
-    }, [filter.niche]);
+    }, [filter.niche, filter.language]);
 
     const loadMyChannels = useCallback(async () => {
         try {
@@ -73,42 +80,9 @@ export default function OffersPage() {
         }
     }, [user, loadMyChannels]);
 
-    async function handleCreateOffer() {
-        if (!selectedChannelId) {
-            toast.error('РЎРїРѕС‡Р°С‚РєСѓ РїС–РґРєР»СЋС‡С–С‚СЊ РєР°РЅР°Р».');
-            return;
-        }
-
-        if (isCreating) {
-            return;
-        }
-
-        setIsCreating(true);
-        try {
-            await api.post('/offers', {
-                channelId: selectedChannelId,
-                ...createForm,
-            });
-            toast.success('РџСЂРѕРїРѕР·РёС†С–СЋ СЃС‚РІРѕСЂРµРЅРѕ.');
-            setShowCreate(false);
-            setCreateForm({
-                type: 'subs',
-                description: '',
-                niche: '',
-                minSubscribers: 0,
-                maxSubscribers: 0,
-            });
-            loadOffers();
-        } catch (error) {
-            toast.error(error.response?.data?.error || 'РќРµ РІРґР°Р»РѕСЃСЏ СЃС‚РІРѕСЂРёС‚Рё РїСЂРѕРїРѕР·РёС†С–СЋ.');
-        } finally {
-            setIsCreating(false);
-        }
-    }
-
     async function handleRespond(offerId) {
         if (!selectedChannelId) {
-            toast.error('РЎРїРѕС‡Р°С‚РєСѓ РїС–РґРєР»СЋС‡С–С‚СЊ РєР°РЅР°Р».');
+            toast.error('Спочатку підключіть канал.');
             return;
         }
 
@@ -119,10 +93,10 @@ export default function OffersPage() {
         setRespondingOfferId(offerId);
         try {
             await api.post(`/offers/${offerId}/respond`, { channelId: selectedChannelId });
-            toast.success('Р’С–РґРіСѓРє РЅР°РґС–СЃР»Р°РЅРѕ.');
+            toast.success('Відгук надіслано.');
             loadOffers();
         } catch (error) {
-            toast.error(error.response?.data?.error || 'РќРµ РІРґР°Р»РѕСЃСЏ РЅР°РґС–СЃР»Р°С‚Рё РІС–РґРіСѓРє.');
+            toast.error(error.response?.data?.error || 'Не вдалося надіслати відгук.');
         } finally {
             setRespondingOfferId('');
         }
@@ -132,7 +106,7 @@ export default function OffersPage() {
         return (
             <div className="dashboard-loading">
                 <div className="loading-pulse" />
-                <p>Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ РїСЂРѕРїРѕР·РёС†С–Р№...</p>
+                <p>Завантаження пропозицій...</p>
             </div>
         );
     }
@@ -144,14 +118,9 @@ export default function OffersPage() {
         <div className="offers-page">
             <div className="offers-header">
                 <div>
-                    <h1>РљР°С‚Р°Р»РѕРі РїСЂРѕРїРѕР·РёС†С–Р№</h1>
-                    <p className="offers-subtitle">Р—РЅР°Р№РґС–С‚СЊ РїР°СЂС‚РЅРµСЂР° РґР»СЏ РѕР±РјС–РЅСѓ Р°СѓРґРёС‚РѕСЂС–С”СЋ</p>
+                    <h1>Каталог пропозицій</h1>
+                    <p className="offers-subtitle">Активні канали відображаються автоматично. Реальні канали показані першими.</p>
                 </div>
-                {user && (
-                    <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
-                        РЎС‚РІРѕСЂРёС‚Рё РїСЂРѕРїРѕР·РёС†С–СЋ
-                    </button>
-                )}
             </div>
 
             <div className="offers-filters card">
@@ -162,20 +131,48 @@ export default function OffersPage() {
                         setFilter((prev) => ({ ...prev, niche: event.target.value }));
                     }}
                 >
-                    <option value="">РќС–С€Р° РєР°РЅР°Р»Сѓ</option>
+                    <option value="">Ніша каналу</option>
                     {nicheOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                             {option.label}
                         </option>
                     ))}
                 </select>
+                <input
+                    type="text"
+                    className="filter-input"
+                    list="dashboard-offers-language-options"
+                    placeholder="Мова каналу"
+                    value={filter.language}
+                    onChange={(event) => {
+                        setFilter((prev) => ({ ...prev, language: event.target.value }));
+                    }}
+                />
+                <datalist id="dashboard-offers-language-options">
+                    {languageOptions.map((option) => (
+                        <option key={option.code} value={getLanguageSearchValue(option)} />
+                    ))}
+                </datalist>
+                {user && myChannels.length > 1 && (
+                    <select
+                        className="filter-select"
+                        value={selectedChannelId}
+                        onChange={(event) => setSelectedChannelId(event.target.value)}
+                    >
+                        {myChannels.map((channel) => (
+                            <option key={channel.id} value={channel.id}>
+                                Мій канал: {channel.channelTitle}
+                            </option>
+                        ))}
+                    </select>
+                )}
             </div>
 
             {visibleOffers.length === 0 ? (
                 <div className="swaps-empty card">
                     <span className="swaps-empty-icon">!</span>
-                    <h3>РџСЂРѕРїРѕР·РёС†С–Р№ РїРѕРєРё РЅРµРјР°С”</h3>
-                    <p>РЎРїСЂРѕР±СѓР№С‚Рµ Р·РјС–РЅРёС‚Рё С„С–Р»СЊС‚СЂ.</p>
+                    <h3>Пропозицій поки немає</h3>
+                    <p>Активуйте канал у розділі «Мої канали», щоб він з?явився тут.</p>
                 </div>
             ) : (
                 <div className="offers-grid">
@@ -185,16 +182,16 @@ export default function OffersPage() {
                                 <img src={offer.channel?.channelAvatar || ''} alt="" className="offer-card-avatar" />
                                 <div className="offer-card-channel">
                                     <span className="offer-card-name">
-                                        {offer.channel?.channelTitle || 'РљР°РЅР°Р»'}
+                                        {offer.channel?.channelTitle || 'Канал'}
                                         {isDemoChannel(offer.channel) && (
-                                            <span className="offer-demo-badge" title="Р”РµРјРѕ-РєР°РЅР°Р»" aria-label="Р”РµРјРѕ-РєР°РЅР°Р»">
+                                            <span className="offer-demo-badge" title="Демо-канал" aria-label="Демо-канал">
                                                 DEMO
                                             </span>
                                         )}
                                     </span>
-                                    <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} РїС–РґРїРёСЃРЅРёРєС–РІ</span>
+                                    <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} підписників</span>
                                 </div>
-                                <span className={`offer-type-badge ${offer.type}`}>{offer.type === 'subs' ? 'РџС–РґРїРёСЃРЅРёРєРё' : 'РџРµСЂРµРіР»СЏРґРё'}</span>
+                                <span className={`offer-type-badge ${offer.type}`}>{offer.type === 'subs' ? 'Підписники' : 'Перегляди'}</span>
                             </div>
 
                             {offer.description && <p className="offer-card-desc">{offer.description}</p>}
@@ -202,13 +199,13 @@ export default function OffersPage() {
                             <div className="offer-card-tags">
                                 {offer.niche && <span className="meta-tag">{offer.niche}</span>}
                                 {offer.language && <span className="meta-tag">{offer.language}</span>}
-                                {offer.minSubscribers > 0 && <span className="meta-tag">РІС–Рґ {formatNumber(offer.minSubscribers)} РїС–РґРїРёСЃ.</span>}
-                                {offer.channel?.totalViews > 0 && <span className="meta-tag">{formatNumber(offer.channel.totalViews)} РїРµСЂРµРіР»СЏРґС–РІ</span>}
+                                {offer.minSubscribers > 0 && <span className="meta-tag">від {formatNumber(offer.minSubscribers)} підпис.</span>}
+                                {offer.channel?.totalViews > 0 && <span className="meta-tag">{formatNumber(offer.channel.totalViews)} переглядів</span>}
                             </div>
 
                             <div className="offer-card-actions">
                                 <button className="btn btn-secondary btn-sm" onClick={() => navigate(buildOfferDetailsPath(offer.id))}>
-                                    Р”РµС‚Р°Р»С–
+                                    Деталі
                                 </button>
                                 {user ? (
                                     <button
@@ -216,95 +213,16 @@ export default function OffersPage() {
                                         onClick={() => handleRespond(offer.id)}
                                         disabled={respondingOfferId === offer.id || offer.status !== 'open'}
                                     >
-                                        {respondingOfferId === offer.id ? 'РќР°РґСЃРёР»Р°С”РјРѕ...' : offer.status === 'open' ? 'Р’С–РґРіСѓРєРЅСѓС‚РёСЃСЏ' : 'РќРµРґРѕСЃС‚СѓРїРЅРѕ'}
+                                        {respondingOfferId === offer.id ? 'Надсилаємо...' : offer.status === 'open' ? 'Відгукнутися' : 'Недоступно'}
                                     </button>
                                 ) : (
                                     <button className="btn btn-secondary btn-sm" onClick={() => navigate('/auth')}>
-                                        РЈРІС–Р№С‚Рё РґР»СЏ РІС–РґРіСѓРєСѓ
+                                        Увійти для відгуку
                                     </button>
                                 )}
                             </div>
                         </div>
                     ))}
-                </div>
-            )}
-
-            {showCreate && (
-                <div className="modal-overlay" onClick={() => setShowCreate(false)}>
-                    <div className="modal-content create-offer-modal" onClick={(event) => event.stopPropagation()}>
-                        <h3>РЎС‚РІРѕСЂРёС‚Рё РїСЂРѕРїРѕР·РёС†С–СЋ РѕР±РјС–РЅСѓ</h3>
-
-                        <div className="form-group">
-                            <label className="form-label">РљР°РЅР°Р»</label>
-                            <select className="filter-select full-width" value={selectedChannelId} onChange={(event) => setSelectedChannelId(event.target.value)}>
-                                {myChannels.map((channel) => (
-                                    <option key={channel.id} value={channel.id}>
-                                        {channel.channelTitle}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">РўРёРї РѕР±РјС–РЅСѓ</label>
-                            <select className="filter-select full-width" value={createForm.type} onChange={(event) => setCreateForm((prev) => ({ ...prev, type: event.target.value }))}>
-                                <option value="subs">РџС–РґРїРёСЃРЅРёРєРё</option>
-                                <option value="views">РџРµСЂРµРіР»СЏРґРё</option>
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">РћРїРёСЃ</label>
-                            <textarea
-                                className="review-textarea"
-                                placeholder="РћРїРёС€С–С‚СЊ, С‰Рѕ РІРё РїСЂРѕРїРѕРЅСѓС”С‚Рµ..."
-                                value={createForm.description}
-                                onChange={(event) => setCreateForm((prev) => ({ ...prev, description: event.target.value }))}
-                                rows={3}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">РќС–С€Р° (РЅРµРѕР±РѕРІ'СЏР·РєРѕРІРѕ)</label>
-                            <input
-                                type="text"
-                                className="filter-input full-width"
-                                placeholder="РќР°РїСЂРёРєР»Р°Рґ: Gaming, Tech, Music..."
-                                value={createForm.niche}
-                                onChange={(event) => setCreateForm((prev) => ({ ...prev, niche: event.target.value }))}
-                            />
-                        </div>
-
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label className="form-label">РњС–РЅ. РїС–РґРїРёСЃРЅРёРєС–РІ</label>
-                                <input
-                                    type="number"
-                                    className="filter-input full-width"
-                                    value={createForm.minSubscribers}
-                                    onChange={(event) => setCreateForm((prev) => ({ ...prev, minSubscribers: parseInt(event.target.value, 10) || 0 }))}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">РњР°РєСЃ. РїС–РґРїРёСЃРЅРёРєС–РІ</label>
-                                <input
-                                    type="number"
-                                    className="filter-input full-width"
-                                    value={createForm.maxSubscribers}
-                                    onChange={(event) => setCreateForm((prev) => ({ ...prev, maxSubscribers: parseInt(event.target.value, 10) || 0 }))}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="modal-actions">
-                            <button className="btn btn-secondary" onClick={() => setShowCreate(false)}>
-                                РЎРєР°СЃСѓРІР°С‚Рё
-                            </button>
-                            <button className="btn btn-primary" onClick={handleCreateOffer} disabled={isCreating}>
-                                {isCreating ? 'РЎС‚РІРѕСЂСЋС”РјРѕ...' : 'РЎС‚РІРѕСЂРёС‚Рё'}
-                            </button>
-                        </div>
-                    </div>
                 </div>
             )}
         </div>

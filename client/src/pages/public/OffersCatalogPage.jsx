@@ -61,7 +61,8 @@ export default function OffersCatalogPage() {
             setLoading(true);
             setError('');
             try {
-                const response = await api.get(`/offers${query}`);
+                const suffix = query ? `${query}&includeAll=true` : '?includeAll=true';
+                const response = await api.get(`/offers${suffix}`);
                 if (cancelled) {
                     return;
                 }

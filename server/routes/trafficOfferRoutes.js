@@ -4,6 +4,7 @@ const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const { getUserChannelsByFirebaseUid, resolveActionChannelId } = require('../services/channelAccessService');
 const { getSystemLimits } = require('../services/systemLimitsService');
+const { ensureAutoOffersForChannels } = require('../services/autoOfferService');
 
 function handleChannelSelectionError(res, errorCode, noChannelMessage) {
     if (errorCode === 'NO_CHANNELS_CONNECTED') {
@@ -119,11 +120,22 @@ router.get('/', async (req, res) => {
     try {
         const { type, niche, language, minSubs, maxSubs, page = 1, limit = 20, includeAll, status } = req.query;
         const where = {};
+        const includeAllEnabled = ['1', 'true', 'yes'].includes(String(includeAll || '').toLowerCase());
 
         if (status) {
             where.status = status;
-        } else if (!['1', 'true', 'yes'].includes(String(includeAll || '').toLowerCase())) {
+        } else if (!includeAllEnabled) {
             where.status = 'open';
+        }
+
+        if (includeAllEnabled) {
+            await ensureAutoOffersForChannels({
+                sequelize,
+                YouTubeAccount,
+                TrafficOffer,
+                ActionLog,
+                reason: 'offers_catalog_opened',
+            });
         }
 
         if (type) where.type = type;
@@ -140,7 +152,8 @@ router.get('/', async (req, res) => {
                 {
                     model: YouTubeAccount,
                     as: 'channel',
-                    attributes: ['channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'niche', 'language', 'country'],
+                    where: { isActive: true, isFlagged: false },
+                    attributes: ['channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'totalViews', 'niche', 'language', 'country'],
                 },
             ],
             order: [

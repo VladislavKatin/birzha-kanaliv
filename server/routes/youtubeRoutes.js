@@ -1,8 +1,9 @@
 const router = require('express').Router();
-const { sequelize, User, YouTubeAccount, ActionLog } = require('../models');
+const { sequelize, User, YouTubeAccount, TrafficOffer, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
 const youtubeService = require('../services/youtubeService');
 const { logInfo, logWarn, logError } = require('../services/logger');
+const { ensureAutoOffersForChannels } = require('../services/autoOfferService');
 
 /**
  * @route GET /api/youtube/connect
@@ -159,6 +160,15 @@ router.get('/callback', async (req, res) => {
             action: 'youtube_connect',
             details: { channelId: channelInfo.channelId, channelTitle: channelInfo.channelTitle },
             ip: req.ip,
+        });
+
+        await ensureAutoOffersForChannels({
+            sequelize,
+            YouTubeAccount,
+            TrafficOffer,
+            ActionLog,
+            channelIds: [account.id],
+            reason: 'youtube_connected',
         });
 
         // Redirect to client dashboard

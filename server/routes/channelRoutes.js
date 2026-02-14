@@ -3,6 +3,7 @@ const { sequelize, YouTubeAccount, Review, User, TrafficMatch, TrafficOffer, Act
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const { listPublishedReviews } = require('../services/reviewReadService');
+const { ensureAutoOffersForChannels } = require('../services/autoOfferService');
 
 /**
  * @route GET /api/channels
@@ -157,6 +158,17 @@ router.put('/:id', auth, async (req, res) => {
             const { isActive } = req.body;
             if (typeof isActive === 'boolean') {
                 await channel.update({ isActive }, { transaction });
+                if (isActive) {
+                    await ensureAutoOffersForChannels({
+                        sequelize,
+                        YouTubeAccount,
+                        TrafficOffer,
+                        ActionLog,
+                        channelIds: [channel.id],
+                        reason: 'channel_activated',
+                        transaction,
+                    });
+                }
             }
 
             await ActionLog.create({
