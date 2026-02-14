@@ -2,10 +2,10 @@
 
 @import "tailwindcss";
 
-/* ─── Design Tokens ──────────────────────────────── */
-/* Tailwind v4 @theme — tokens become available via theme() and as utility classes */
+/* --- Design Tokens ---------------------------------------------------- */
+/* Tailwind v4 @theme: tokens become available via theme() and as utility classes */
 @theme {
-  /* Brand palette — utilities: bg-brand-500, text-brand-400, etc. */
+  /* Brand palette - utilities: bg-brand-500, text-brand-400, etc. */
   --color-brand-50: #eef2ff;
   --color-brand-100: #e0e7ff;
   --color-brand-200: #c7d2fe;
@@ -17,14 +17,14 @@
   --color-brand-800: #3730a3;
   --color-brand-900: #312e81;
 
-  /* Surface palette — utilities: bg-surface-0, bg-surface-1, etc. */
+  /* Surface palette - utilities: bg-surface-0, bg-surface-1, etc. */
   --color-surface-0: #0a0a0f;
   --color-surface-1: #111118;
   --color-surface-2: #1a1a24;
   --color-surface-3: #23232f;
   --color-surface-4: #2d2d3a;
 
-  /* Semantic text — utilities: text-primary, text-secondary, text-muted */
+  /* Semantic text - utilities: text-primary, text-secondary, text-muted */
   --color-primary: #f1f1f4;
   --color-secondary: #a1a1b5;
   --color-muted: #6b6b80;
@@ -63,7 +63,7 @@
   --transition-timing-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ─── Legacy CSS Variable Aliases ─────────────────── */
+/* --- Legacy CSS Variable Aliases ------------------------------------- */
 /* These map old var(--xxx) references used by component CSS files        */
 /* to the new @theme token values, so existing CSS keeps working.         */
 :root {
@@ -117,7 +117,7 @@
   --transition-slow: var(--transition-timing-slow);
 }
 
-/* ─── Base Styles ─────────────────────────────────── */
+/* --- Base Styles ------------------------------------------------------ */
 * {
   margin: 0;
   padding: 0;
@@ -165,7 +165,7 @@ button {
   background: var(--text-muted);
 }
 
-/* ─── Component Classes ───────────────────────────── */
+/* --- Component Classes ------------------------------------------------ */
 .glass {
   background: rgba(26, 26, 36, 0.8);
   backdrop-filter: blur(12px);
@@ -263,7 +263,7 @@ button {
   font-family: 'Inter', sans-serif !important;
 }
 
-/* ─── Mobile-First ────────────────────────────────── */
+/* --- Mobile-First ----------------------------------------------------- */
 html {
   overflow-x: hidden;
 }
@@ -303,7 +303,7 @@ select {
   min-height: 100dvh;
 }
 
-/* ─── Loading States ──────────────────────────────── */
+/* --- Loading States --------------------------------------------------- */
 .dashboard-loading {
   display: flex;
   flex-direction: column;
