@@ -1,5 +1,5 @@
 // Service Worker: cache-first for static assets, network-first for API GET
-const CACHE_NAME = 'birza-v2';
+const CACHE_NAME = 'birza-v3';
 const STATIC_ASSETS = ['/', '/index.html'];
 
 self.addEventListener('install', (event) => {
@@ -19,6 +19,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
+    const isHttp = url.protocol === 'http:' || url.protocol === 'https:';
+
+    if (!isHttp) {
+        return;
+    }
 
     // Do not cache non-GET requests (POST/PUT/PATCH/DELETE)
     if (request.method !== 'GET') {
@@ -33,7 +38,10 @@ self.addEventListener('fetch', (event) => {
                 .then((response) => {
                     if (response && response.ok) {
                         const clone = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+                        caches
+                            .open(CACHE_NAME)
+                            .then((cache) => cache.put(request, clone))
+                            .catch(() => {});
                     }
                     return response;
                 })
