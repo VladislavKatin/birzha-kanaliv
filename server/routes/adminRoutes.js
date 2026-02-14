@@ -4,6 +4,7 @@ const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const { normalizeIncomingMessagePayload } = require('../services/chatMessagePayload');
 const { getSystemLimits, normalizeIncomingLimits, validateLimits } = require('../services/systemLimitsService');
+const { emitSupportMessage } = require('../socketSetup');
 const {
     sequelize,
     User,
@@ -1066,6 +1067,9 @@ router.post('/support/threads/:userId/messages', auth, admin, async (req, res) =
         }
 
         res.status(201).json(payload);
+
+        const io = req.app.get('io');
+        emitSupportMessage(io, [payload.user.id, req.dbUser.id], payload.message);
     } catch (error) {
         console.error('Admin support reply error:', error);
         res.status(500).json({ error: 'Failed to send support reply' });

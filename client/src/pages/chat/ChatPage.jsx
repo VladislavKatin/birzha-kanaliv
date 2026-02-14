@@ -210,6 +210,15 @@ export default function ChatPage() {
                     </div>
                 </div>
                 <div className="chat-header-actions">
+                    <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => {
+                            const prefill = encodeURIComponent(`Скарга у чаті обміну ${transactionId} з каналом ${partner?.channelTitle || 'Партнер'}: `);
+                            navigate(`/support/chats?prefill=${prefill}`);
+                        }}
+                    >
+                        Поскаржитися
+                    </button>
                     {match?.status === 'accepted' && (
                         <button className="btn btn-primary btn-sm" onClick={handleComplete}>
                             Підтвердити виконання

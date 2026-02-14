@@ -19,6 +19,8 @@ export default function OffersPage() {
     const [offers, setOffers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState({ niche: '' });
+    const [isCreating, setIsCreating] = useState(false);
+    const [respondingOfferId, setRespondingOfferId] = useState('');
     const [showCreate, setShowCreate] = useState(false);
     const [createForm, setCreateForm] = useState({
         type: 'subs',
@@ -64,6 +66,13 @@ export default function OffersPage() {
     }, [loadOffers]);
 
     useEffect(() => {
+        const cachedNiche = window.localStorage.getItem('dashboard_offers_niche_filter');
+        if (cachedNiche) {
+            setFilter({ niche: cachedNiche });
+        }
+    }, []);
+
+    useEffect(() => {
         if (user) {
             loadMyChannels();
         }
@@ -75,6 +84,11 @@ export default function OffersPage() {
             return;
         }
 
+        if (isCreating) {
+            return;
+        }
+
+        setIsCreating(true);
         try {
             await api.post('/offers', {
                 channelId: selectedChannelId,
@@ -92,6 +106,8 @@ export default function OffersPage() {
             loadOffers();
         } catch (error) {
             toast.error(error.response?.data?.error || 'Не вдалося створити пропозицію.');
+        } finally {
+            setIsCreating(false);
         }
     }
 
@@ -101,12 +117,19 @@ export default function OffersPage() {
             return;
         }
 
+        if (respondingOfferId) {
+            return;
+        }
+
+        setRespondingOfferId(offerId);
         try {
             await api.post(`/offers/${offerId}/respond`, { channelId: selectedChannelId });
             toast.success('Відгук надіслано.');
             loadOffers();
         } catch (error) {
             toast.error(error.response?.data?.error || 'Не вдалося надіслати відгук.');
+        } finally {
+            setRespondingOfferId('');
         }
     }
 
@@ -142,7 +165,11 @@ export default function OffersPage() {
                     className="filter-input"
                     placeholder="Фільтр за нішею..."
                     value={filter.niche}
-                    onChange={(event) => setFilter((prev) => ({ ...prev, niche: event.target.value }))}
+                    onChange={(event) => {
+                        const nextNiche = event.target.value;
+                        setFilter((prev) => ({ ...prev, niche: nextNiche }));
+                        window.localStorage.setItem('dashboard_offers_niche_filter', nextNiche);
+                    }}
                 />
             </div>
 
@@ -186,8 +213,12 @@ export default function OffersPage() {
                                     Деталі
                                 </button>
                                 {user ? (
-                                    <button className="btn btn-primary btn-sm" onClick={() => handleRespond(offer.id)}>
-                                        Відгукнутися
+                                    <button
+                                        className="btn btn-primary btn-sm"
+                                        onClick={() => handleRespond(offer.id)}
+                                        disabled={respondingOfferId === offer.id}
+                                    >
+                                        {respondingOfferId === offer.id ? 'Надсилаємо...' : 'Відгукнутися'}
                                     </button>
                                 ) : (
                                     <button className="btn btn-secondary btn-sm" onClick={() => navigate('/auth')}>
@@ -271,8 +302,8 @@ export default function OffersPage() {
                             <button className="btn btn-secondary" onClick={() => setShowCreate(false)}>
                                 Скасувати
                             </button>
-                            <button className="btn btn-primary" onClick={handleCreateOffer}>
-                                Створити
+                            <button className="btn btn-primary" onClick={handleCreateOffer} disabled={isCreating}>
+                                {isCreating ? 'Створюємо...' : 'Створити'}
                             </button>
                         </div>
                     </div>

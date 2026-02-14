@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { YouTubeAccount, Review, User, TrafficMatch, TrafficOffer } = require('../models');
+const { sequelize, YouTubeAccount, Review, User, TrafficMatch, TrafficOffer, ActionLog } = require('../models');
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const { listPublishedReviews } = require('../services/reviewReadService');
@@ -146,19 +146,34 @@ router.get('/:id', async (req, res) => {
  */
 router.put('/:id', auth, async (req, res) => {
     try {
-        const user = await User.findOne({ where: { firebaseUid: req.firebaseUser.uid } });
-        if (!user) return res.status(404).json({ error: 'User not found' });
+        const payload = await sequelize.transaction(async (transaction) => {
+            const user = await User.findOne({ where: { firebaseUid: req.firebaseUser.uid }, transaction });
+            if (!user) return { error: { status: 404, body: { error: 'User not found' } } };
 
-        const channel = await YouTubeAccount.findByPk(req.params.id);
-        if (!channel) return res.status(404).json({ error: 'Channel not found' });
-        if (channel.userId !== user.id) return res.status(403).json({ error: 'Not your channel' });
+            const channel = await YouTubeAccount.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE });
+            if (!channel) return { error: { status: 404, body: { error: 'Channel not found' } } };
+            if (channel.userId !== user.id) return { error: { status: 403, body: { error: 'Not your channel' } } };
 
-        const { isActive } = req.body;
-        if (typeof isActive === 'boolean') {
-            await channel.update({ isActive });
+            const { isActive } = req.body;
+            if (typeof isActive === 'boolean') {
+                await channel.update({ isActive }, { transaction });
+            }
+
+            await ActionLog.create({
+                userId: user.id,
+                action: 'channel_settings_updated',
+                details: { channelId: channel.id, isActive: channel.isActive },
+                ip: req.ip,
+            }, { transaction });
+
+            return { channel };
+        });
+
+        if (payload.error) {
+            return res.status(payload.error.status).json(payload.error.body);
         }
 
-        res.json({ channel });
+        res.json({ channel: payload.channel });
     } catch (error) {
         console.error('Update channel error:', error);
         res.status(500).json({ error: 'Failed to update channel' });
@@ -174,14 +189,36 @@ router.put('/:id', auth, async (req, res) => {
  */
 router.delete('/:id', auth, async (req, res) => {
     try {
-        const user = await User.findOne({ where: { firebaseUid: req.firebaseUser.uid } });
-        if (!user) return res.status(404).json({ error: 'User not found' });
+        const payload = await sequelize.transaction(async (transaction) => {
+            const user = await User.findOne({ where: { firebaseUid: req.firebaseUser.uid }, transaction });
+            if (!user) return { error: { status: 404, body: { error: 'User not found' } } };
 
-        const channel = await YouTubeAccount.findByPk(req.params.id);
-        if (!channel) return res.status(404).json({ error: 'Channel not found' });
-        if (channel.userId !== user.id) return res.status(403).json({ error: 'Not your channel' });
+            const channel = await YouTubeAccount.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE });
+            if (!channel) return { error: { status: 404, body: { error: 'Channel not found' } } };
+            if (channel.userId !== user.id) return { error: { status: 403, body: { error: 'Not your channel' } } };
 
-        await channel.destroy();
+            const snapshot = {
+                id: channel.id,
+                channelId: channel.channelId,
+                channelTitle: channel.channelTitle,
+            };
+
+            await channel.destroy({ transaction });
+
+            await ActionLog.create({
+                userId: user.id,
+                action: 'channel_deleted',
+                details: snapshot,
+                ip: req.ip,
+            }, { transaction });
+
+            return { ok: true };
+        });
+
+        if (payload.error) {
+            return res.status(payload.error.status).json(payload.error.body);
+        }
+
         res.json({ message: 'Channel deleted' });
     } catch (error) {
         console.error('Delete channel error:', error);

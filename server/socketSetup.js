@@ -12,10 +12,14 @@ const onlineUsers = new Map();
  */
 function setupSocket(server) {
     const { Server } = require('socket.io');
+    const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:5173,http://localhost:5174')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
 
     const io = new Server(server, {
         cors: {
-            origin: process.env.CLIENT_URL || 'http://localhost:5173',
+            origin: allowedOrigins,
             methods: ['GET', 'POST'],
             credentials: true,
         },
@@ -62,6 +66,7 @@ function setupSocket(server) {
 
         // Join user's personal notification room
         socket.join(`user:${socket.userId}`);
+        socket.join(`support:${socket.userId}`);
 
         // ── Join match/transaction room ───────────────────
         socket.on('join:transaction', async (matchId) => {
@@ -207,6 +212,20 @@ function emitNotification(io, targetUserId, notification) {
 }
 
 /**
+ * Emit support chat message to specific users.
+ * @param {import('socket.io').Server} io
+ * @param {string[]} targetUserIds
+ * @param {Object} message
+ */
+function emitSupportMessage(io, targetUserIds, message) {
+    if (!io || !Array.isArray(targetUserIds) || targetUserIds.length === 0 || !message) return;
+
+    targetUserIds.forEach((userId) => {
+        io.to(`support:${userId}`).emit('support:message', message);
+    });
+}
+
+/**
  * Check if a user is currently online.
  * @param {string} userId
  * @returns {boolean}
@@ -218,4 +237,5 @@ function isUserOnline(userId) {
 module.exports = setupSocket;
 module.exports.emitSwapStatusChanged = emitSwapStatusChanged;
 module.exports.emitNotification = emitNotification;
+module.exports.emitSupportMessage = emitSupportMessage;
 module.exports.isUserOnline = isUserOnline;

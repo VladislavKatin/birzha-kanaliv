@@ -39,6 +39,22 @@ export default function OffersCatalogPage() {
     }, [offers]);
 
     useEffect(() => {
+        try {
+            const raw = window.localStorage.getItem('public_offers_filter');
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if (typeof parsed === 'object' && parsed) {
+                setFilter({
+                    niche: typeof parsed.niche === 'string' ? parsed.niche : '',
+                    language: typeof parsed.language === 'string' ? parsed.language : '',
+                });
+            }
+        } catch {
+            // ignore invalid local cache
+        }
+    }, []);
+
+    useEffect(() => {
         let cancelled = false;
 
         async function loadOffers() {
@@ -80,7 +96,11 @@ export default function OffersCatalogPage() {
                     <div className="offers-catalog-filters">
                         <select
                             value={filter.niche}
-                            onChange={(event) => setFilter((prev) => ({ ...prev, niche: event.target.value }))}
+                            onChange={(event) => {
+                                const next = { ...filter, niche: event.target.value };
+                                setFilter(next);
+                                window.localStorage.setItem('public_offers_filter', JSON.stringify(next));
+                            }}
                         >
                             <option value="">Ніша каналу</option>
                             {nicheOptions.map((option) => (
@@ -94,7 +114,11 @@ export default function OffersCatalogPage() {
                             list="offers-language-options"
                             placeholder="Мова каналу"
                             value={filter.language}
-                            onChange={(event) => setFilter((prev) => ({ ...prev, language: event.target.value }))}
+                            onChange={(event) => {
+                                const next = { ...filter, language: event.target.value };
+                                setFilter(next);
+                                window.localStorage.setItem('public_offers_filter', JSON.stringify(next));
+                            }}
                         />
                         <datalist id="offers-language-options">
                             {languageOptions.map((option) => (

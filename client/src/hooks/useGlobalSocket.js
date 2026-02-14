@@ -41,6 +41,10 @@ export default function useGlobalSocket() {
                 window.dispatchEvent(new CustomEvent('swap:status-changed', { detail: payload }));
             });
 
+            socket.on('support:message', (payload) => {
+                window.dispatchEvent(new CustomEvent('support:message', { detail: payload }));
+            });
+
             // ── Presence ──────────────────────────────────
             socket.on('online:users', (data) => {
                 setOnlineUsers(data.userIds || []);

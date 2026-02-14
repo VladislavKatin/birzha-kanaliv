@@ -4,6 +4,7 @@ import api from '../../services/api';
 import TrustLevelCard from './TrustLevelCard';
 import StatsGrid from './StatsGrid';
 import RecentActivity from './RecentActivity';
+import OnboardingChecklist from './OnboardingChecklist';
 import InfluenceChart from '../../components/common/InfluenceChart';
 import PartnerRecommendations from '../../components/common/PartnerRecommendations';
 import './DashboardPage.css';
@@ -54,6 +55,7 @@ export default function DashboardPage() {
 
             <div className="dashboard-grid">
                 <div className="dashboard-col-left">
+                    <OnboardingChecklist stats={stats?.stats} />
                     <StatsGrid stats={stats?.stats} />
                     <RecentActivity events={activity} />
                 </div>

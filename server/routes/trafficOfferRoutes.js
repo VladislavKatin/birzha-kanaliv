@@ -284,54 +284,78 @@ router.post('/:id/respond', auth, async (req, res) => {
             );
         }
 
-        const offer = await TrafficOffer.findByPk(req.params.id);
-        if (!offer) return res.status(404).json({ error: 'Offer not found' });
-        if (offer.status !== 'open') {
-            return res.status(400).json({ error: 'Offer is no longer active' });
-        }
-
-        if (offer.channelId === selected.channelId) {
-            return res.status(400).json({ error: 'Cannot respond to your own offer' });
-        }
-
-        if (process.env.NODE_ENV !== 'test') {
-            const limitsConfig = await getSystemLimits({ ActionLog });
-            const activeMatches = await TrafficMatch.count({
-                where: {
-                    [Op.or]: [
-                        { initiatorChannelId: selected.channelId },
-                        { targetChannelId: selected.channelId },
-                    ],
-                    status: { [Op.in]: ['pending', 'accepted'] },
-                },
+        const payload = await sequelize.transaction(async (transaction) => {
+            const offer = await TrafficOffer.findByPk(req.params.id, {
+                transaction,
+                lock: transaction.LOCK.UPDATE,
             });
 
-            if (activeMatches >= limitsConfig.limits.activeExchangesPerChannel) {
-                try {
-                    await sequelize.transaction(async (transaction) => {
-                        await ActionLog.create({
-                            userId: result.user.id,
-                            action: 'rate_limit_match_create_blocked',
-                            details: {
-                                channelId: selected.channelId,
-                                activeMatches,
-                                limit: limitsConfig.limits.activeExchangesPerChannel,
-                            },
-                            ip: req.ip,
-                        }, { transaction });
-                    });
-                } catch (auditError) {
-                    console.error('Failed to write rate-limit audit log:', auditError);
-                }
-                return res.status(429).json({
-                    error: `Maximum ${limitsConfig.limits.activeExchangesPerChannel} active exchanges at the same time`,
-                });
+            if (!offer) {
+                return { error: { status: 404, body: { error: 'Offer not found' } } };
             }
-        }
+            if (offer.status !== 'open') {
+                return { error: { status: 400, body: { error: 'Offer is no longer active' } } };
+            }
 
-        const transaction = await sequelize.transaction();
+            if (offer.channelId === selected.channelId) {
+                return { error: { status: 400, body: { error: 'Cannot respond to your own offer' } } };
+            }
 
-        try {
+            if (process.env.NODE_ENV !== 'test') {
+                const limitsConfig = await getSystemLimits({ ActionLog });
+                const activeMatches = await TrafficMatch.count({
+                    where: {
+                        [Op.or]: [
+                            { initiatorChannelId: selected.channelId },
+                            { targetChannelId: selected.channelId },
+                        ],
+                        status: { [Op.in]: ['pending', 'accepted'] },
+                    },
+                    transaction,
+                });
+
+                if (activeMatches >= limitsConfig.limits.activeExchangesPerChannel) {
+                    await ActionLog.create({
+                        userId: result.user.id,
+                        action: 'rate_limit_match_create_blocked',
+                        details: {
+                            channelId: selected.channelId,
+                            activeMatches,
+                            limit: limitsConfig.limits.activeExchangesPerChannel,
+                        },
+                        ip: req.ip,
+                    }, { transaction });
+
+                    return {
+                        error: {
+                            status: 429,
+                            body: { error: `Maximum ${limitsConfig.limits.activeExchangesPerChannel} active exchanges at the same time` },
+                        },
+                    };
+                }
+            }
+
+            const existing = await TrafficMatch.findOne({
+                where: {
+                    offerId: offer.id,
+                    initiatorChannelId: selected.channelId,
+                    status: { [Op.in]: ['pending', 'accepted'] },
+                },
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+            });
+
+            if (existing) {
+                await ActionLog.create({
+                    userId: result.user.id,
+                    action: 'match_respond_idempotent_hit',
+                    details: { matchId: existing.id, offerId: offer.id, initiatorChannelId: selected.channelId },
+                    ip: req.ip,
+                }, { transaction });
+
+                return { match: existing, idempotent: true };
+            }
+
             const match = await TrafficMatch.create({
                 offerId: offer.id,
                 initiatorChannelId: selected.channelId,
@@ -348,12 +372,14 @@ router.post('/:id/respond', auth, async (req, res) => {
                 ip: req.ip,
             }, { transaction });
 
-            await transaction.commit();
-            res.status(201).json({ match });
-        } catch (txError) {
-            await transaction.rollback();
-            throw txError;
+            return { match, idempotent: false };
+        });
+
+        if (payload.error) {
+            return res.status(payload.error.status).json(payload.error.body);
         }
+
+        return res.status(payload.idempotent ? 200 : 201).json({ match: payload.match, idempotent: payload.idempotent });
     } catch (error) {
         console.error('Respond to offer error:', error);
         res.status(500).json({ error: 'Failed to respond to offer' });

@@ -4,6 +4,7 @@ const { sequelize, User, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
 const { normalizeIncomingMessagePayload } = require('../services/chatMessagePayload');
 const { logInfo, logError } = require('../services/logger');
+const { emitSupportMessage } = require('../socketSetup');
 
 function mapSupportLogToMessage(log) {
     const details = log.details || {};
@@ -156,9 +157,16 @@ router.post('/chat/messages', auth, async (req, res) => {
                 transaction,
             });
 
+            const adminUsers = await User.findAll({
+                where: { role: 'admin' },
+                attributes: ['id'],
+                transaction,
+            });
+
             return {
                 user,
                 message: mapSupportLogToMessage(fullLog),
+                adminIds: adminUsers.map((item) => item.id),
             };
         });
 
@@ -167,6 +175,11 @@ router.post('/chat/messages', auth, async (req, res) => {
         }
 
         res.status(201).json({ message: payload.message });
+
+        const io = req.app.get('io');
+        const targetUsers = Array.from(new Set([payload.user.id, ...(payload.adminIds || [])]));
+        emitSupportMessage(io, targetUsers, payload.message);
+
         logInfo('support.chat.message.sent', {
             firebaseUid: req.firebaseUser.uid,
             userId: payload.user.id,

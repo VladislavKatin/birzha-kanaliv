@@ -170,6 +170,16 @@ export default function OfferDetailsPage() {
                                 <button className="primary" onClick={handleRespond} disabled={responding}>
                                     {user ? 'Запропонувати обмін' : 'Увійти, щоб запропонувати обмін'}
                                 </button>
+                                {user && (
+                                    <button
+                                        onClick={() => {
+                                            const prefill = encodeURIComponent(`Скарга на пропозицію ${offer.id} від каналу ${offer.channel?.channelTitle || 'Канал'}: `);
+                                            navigate(`/support/chats?prefill=${prefill}`);
+                                        }}
+                                    >
+                                        Поскаржитися
+                                    </button>
+                                )}
                             </div>
                         </article>
                     )}

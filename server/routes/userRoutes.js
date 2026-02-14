@@ -1,4 +1,4 @@
-const router = require('express').Router();
+﻿const router = require('express').Router();
 const { User, YouTubeAccount, TrafficOffer, TrafficMatch, Review, Message, ChatRoom } = require('../models');
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
@@ -190,7 +190,7 @@ router.get('/activity', auth, async (req, res) => {
                     id: m.id,
                     title: isIncoming
                         ? `Нова пропозиція від ${m.initiatorChannel?.channelTitle || 'Канал'}`
-                        : `Ви відгукнулися на пропозицію`,
+                        : 'Ви відгукнулися на пропозицію',
                     status: m.status,
                     date: m.createdAt,
                     avatar: isIncoming ? m.initiatorChannel?.channelAvatar : m.targetChannel?.channelAvatar,
@@ -212,7 +212,7 @@ router.get('/activity', auth, async (req, res) => {
                 events.push({
                     type: 'review',
                     id: r.id,
-                    title: `Відгук від ${r.fromChannel?.channelTitle || 'Канал'}: ${'⭐'.repeat(r.rating)}`,
+                    title: `Відгук від ${r.fromChannel?.channelTitle || 'Канал'}: ${'★'.repeat(r.rating)}`,
                     date: r.createdAt,
                     avatar: r.fromChannel?.channelAvatar,
                     link: '/exchanges',

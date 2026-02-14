@@ -448,3 +448,52 @@
         grid-template-columns: 1fr;
     }
 }
+
+.onboarding-card {
+    display: grid;
+    gap: 12px;
+}
+
+.onboarding-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.onboarding-head h3 {
+    margin: 0;
+}
+
+.onboarding-head span {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.onboarding-list {
+    display: grid;
+    gap: 10px;
+}
+
+.onboarding-item {
+    display: grid;
+    grid-template-columns: 12px 1fr auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.onboarding-item p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.onboarding-state {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #f59e0b;
+}
+
+.onboarding-state.done {
+    background: #22c55e;
+}

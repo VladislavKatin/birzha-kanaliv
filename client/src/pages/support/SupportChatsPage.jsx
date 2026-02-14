@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import './SupportChatsPage.css';
 
@@ -24,6 +25,7 @@ function fileToDataUrl(file) {
 }
 
 export default function SupportChatsPage() {
+    const location = useLocation();
     const fileInputRef = useRef(null);
     const listEndRef = useRef(null);
 
@@ -39,8 +41,33 @@ export default function SupportChatsPage() {
     }, []);
 
     useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const prefill = params.get('prefill');
+        if (prefill) {
+            setInputValue(prefill);
+        }
+    }, [location.search]);
+
+    useEffect(() => {
         listEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    useEffect(() => {
+        function handleSupportMessage(event) {
+            const incoming = event.detail;
+            if (!incoming?.id) return;
+
+            setMessages((prev) => {
+                if (prev.some((item) => item.id === incoming.id)) {
+                    return prev;
+                }
+                return [...prev, incoming];
+            });
+        }
+
+        window.addEventListener('support:message', handleSupportMessage);
+        return () => window.removeEventListener('support:message', handleSupportMessage);
+    }, []);
 
     async function loadSupportChat() {
         try {
@@ -87,7 +114,12 @@ export default function SupportChatsPage() {
 
         try {
             const response = await api.post('/support/chat/messages', payload);
-            setMessages((prev) => [...prev, response.data.message]);
+            setMessages((prev) => {
+                if (prev.some((item) => item.id === response.data.message?.id)) {
+                    return prev;
+                }
+                return [...prev, response.data.message];
+            });
             setInputValue('');
             setSelectedImage('');
         } catch (error) {

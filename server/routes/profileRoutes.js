@@ -1,13 +1,13 @@
 ﻿const router = require('express').Router();
-const { User, YouTubeAccount, TrafficMatch, Review } = require('../models');
+const { sequelize, User, YouTubeAccount, TrafficMatch, Review, ActionLog } = require('../models');
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const path = require('path');
 const fs = require('fs');
 const { validate: isUuid } = require('uuid');
 
-async function getUser(firebaseUid) {
-    return User.findOne({ where: { firebaseUid } });
+async function getUser(firebaseUid, transaction = null) {
+    return User.findOne({ where: { firebaseUid }, ...(transaction ? { transaction } : {}) });
 }
 
 router.get('/me', auth, async (req, res) => {
@@ -141,18 +141,30 @@ router.get('/:userId', async (req, res) => {
 
 router.put('/', auth, async (req, res) => {
     try {
-        const user = await getUser(req.firebaseUser.uid);
-        if (!user) return res.status(404).json({ error: 'User not found' });
+        const payload = await sequelize.transaction(async (transaction) => {
+            const user = await getUser(req.firebaseUser.uid, transaction);
+            if (!user) return { error: { status: 404, body: { error: 'User not found' } } };
 
-        const allowed = ['displayName', 'bio', 'location', 'languages', 'birthYear', 'gender', 'professionalRole', 'companyName', 'website', 'socialLinks'];
+            const allowed = ['displayName', 'bio', 'location', 'languages', 'birthYear', 'gender', 'professionalRole', 'companyName', 'website', 'socialLinks'];
 
-        const updates = {};
-        for (const key of allowed) {
-            if (req.body[key] !== undefined) updates[key] = req.body[key];
-        }
+            const updates = {};
+            for (const key of allowed) {
+                if (req.body[key] !== undefined) updates[key] = req.body[key];
+            }
 
-        await user.update(updates);
-        return res.json({ user });
+            await user.update(updates, { transaction });
+            await ActionLog.create({
+                userId: user.id,
+                action: 'profile_updated',
+                details: { fields: Object.keys(updates) },
+                ip: req.ip,
+            }, { transaction });
+
+            return { user };
+        });
+
+        if (payload.error) return res.status(payload.error.status).json(payload.error.body);
+        return res.json({ user: payload.user });
     } catch (error) {
         console.error('Update profile error:', error);
         return res.status(500).json({ error: 'Failed to update profile' });
@@ -161,9 +173,6 @@ router.put('/', auth, async (req, res) => {
 
 router.put('/privacy', auth, async (req, res) => {
     try {
-        const user = await getUser(req.firebaseUser.uid);
-        if (!user) return res.status(404).json({ error: 'User not found' });
-
         const { privacySettings } = req.body;
         if (!privacySettings || typeof privacySettings !== 'object') {
             return res.status(400).json({ error: 'Invalid privacy settings' });
@@ -176,8 +185,24 @@ router.put('/privacy', auth, async (req, res) => {
             }
         }
 
-        await user.update({ privacySettings: { ...user.privacySettings, ...privacySettings } });
-        return res.json({ privacySettings: user.privacySettings });
+        const payload = await sequelize.transaction(async (transaction) => {
+            const user = await getUser(req.firebaseUser.uid, transaction);
+            if (!user) return { error: { status: 404, body: { error: 'User not found' } } };
+
+            const nextPrivacy = { ...user.privacySettings, ...privacySettings };
+            await user.update({ privacySettings: nextPrivacy }, { transaction });
+            await ActionLog.create({
+                userId: user.id,
+                action: 'profile_privacy_updated',
+                details: { keys: Object.keys(privacySettings) },
+                ip: req.ip,
+            }, { transaction });
+
+            return { privacySettings: nextPrivacy };
+        });
+
+        if (payload.error) return res.status(payload.error.status).json(payload.error.body);
+        return res.json({ privacySettings: payload.privacySettings });
     } catch (error) {
         console.error('Update privacy error:', error);
         return res.status(500).json({ error: 'Failed to update privacy' });
@@ -201,7 +226,16 @@ router.post('/avatar', auth, async (req, res) => {
         fs.writeFileSync(path.join(uploadsDir, filename), base64Data, 'base64');
 
         const photoURL = `/uploads/avatars/${filename}`;
-        await user.update({ photoURL });
+
+        await sequelize.transaction(async (transaction) => {
+            await user.update({ photoURL }, { transaction });
+            await ActionLog.create({
+                userId: user.id,
+                action: 'profile_avatar_updated',
+                details: { filename },
+                ip: req.ip,
+            }, { transaction });
+        });
 
         return res.json({ photoURL });
     } catch (error) {
@@ -212,16 +246,28 @@ router.post('/avatar', auth, async (req, res) => {
 
 router.put('/notifications', auth, async (req, res) => {
     try {
-        const user = await getUser(req.firebaseUser.uid);
-        if (!user) return res.status(404).json({ error: 'User not found' });
-
         const { notificationPrefs } = req.body;
         if (!notificationPrefs || typeof notificationPrefs !== 'object') {
             return res.status(400).json({ error: 'Invalid notification prefs' });
         }
 
-        await user.update({ notificationPrefs: { ...user.notificationPrefs, ...notificationPrefs } });
-        return res.json({ notificationPrefs: user.notificationPrefs });
+        const payload = await sequelize.transaction(async (transaction) => {
+            const user = await getUser(req.firebaseUser.uid, transaction);
+            if (!user) return { error: { status: 404, body: { error: 'User not found' } } };
+
+            const nextPrefs = { ...user.notificationPrefs, ...notificationPrefs };
+            await user.update({ notificationPrefs: nextPrefs }, { transaction });
+            await ActionLog.create({
+                userId: user.id,
+                action: 'profile_notifications_updated',
+                details: { keys: Object.keys(notificationPrefs) },
+                ip: req.ip,
+            }, { transaction });
+            return { notificationPrefs: nextPrefs };
+        });
+
+        if (payload.error) return res.status(payload.error.status).json(payload.error.body);
+        return res.json({ notificationPrefs: payload.notificationPrefs });
     } catch (error) {
         console.error('Update notification prefs error:', error);
         return res.status(500).json({ error: 'Failed to update notifications' });
