@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
-import { buildOfferDetailsPath, isDemoChannel, splitOffersByChannelKind } from '../../services/publicOffers';
+import { buildOfferDetailsPath, getNicheOptions, isDemoChannel, splitOffersByChannelKind } from '../../services/publicOffers';
 import './OffersPage.css';
 
 function formatNumber(num) {
@@ -31,6 +31,7 @@ export default function OffersPage() {
     });
     const [myChannels, setMyChannels] = useState([]);
     const [selectedChannelId, setSelectedChannelId] = useState('');
+    const nicheOptions = getNicheOptions();
 
     const loadOffers = useCallback(async () => {
         try {
@@ -64,13 +65,6 @@ export default function OffersPage() {
     useEffect(() => {
         loadOffers();
     }, [loadOffers]);
-
-    useEffect(() => {
-        const cachedNiche = window.localStorage.getItem('dashboard_offers_niche_filter');
-        if (cachedNiche) {
-            setFilter({ niche: cachedNiche });
-        }
-    }, []);
 
     useEffect(() => {
         if (user) {
@@ -160,17 +154,20 @@ export default function OffersPage() {
             </div>
 
             <div className="offers-filters card">
-                <input
-                    type="text"
-                    className="filter-input"
-                    placeholder="Фільтр за нішею..."
+                <select
+                    className="filter-select"
                     value={filter.niche}
                     onChange={(event) => {
-                        const nextNiche = event.target.value;
-                        setFilter((prev) => ({ ...prev, niche: nextNiche }));
-                        window.localStorage.setItem('dashboard_offers_niche_filter', nextNiche);
+                        setFilter((prev) => ({ ...prev, niche: event.target.value }));
                     }}
-                />
+                >
+                    <option value="">Ніша каналу</option>
+                    {nicheOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
             </div>
 
             {visibleOffers.length === 0 ? (
