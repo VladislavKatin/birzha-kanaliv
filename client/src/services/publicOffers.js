@@ -37,6 +37,21 @@ export function getLanguageOptions() {
     return LANGUAGE_OPTIONS;
 }
 
+export function getNicheLabel(value) {
+    const key = String(value || '').trim().toLowerCase();
+    if (!key) return '';
+    const option = NICHE_OPTIONS.find((item) => item.value === key);
+    return option ? option.label : value;
+}
+
+export function getLanguageLabel(value) {
+    const key = String(value || '').trim().toLowerCase();
+    if (!key) return '';
+    const option = LANGUAGE_OPTIONS.find((item) => item.code === key);
+    if (!option) return value;
+    return option.flag ? `${option.flag} ${option.name}` : option.name;
+}
+
 export function getLanguageSearchValue(option) {
     if (!option) {
         return '';

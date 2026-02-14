@@ -5,8 +5,10 @@ import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import {
     buildOfferDetailsPath,
+    getLanguageLabel,
     getLanguageOptions,
     getLanguageSearchValue,
+    getNicheLabel,
     getNicheOptions,
     isDemoChannel,
     normalizeOfferDescription,
@@ -27,6 +29,7 @@ export default function OffersPage() {
     const navigate = useNavigate();
     const [offers, setOffers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [filter, setFilter] = useState({ niche: '', language: '' });
     const [respondingOfferId, setRespondingOfferId] = useState('');
     const [myChannels, setMyChannels] = useState([]);
@@ -36,6 +39,8 @@ export default function OffersPage() {
     const languageOptions = getLanguageOptions();
 
     const loadOffers = useCallback(async () => {
+        setLoading(true);
+        setError('');
         try {
             const params = new URLSearchParams();
             if (filter.niche) {
@@ -48,11 +53,12 @@ export default function OffersPage() {
             }
 
             params.set('includeAll', 'true');
-            params.set('limit', '200');
+            params.set('limit', '60');
             const response = await api.get(`/offers?${params.toString()}`);
             setOffers(response.data.offers || response.data || []);
         } catch (error) {
             console.error('Failed to load offers:', error);
+            setError('Не вдалося завантажити пропозиції. Спробуйте ще раз.');
         } finally {
             setLoading(false);
         }
@@ -169,7 +175,16 @@ export default function OffersPage() {
                 )}
             </div>
 
-            {visibleOffers.length === 0 ? (
+            {error ? (
+                <div className="swaps-empty card">
+                    <span className="swaps-empty-icon">!</span>
+                    <h3>Помилка завантаження</h3>
+                    <p>{error}</p>
+                    <button className="btn btn-secondary btn-sm" onClick={() => loadOffers()}>
+                        Спробувати ще раз
+                    </button>
+                </div>
+            ) : visibleOffers.length === 0 ? (
                 <div className="swaps-empty card">
                     <span className="swaps-empty-icon">!</span>
                     <h3>Пропозицій поки немає</h3>
@@ -200,8 +215,8 @@ export default function OffersPage() {
                             )}
 
                             <div className="offer-card-tags">
-                                {offer.niche && <span className="meta-tag">{offer.niche}</span>}
-                                {offer.language && <span className="meta-tag">{offer.language}</span>}
+                                {offer.niche && <span className="meta-tag">{getNicheLabel(offer.niche)}</span>}
+                                {offer.language && <span className="meta-tag">{getLanguageLabel(offer.language)}</span>}
                                 {offer.minSubscribers > 0 && <span className="meta-tag">від {formatNumber(offer.minSubscribers)} підпис.</span>}
                                 {offer.channel?.totalViews > 0 && <span className="meta-tag">{formatNumber(offer.channel.totalViews)} переглядів</span>}
                             </div>
