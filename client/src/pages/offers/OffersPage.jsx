@@ -39,6 +39,7 @@ export default function OffersPage() {
             if (filter.niche) {
                 params.set('niche', filter.niche);
             }
+            params.set('includeAll', 'true');
             params.set('limit', '200');
             const response = await api.get(`/offers?${params.toString()}`);
             setOffers(response.data.offers || response.data || []);
@@ -213,9 +214,9 @@ export default function OffersPage() {
                                     <button
                                         className="btn btn-primary btn-sm"
                                         onClick={() => handleRespond(offer.id)}
-                                        disabled={respondingOfferId === offer.id}
+                                        disabled={respondingOfferId === offer.id || offer.status !== 'open'}
                                     >
-                                        {respondingOfferId === offer.id ? 'Надсилаємо...' : 'Відгукнутися'}
+                                        {respondingOfferId === offer.id ? 'Надсилаємо...' : offer.status === 'open' ? 'Відгукнутися' : 'Недоступно'}
                                     </button>
                                 ) : (
                                     <button className="btn btn-secondary btn-sm" onClick={() => navigate('/auth')}>

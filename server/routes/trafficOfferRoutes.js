@@ -117,8 +117,14 @@ router.post('/', auth, async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const { type, niche, language, minSubs, maxSubs, page = 1, limit = 20 } = req.query;
-        const where = { status: 'open' };
+        const { type, niche, language, minSubs, maxSubs, page = 1, limit = 20, includeAll, status } = req.query;
+        const where = {};
+
+        if (status) {
+            where.status = status;
+        } else if (!['1', 'true', 'yes'].includes(String(includeAll || '').toLowerCase())) {
+            where.status = 'open';
+        }
 
         if (type) where.type = type;
         if (niche) where.niche = niche;
