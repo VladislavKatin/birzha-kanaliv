@@ -4,6 +4,34 @@
 module.exports = {
     async up(queryInterface) {
         const now = new Date();
+        const seedUserIds = [
+            '11111111-1111-4111-8111-111111111111',
+            '22222222-2222-4222-8222-222222222222',
+            'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        ];
+        const seedUserEmails = [
+            'creator.one@example.com',
+            'creator.two@example.com',
+            'demo.one@example.com',
+            'demo.two@example.com',
+        ];
+        const seedChannelIds = [
+            '33333333-3333-4333-8333-333333333333',
+            '44444444-4444-4444-8444-444444444444',
+            'aaaa1111-aaaa-4111-8111-aaaaaaaa1111',
+            'bbbb2222-bbbb-4222-8222-bbbbbbbb2222',
+            'cccc3333-cccc-4333-8333-cccccccc3333',
+            'dddd4444-dddd-4444-8444-dddddddd4444',
+        ];
+        const seedOfferIds = [
+            '55555555-5555-4555-8555-555555555555',
+            'a1010101-1010-4101-8101-a10101010101',
+            'a2020202-2020-4202-8202-a20202020202',
+            'a3030303-3030-4303-8303-a30303030303',
+            'a4040404-4040-4404-8404-a40404040404',
+            'a5050505-5050-4505-8505-a50505050505',
+        ];
 
         const users = [
             {
@@ -429,6 +457,16 @@ module.exports = {
         ];
 
         await queryInterface.sequelize.transaction(async (transaction) => {
+            // Make seed idempotent for repeated db:seed:all runs.
+            await queryInterface.bulkDelete('action_logs', { id: ['99999999-9999-4999-8999-999999999999'] }, { transaction });
+            await queryInterface.bulkDelete('messages', { id: ['88888888-8888-4888-8888-888888888888'] }, { transaction });
+            await queryInterface.bulkDelete('chat_rooms', { id: ['77777777-7777-4777-8777-777777777777'] }, { transaction });
+            await queryInterface.bulkDelete('traffic_matches', { id: ['66666666-6666-4666-8666-666666666666'] }, { transaction });
+            await queryInterface.bulkDelete('traffic_offers', { id: seedOfferIds }, { transaction });
+            await queryInterface.bulkDelete('youtube_accounts', { id: seedChannelIds }, { transaction });
+            await queryInterface.bulkDelete('users', { id: seedUserIds }, { transaction });
+            await queryInterface.bulkDelete('users', { email: seedUserEmails }, { transaction });
+
             await queryInterface.bulkInsert('users', users, { transaction });
             await queryInterface.bulkInsert('youtube_accounts', channels, { transaction });
             await queryInterface.bulkInsert('traffic_offers', offers, { transaction });
