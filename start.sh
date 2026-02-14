@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "========================================"
-echo "  ViewExchange/Youtoobe Startup Script"
+echo "  Birzha Kanaliv Startup Script"
 echo "========================================"
 echo ""
 
@@ -37,15 +37,20 @@ echo "   OK - Migrations complete"
 echo ""
 echo "[3/4] Running seeds..."
 npx sequelize-cli db:seed:all
+if [ $? -ne 0 ]; then
+    echo "ERROR: Seed failed"
+    exit 1
+fi
 echo "   OK - Seeds complete"
 
-# Start servers
+# Start apps
 echo ""
-echo "[4/4] Starting servers..."
+echo "[4/4] Starting apps..."
 echo ""
 echo "========================================"
-echo "  Backend:  http://localhost:3001"
-echo "  Frontend: http://localhost:5173"
+echo "  Backend:        http://localhost:3001"
+echo "  User Frontend:  http://localhost:5173"
+echo "  Admin Frontend: http://localhost:5174"
 echo "========================================"
 echo ""
 echo "Press Ctrl+C to stop all servers"
@@ -60,8 +65,12 @@ BACKEND_PID=$!
 # Wait a bit for backend to start
 sleep 3
 
-# Start frontend
+# Start admin frontend in background
+cd ../admin-frontend && npm run dev &
+ADMIN_PID=$!
+
+# Start user frontend
 cd ../client && npm run dev
 
 # Cleanup on exit
-trap "kill $BACKEND_PID 2>/dev/null" EXIT
+trap "kill $BACKEND_PID 2>/dev/null; kill $ADMIN_PID 2>/dev/null" EXIT
