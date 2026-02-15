@@ -1,11 +1,9 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import './ProfilePage.css';
-
-const LANGUAGES = ['Українська', 'English', 'Русский', 'Deutsch', 'Español', 'Français', 'Polski', 'Türkçe', 'العربية', '中文', '日本語'];
 
 const SOCIAL_PLATFORMS = [
     { key: 'telegram', label: 'Telegram', icon: '✈️' },
@@ -28,11 +26,11 @@ const SOCIAL_SUGGESTED_PREFIXES = {
 export default function EditProfilePage() {
     const { dbUser, refreshUserData } = useAuthStore();
     const navigate = useNavigate();
+    const [initialForm, setInitialForm] = useState(null);
     const [form, setForm] = useState({
         displayName: '',
         bio: '',
         location: '',
-        languages: [],
         birthYear: '',
         gender: '',
         professionalRole: '',
@@ -50,18 +48,19 @@ export default function EditProfilePage() {
     useEffect(() => {
         if (!dbUser) return;
 
-        setForm({
+        const nextForm = {
             displayName: dbUser.displayName || '',
             bio: dbUser.bio || '',
             location: dbUser.location || '',
-            languages: dbUser.languages || [],
             birthYear: dbUser.birthYear || '',
             gender: dbUser.gender || '',
             professionalRole: dbUser.professionalRole || '',
             companyName: dbUser.companyName || '',
             website: dbUser.website || '',
             socialLinks: dbUser.socialLinks || {},
-        });
+        };
+        setForm(nextForm);
+        setInitialForm(nextForm);
         setAvatarPreview(dbUser.photoURL || null);
     }, [dbUser]);
 
@@ -72,15 +71,6 @@ export default function EditProfilePage() {
 
     function updateField(key, value) {
         setForm((prev) => ({ ...prev, [key]: value }));
-    }
-
-    function toggleLanguage(language) {
-        setForm((prev) => ({
-            ...prev,
-            languages: prev.languages.includes(language)
-                ? prev.languages.filter((item) => item !== language)
-                : [...prev.languages, language],
-        }));
     }
 
     function updateSocial(platform, value) {
@@ -147,6 +137,7 @@ export default function EditProfilePage() {
         try {
             await api.put('/profile', form);
             toast.success('Профіль збережено!');
+            setInitialForm(form);
             refreshUserData();
         } catch {
             toast.error('Не вдалося зберегти');
@@ -183,6 +174,25 @@ export default function EditProfilePage() {
         }
     }
 
+    const profileCompletion = useMemo(() => {
+        const fields = [form.displayName, form.bio, form.location, form.professionalRole, form.website, form.companyName, form.birthYear, form.gender];
+        const socialsCount = Object.values(form.socialLinks || {}).filter((value) => String(value || '').trim()).length;
+        const completedFields = fields.filter((value) => String(value || '').trim()).length + (socialsCount > 0 ? 1 : 0);
+        const totalFields = fields.length + 1;
+        return Math.round((completedFields / totalFields) * 100);
+    }, [form]);
+
+    const isDirty = useMemo(() => {
+        if (!initialForm) return false;
+        return JSON.stringify(form) !== JSON.stringify(initialForm);
+    }, [form, initialForm]);
+
+    function handleResetChanges() {
+        if (!initialForm) return;
+        setForm(initialForm);
+        toast.success('Зміни скинуто');
+    }
+
     return (
         <div className="edit-profile-page">
             <div className="edit-profile-header">
@@ -191,6 +201,9 @@ export default function EditProfilePage() {
                     <p className="edit-profile-subtitle">Оновіть публічну інформацію та керуйте тим, що бачать інші користувачі.</p>
                 </div>
                 <div className="edit-profile-header-actions">
+                    <button className="btn btn-secondary" onClick={handleResetChanges} disabled={!isDirty || saving}>
+                        Скинути зміни
+                    </button>
                     <button className="btn btn-secondary" onClick={() => navigate('/profile')}>
                         Переглянути профіль
                     </button>
@@ -198,6 +211,19 @@ export default function EditProfilePage() {
                         {saving ? 'Збереження...' : 'Зберегти'}
                     </button>
                 </div>
+            </div>
+
+            <div className="card edit-section profile-completion-section">
+                <div className="profile-completion-head">
+                    <h3>Статус профілю</h3>
+                    <strong>{profileCompletion}%</strong>
+                </div>
+                <div className="profile-completion-track">
+                    <div className="profile-completion-fill" style={{ width: `${profileCompletion}%` }} />
+                </div>
+                <p className="section-desc">
+                    Додайте базову інформацію та щонайменше одне соцпосилання, щоб підвищити довіру до профілю в каталозі.
+                </p>
             </div>
 
             <div className="card edit-section network-info-section">
@@ -287,17 +313,6 @@ export default function EditProfilePage() {
                 <div className="form-group">
                     <label className="form-label">Біографія</label>
                     <textarea className="form-textarea" rows={4} placeholder="Розкажіть про себе..." value={form.bio} onChange={(event) => updateField('bio', event.target.value)} />
-                </div>
-            </div>
-
-            <div className="card edit-section">
-                <h3>Мови</h3>
-                <div className="language-chips">
-                    {LANGUAGES.map((language) => (
-                        <button key={language} className={`language-chip ${form.languages.includes(language) ? 'active' : ''}`} onClick={() => toggleLanguage(language)}>
-                            {language}
-                        </button>
-                    ))}
                 </div>
             </div>
 
