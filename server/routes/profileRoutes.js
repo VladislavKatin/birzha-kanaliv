@@ -134,110 +134,6 @@ router.get('/network-info', auth, async (req, res) => {
     }
 });
 
-router.get('/:userId', async (req, res) => {
-    try {
-        if (!isUuid(req.params.userId)) {
-            return res.status(404).json({ error: 'Користувача не знайдено' });
-        }
-
-        const user = await User.findByPk(req.params.userId, {
-            attributes: { exclude: ['firebaseUid'] },
-        });
-        if (!user) {
-            return res.status(404).json({ error: 'Користувача не знайдено' });
-        }
-
-        const privacy = user.privacySettings || {};
-        const profile = {
-            id: user.id,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            badges: user.badges || [],
-            createdAt: user.createdAt,
-        };
-
-        const conditionalFields = [
-            'bio',
-            'location',
-            'languages',
-            'birthYear',
-            'gender',
-            'professionalRole',
-            'companyName',
-            'website',
-            'socialLinks',
-        ];
-
-        let requesterVerified = false;
-        const authHeader = req.headers.authorization;
-        if (authHeader) {
-            try {
-                const admin = require('../config/firebase');
-                const token = authHeader.replace('Bearer ', '');
-                const decoded = await admin.auth().verifyIdToken(token);
-                const requester = await User.findOne({ where: { firebaseUid: decoded.uid } });
-                if (requester) {
-                    const verifiedChannel = await YouTubeAccount.findOne({
-                        where: { userId: requester.id, verified: true },
-                    });
-                    requesterVerified = !!verifiedChannel;
-                }
-            } catch (_e) {
-                // Not logged in or invalid token -> treat as public.
-            }
-        }
-
-        for (const field of conditionalFields) {
-            const visibility = privacy[field] || 'public';
-            if (visibility === 'public') {
-                profile[field] = user[field];
-            } else if (visibility === 'verified' && requesterVerified) {
-                profile[field] = user[field];
-            }
-        }
-
-        const channels = await YouTubeAccount.findAll({
-            where: { userId: user.id, isActive: true },
-            attributes: ['id', 'channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'totalViews', 'niche', 'verified'],
-        });
-
-        const channelIds = channels.map((channel) => channel.id);
-        let completedExchanges = 0;
-        let avgRating = 0;
-        let reviewCount = 0;
-
-        if (channelIds.length > 0) {
-            completedExchanges = await TrafficMatch.count({
-                where: {
-                    [Op.or]: [
-                        { initiatorChannelId: { [Op.in]: channelIds } },
-                        { targetChannelId: { [Op.in]: channelIds } },
-                    ],
-                    status: 'completed',
-                },
-            });
-
-            const reviews = await Review.findAll({
-                where: { toChannelId: { [Op.in]: channelIds } },
-                attributes: ['rating'],
-            });
-
-            reviewCount = reviews.length;
-            avgRating = reviewCount > 0
-                ? Math.round((reviews.reduce((sum, item) => sum + item.rating, 0) / reviewCount) * 10) / 10
-                : 0;
-        }
-
-        profile.stats = { completedExchanges, avgRating, reviewCount };
-        profile.channels = channels;
-
-        return res.json({ profile });
-    } catch (error) {
-        console.error('Get profile error:', error);
-        return res.status(500).json({ error: 'Failed to get profile' });
-    }
-});
-
 router.put('/', auth, async (req, res) => {
     try {
         const payload = await sequelize.transaction(async (transaction) => {
@@ -442,6 +338,110 @@ router.delete('/notifications/telegram-link', auth, async (req, res) => {
     } catch (error) {
         console.error('Telegram unlink error:', error);
         return res.status(500).json({ error: 'Failed to unlink telegram' });
+    }
+});
+
+router.get('/:userId', async (req, res) => {
+    try {
+        if (!isUuid(req.params.userId)) {
+            return res.status(404).json({ error: 'Користувача не знайдено' });
+        }
+
+        const user = await User.findByPk(req.params.userId, {
+            attributes: { exclude: ['firebaseUid'] },
+        });
+        if (!user) {
+            return res.status(404).json({ error: 'Користувача не знайдено' });
+        }
+
+        const privacy = user.privacySettings || {};
+        const profile = {
+            id: user.id,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            badges: user.badges || [],
+            createdAt: user.createdAt,
+        };
+
+        const conditionalFields = [
+            'bio',
+            'location',
+            'languages',
+            'birthYear',
+            'gender',
+            'professionalRole',
+            'companyName',
+            'website',
+            'socialLinks',
+        ];
+
+        let requesterVerified = false;
+        const authHeader = req.headers.authorization;
+        if (authHeader) {
+            try {
+                const admin = require('../config/firebase');
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = await admin.auth().verifyIdToken(token);
+                const requester = await User.findOne({ where: { firebaseUid: decoded.uid } });
+                if (requester) {
+                    const verifiedChannel = await YouTubeAccount.findOne({
+                        where: { userId: requester.id, verified: true },
+                    });
+                    requesterVerified = !!verifiedChannel;
+                }
+            } catch (_e) {
+                // Not logged in or invalid token -> treat as public.
+            }
+        }
+
+        for (const field of conditionalFields) {
+            const visibility = privacy[field] || 'public';
+            if (visibility === 'public') {
+                profile[field] = user[field];
+            } else if (visibility === 'verified' && requesterVerified) {
+                profile[field] = user[field];
+            }
+        }
+
+        const channels = await YouTubeAccount.findAll({
+            where: { userId: user.id, isActive: true },
+            attributes: ['id', 'channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'totalViews', 'niche', 'verified'],
+        });
+
+        const channelIds = channels.map((channel) => channel.id);
+        let completedExchanges = 0;
+        let avgRating = 0;
+        let reviewCount = 0;
+
+        if (channelIds.length > 0) {
+            completedExchanges = await TrafficMatch.count({
+                where: {
+                    [Op.or]: [
+                        { initiatorChannelId: { [Op.in]: channelIds } },
+                        { targetChannelId: { [Op.in]: channelIds } },
+                    ],
+                    status: 'completed',
+                },
+            });
+
+            const reviews = await Review.findAll({
+                where: { toChannelId: { [Op.in]: channelIds } },
+                attributes: ['rating'],
+            });
+
+            reviewCount = reviews.length;
+            avgRating = reviewCount > 0
+                ? Math.round((reviews.reduce((sum, item) => sum + item.rating, 0) / reviewCount) * 10) / 10
+                : 0;
+        }
+
+        profile.stats = { completedExchanges, avgRating, reviewCount };
+        profile.channels = channels;
+
+        return res.json({ profile });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        return res.status(500).json({ error: 'Failed to get profile' });
     }
 });
 

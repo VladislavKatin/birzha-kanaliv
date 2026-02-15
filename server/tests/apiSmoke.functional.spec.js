@@ -15,6 +15,7 @@ async function runApiSmokeFunctionalTests() {
 
     try {
         await smokeAuthMe(baseUrl);
+        await smokeNotificationSettings(baseUrl);
         await smokeOffersList(baseUrl);
         await smokeOfferDetailsPublic(baseUrl);
 
@@ -54,6 +55,29 @@ async function smokeAuthMe(baseUrl) {
 
     assert.equal(response.status, 200);
     assert.equal(!!response.body.user, true);
+}
+
+async function smokeNotificationSettings(baseUrl) {
+    const telegramLink = await request(baseUrl, {
+        method: 'GET',
+        path: '/api/profile/notifications/telegram-link',
+        uid: OFFER_OWNER_UID,
+    });
+    assert.equal(telegramLink.status, 200);
+    assert.equal(typeof telegramLink.body.configured, 'boolean');
+    assert.equal(typeof telegramLink.body.connected, 'boolean');
+
+    const invalidEnable = await request(baseUrl, {
+        method: 'PUT',
+        path: '/api/profile/notifications',
+        uid: OFFER_OWNER_UID,
+        body: {
+            notificationPrefs: {
+                telegram: true,
+            },
+        },
+    });
+    assert.equal(invalidEnable.status, 400);
 }
 
 async function smokeOffersList(baseUrl) {
