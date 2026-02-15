@@ -195,22 +195,6 @@ export default function EditProfilePage() {
                 </div>
             </div>
 
-            <div className="card edit-section quick-actions-section">
-                <h3>Швидке додавання без посилань</h3>
-                <p className="section-desc">Деякі дані зручніше додавати прямо у відповідних розділах.</p>
-                <div className="quick-actions-grid">
-                    <button className="btn btn-secondary quick-action-btn" onClick={() => navigate('/my-channels')}>
-                        Підключити YouTube канал
-                    </button>
-                    <button className="btn btn-secondary quick-action-btn" onClick={() => navigate('/settings/notifications')}>
-                        Налаштувати сповіщення
-                    </button>
-                    <button className="btn btn-secondary quick-action-btn" onClick={() => navigate('/support/chats')}>
-                        Написати адміністрації
-                    </button>
-                </div>
-            </div>
-
             <div className="card edit-section network-info-section">
                 <div className="network-info-head">
                     <h3>Мережева інформація</h3>
