@@ -27,9 +27,15 @@ async function start() {
     await sequelize.authenticate();
     console.log('Database connected');
 
-    if (process.env.NODE_ENV !== 'production') {
+    const shouldSyncSchema =
+      process.env.NODE_ENV !== 'production' &&
+      String(process.env.DB_SYNC_ON_START || '').toLowerCase() === 'true';
+
+    if (shouldSyncSchema) {
       await sequelize.sync({ alter: true });
-      console.log('Database synced');
+      console.log('Database synced via sequelize.sync({ alter: true })');
+    } else {
+      console.log('Schema auto-sync skipped (use migrations or set DB_SYNC_ON_START=true)');
     }
 
     server.listen(PORT, () => {
