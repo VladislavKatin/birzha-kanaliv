@@ -14,12 +14,28 @@ export default function NotificationSettingsPage() {
         webpush: false,
     });
     const [saving, setSaving] = useState(false);
+    const [telegramInfo, setTelegramInfo] = useState({
+        configured: false,
+        botUsername: null,
+        deepLink: null,
+        connected: false,
+        telegramUsername: null,
+        telegramChatId: null,
+        telegramLinkedAt: null,
+    });
+    const [loadingTelegram, setLoadingTelegram] = useState(false);
+    const [sendingTelegramTest, setSendingTelegramTest] = useState(false);
+    const [disconnectingTelegram, setDisconnectingTelegram] = useState(false);
 
     useEffect(() => {
         if (dbUser?.notificationPrefs) {
             setPrefs((prev) => ({ ...prev, ...dbUser.notificationPrefs }));
         }
     }, [dbUser]);
+
+    useEffect(() => {
+        loadTelegramInfo();
+    }, []);
 
     function toggle(key) {
         setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -28,12 +44,56 @@ export default function NotificationSettingsPage() {
     async function handleSave() {
         setSaving(true);
         try {
-            await api.put('/profile/notifications', { notificationPrefs: prefs });
+            const payload = { ...prefs };
+            if (payload.telegram && !telegramInfo.connected) {
+                toast.error('Спочатку підключіть Telegram-бота');
+                setSaving(false);
+                return;
+            }
+            await api.put('/profile/notifications', { notificationPrefs: payload });
             toast.success('Сповіщення збережено');
-        } catch {
-            toast.error('Не вдалося зберегти');
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося зберегти');
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function loadTelegramInfo() {
+        setLoadingTelegram(true);
+        try {
+            const response = await api.get('/profile/notifications/telegram-link');
+            setTelegramInfo(response.data || {});
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося отримати Telegram-налаштування');
+        } finally {
+            setLoadingTelegram(false);
+        }
+    }
+
+    async function handleSendTelegramTest() {
+        setSendingTelegramTest(true);
+        try {
+            await api.post('/profile/notifications/telegram-test');
+            toast.success('Тестове повідомлення надіслано');
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося надіслати тест');
+        } finally {
+            setSendingTelegramTest(false);
+        }
+    }
+
+    async function handleDisconnectTelegram() {
+        setDisconnectingTelegram(true);
+        try {
+            await api.delete('/profile/notifications/telegram-link');
+            setPrefs((prev) => ({ ...prev, telegram: false }));
+            await loadTelegramInfo();
+            toast.success('Telegram відключено');
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося відключити Telegram');
+        } finally {
+            setDisconnectingTelegram(false);
         }
     }
 
@@ -55,13 +115,30 @@ export default function NotificationSettingsPage() {
                         <span className="toggle-thumb" />
                     </button>
                 </div>
-                {prefs.telegram && (
+                {!telegramInfo.configured && !loadingTelegram && (
+                    <div className="connect-hint">Telegram-бот ще не налаштований на сервері.</div>
+                )}
+                {telegramInfo.configured && (
                     <div className="connect-hint">
-                        <span>Посилання:</span>{' '}
-                        <a href="https://t.me/youtoobe_bot" target="_blank" rel="noopener noreferrer">
-                            @youtoobe_bot
-                        </a>{' '}
-                        та команда `/start`
+                        {telegramInfo.connected
+                            ? `Підключено як ${telegramInfo.telegramUsername ? `@${telegramInfo.telegramUsername}` : 'Telegram-користувач'}`
+                            : 'Telegram не підключений'}
+                    </div>
+                )}
+                {telegramInfo.configured && telegramInfo.deepLink && (
+                    <div className="settings-actions-row">
+                        <a className="btn btn-secondary btn-sm" href={telegramInfo.deepLink} target="_blank" rel="noopener noreferrer">
+                            Підключити Telegram
+                        </a>
+                        <button className="btn btn-secondary btn-sm" onClick={loadTelegramInfo} disabled={loadingTelegram}>
+                            {loadingTelegram ? 'Оновлення...' : 'Оновити статус'}
+                        </button>
+                        <button className="btn btn-secondary btn-sm" onClick={handleSendTelegramTest} disabled={!telegramInfo.connected || sendingTelegramTest}>
+                            {sendingTelegramTest ? 'Надсилання...' : 'Тест повідомлення'}
+                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={handleDisconnectTelegram} disabled={!telegramInfo.connected || disconnectingTelegram}>
+                            {disconnectingTelegram ? 'Відключення...' : 'Відключити'}
+                        </button>
                     </div>
                 )}
             </div>

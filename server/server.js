@@ -5,6 +5,7 @@ const { sequelize } = require('./models');
 const setupSocket = require('./socketSetup');
 const { initQueues } = require('./queues');
 const { isRedisConnected } = require('./config/redis');
+const { startTelegramBotPolling } = require('./services/telegramService');
 
 const PORT = process.env.PORT || 3001;
 
@@ -37,6 +38,7 @@ async function start() {
     });
 
     initQueues();
+    startTelegramBotPolling();
 
     if (!isRedisConnected()) {
       const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;

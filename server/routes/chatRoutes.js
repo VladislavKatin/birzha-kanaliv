@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const { completeMatchInTransaction } = require('../services/chatCompletionService');
 const { normalizeIncomingMessagePayload, formatMessageForClient } = require('../services/chatMessagePayload');
 const { logInfo, logError } = require('../services/logger');
+const { sendTelegramNotificationToUser } = require('../services/telegramService');
 
 /**
  * Verify that a user is a participant in a traffic match.
@@ -243,6 +244,32 @@ router.post('/:matchId/messages', auth, async (req, res) => {
             messageId: fullMessage.id,
             hasImage: !!fullMessage.imageData,
         });
+
+        try {
+            const partnerChannelId = result.channelIds.includes(result.match.initiatorChannelId)
+                ? result.match.targetChannelId
+                : result.match.initiatorChannelId;
+            const senderChannelId = result.channelIds.includes(result.match.initiatorChannelId)
+                ? result.match.initiatorChannelId
+                : result.match.targetChannelId;
+            const [partnerChannel, senderChannel] = await Promise.all([
+                YouTubeAccount.findByPk(partnerChannelId, { attributes: ['userId', 'channelTitle'] }),
+                YouTubeAccount.findByPk(senderChannelId, { attributes: ['channelTitle'] }),
+            ]);
+
+            if (partnerChannel?.userId && partnerChannel.userId !== result.user.id) {
+                await sendTelegramNotificationToUser(
+                    partnerChannel.userId,
+                    `Нове повідомлення у чаті обміну від "${senderChannel?.channelTitle || 'партнера'}".`
+                );
+            }
+        } catch (notifyError) {
+            logError('chat.message.telegram.notify.failed', {
+                matchId: req.params?.matchId || null,
+                senderUserId: result.user.id,
+                error: notifyError,
+            });
+        }
     } catch (error) {
         logError('chat.message.send.failed', {
             matchId: req.params?.matchId || null,

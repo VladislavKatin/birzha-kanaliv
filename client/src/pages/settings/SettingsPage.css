@@ -90,8 +90,19 @@
     color: var(--brand-400);
 }
 
+.settings-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
 @media (max-width: 768px) {
     .settings-page {
         padding: 0;
+    }
+
+    .settings-actions-row .btn {
+        width: 100%;
     }
 }

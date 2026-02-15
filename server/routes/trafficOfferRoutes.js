@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const { getUserChannelsByFirebaseUid, resolveActionChannelId } = require('../services/channelAccessService');
 const { getSystemLimits } = require('../services/systemLimitsService');
 const { ensureAutoOffersForChannels } = require('../services/autoOfferService');
+const { sendTelegramNotificationToUser } = require('../services/telegramService');
 
 function handleChannelSelectionError(res, errorCode, noChannelMessage) {
     if (errorCode === 'NO_CHANNELS_CONNECTED') {
@@ -435,6 +436,26 @@ router.post('/:id/respond', auth, async (req, res) => {
 
         if (payload.error) {
             return res.status(payload.error.status).json(payload.error.body);
+        }
+
+        if (!payload.idempotent) {
+            try {
+                const [targetChannel, initiatorChannel] = await Promise.all([
+                    YouTubeAccount.findByPk(payload.match.targetChannelId, { attributes: ['userId', 'channelTitle'] }),
+                    YouTubeAccount.findByPk(payload.match.initiatorChannelId, { attributes: ['channelTitle'] }),
+                ]);
+
+                if (targetChannel?.userId) {
+                    const initiatorTitle = initiatorChannel?.channelTitle || 'Інший канал';
+                    const targetTitle = targetChannel.channelTitle || 'Ваш канал';
+                    await sendTelegramNotificationToUser(
+                        targetChannel.userId,
+                        `Новий запит на обмін для каналу "${targetTitle}" від "${initiatorTitle}". Перевірте вхідні запити у кабінеті.`
+                    );
+                }
+            } catch (notifyError) {
+                console.error('Telegram notify (new match) failed:', notifyError.message);
+            }
         }
 
         return res.status(payload.idempotent ? 200 : 201).json({ match: payload.match, idempotent: payload.idempotent });

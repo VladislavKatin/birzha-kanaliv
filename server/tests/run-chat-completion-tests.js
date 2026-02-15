@@ -27,6 +27,7 @@ const { runAdminSystemUnitTests } = require('./adminSystem.unit.spec');
 const { runAdminSystemFunctionalTests } = require('./adminSystem.functional.spec');
 const { runAdminOpsUnitTests } = require('./adminOps.unit.spec');
 const { runAdminOpsFunctionalTests } = require('./adminOps.functional.spec');
+const { runTelegramTokenUnitTests } = require('./telegramToken.unit.spec');
 
 async function run() {
     const tests = [
@@ -59,6 +60,7 @@ async function run() {
         { name: 'functional: admin system insights flow', fn: runAdminSystemFunctionalTests },
         { name: 'unit: admin operations endpoint manifest', fn: runAdminOpsUnitTests },
         { name: 'functional: admin operations flow', fn: runAdminOpsFunctionalTests },
+        { name: 'unit: telegram link token signing', fn: runTelegramTokenUnitTests },
     ];
 
     let failed = 0;

@@ -5,6 +5,8 @@ const auth = require('../middleware/auth');
 const path = require('path');
 const fs = require('fs');
 const { validate: isUuid } = require('uuid');
+const { createTelegramLinkToken } = require('../services/telegramLinkToken');
+const { getBotUsername, isTelegramConfigured, sendTelegramNotificationToUser, unlinkTelegramChatForUser } = require('../services/telegramService');
 
 async function getUser(firebaseUid, transaction = null) {
     return User.findOne({ where: { firebaseUid }, ...(transaction ? { transaction } : {}) });
@@ -353,6 +355,9 @@ router.put('/notifications', auth, async (req, res) => {
             if (!user) return { error: { status: 404, body: { error: 'User not found' } } };
 
             const nextPrefs = { ...user.notificationPrefs, ...notificationPrefs };
+            if (nextPrefs.telegram && !nextPrefs.telegramChatId) {
+                return { error: { status: 400, body: { error: 'Спочатку підключіть Telegram-бота' } } };
+            }
             await user.update({ notificationPrefs: nextPrefs }, { transaction });
             await ActionLog.create({
                 userId: user.id,
@@ -368,6 +373,75 @@ router.put('/notifications', auth, async (req, res) => {
     } catch (error) {
         console.error('Update notification prefs error:', error);
         return res.status(500).json({ error: 'Failed to update notifications' });
+    }
+});
+
+router.get('/notifications/telegram-link', auth, async (req, res) => {
+    try {
+        const user = await getUser(req.firebaseUser.uid);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const botUsername = getBotUsername();
+        const token = createTelegramLinkToken(user.id);
+        const deepLink = botUsername ? `https://t.me/${botUsername}?start=${token}` : null;
+        const prefs = user.notificationPrefs || {};
+
+        return res.json({
+            configured: isTelegramConfigured(),
+            botUsername: botUsername ? `@${botUsername}` : null,
+            deepLink,
+            connected: !!prefs.telegramChatId,
+            telegramChatId: prefs.telegramChatId || null,
+            telegramUsername: prefs.telegramUsername || null,
+            telegramLinkedAt: prefs.telegramLinkedAt || null,
+        });
+    } catch (error) {
+        console.error('Get telegram link error:', error);
+        return res.status(500).json({ error: 'Failed to build telegram link' });
+    }
+});
+
+router.post('/notifications/telegram-test', auth, async (req, res) => {
+    try {
+        const user = await getUser(req.firebaseUser.uid);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const result = await sendTelegramNotificationToUser(
+            user.id,
+            'Тестове сповіщення: Telegram підключено успішно.'
+        );
+
+        if (!result.ok) {
+            return res.status(400).json({ error: `Не вдалося надіслати тест: ${result.reason}` });
+        }
+
+        await sequelize.transaction(async (transaction) => {
+            await ActionLog.create({
+                userId: user.id,
+                action: 'telegram_test_sent',
+                details: {},
+                ip: req.ip,
+            }, { transaction });
+        });
+        return res.json({ ok: true });
+    } catch (error) {
+        console.error('Telegram test send error:', error);
+        return res.status(500).json({ error: 'Failed to send telegram test' });
+    }
+});
+
+router.delete('/notifications/telegram-link', auth, async (req, res) => {
+    try {
+        const user = await getUser(req.firebaseUser.uid);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const payload = await unlinkTelegramChatForUser(user.id, req.ip);
+        if (!payload.ok) return res.status(400).json({ error: payload.reason || 'Failed to unlink telegram' });
+
+        return res.json({ notificationPrefs: payload.notificationPrefs });
+    } catch (error) {
+        console.error('Telegram unlink error:', error);
+        return res.status(500).json({ error: 'Failed to unlink telegram' });
     }
 });
 
