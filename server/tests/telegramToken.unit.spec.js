@@ -3,6 +3,9 @@ const { createTelegramLinkToken, verifyTelegramLinkToken } = require('../service
 
 function runTelegramTokenUnitTests() {
     const token = createTelegramLinkToken('11111111-1111-4111-8111-111111111111', 60);
+    assert.equal(token.length <= 64, true);
+    assert.equal(/^[A-Za-z0-9_-]+$/.test(token), true);
+
     const verified = verifyTelegramLinkToken(token);
     assert.equal(verified.valid, true);
     assert.equal(verified.userId, '11111111-1111-4111-8111-111111111111');
