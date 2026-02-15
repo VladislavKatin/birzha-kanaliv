@@ -162,10 +162,34 @@ export default function EditProfilePage() {
     return (
         <div className="edit-profile-page">
             <div className="edit-profile-header">
-                <h1>Редагування профілю</h1>
-                <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-                    {saving ? 'Збереження...' : 'Зберегти'}
-                </button>
+                <div>
+                    <h1>Редагування профілю</h1>
+                    <p className="edit-profile-subtitle">Оновіть публічну інформацію та керуйте тим, що бачать інші користувачі.</p>
+                </div>
+                <div className="edit-profile-header-actions">
+                    <button className="btn btn-secondary" onClick={() => navigate('/profile')}>
+                        Переглянути профіль
+                    </button>
+                    <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                        {saving ? 'Збереження...' : 'Зберегти'}
+                    </button>
+                </div>
+            </div>
+
+            <div className="card edit-section quick-actions-section">
+                <h3>Швидке додавання без посилань</h3>
+                <p className="section-desc">Деякі дані зручніше додавати прямо у відповідних розділах.</p>
+                <div className="quick-actions-grid">
+                    <button className="btn btn-secondary quick-action-btn" onClick={() => navigate('/my-channels')}>
+                        Підключити YouTube канал
+                    </button>
+                    <button className="btn btn-secondary quick-action-btn" onClick={() => navigate('/settings/notifications')}>
+                        Налаштувати сповіщення
+                    </button>
+                    <button className="btn btn-secondary quick-action-btn" onClick={() => navigate('/support/chats')}>
+                        Написати адміністрації
+                    </button>
+                </div>
             </div>
 
             <div className="card edit-section">
@@ -240,6 +264,7 @@ export default function EditProfilePage() {
 
             <div className="card edit-section">
                 <h3>Соціальні мережі</h3>
+                <p className="section-desc">Для YouTube краще підключати канал через розділ «Мої канали», щоб статистика підтягувалась автоматично.</p>
                 <div className="social-inputs">
                     {SOCIAL_PLATFORMS.map((platform) => (
                         <div key={platform.key} className="social-input-row">
@@ -251,6 +276,11 @@ export default function EditProfilePage() {
                                 value={form.socialLinks[platform.key] || ''}
                                 onChange={(event) => updateSocial(platform.key, event.target.value)}
                             />
+                            {platform.key === 'youtube' && (
+                                <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate('/my-channels')}>
+                                    Додати
+                                </button>
+                            )}
                         </div>
                     ))}
                 </div>

@@ -229,25 +229,39 @@
 
 /* ─── Edit Profile ───────────────────────────────── */
 .edit-profile-page {
-    max-width: 900px;
+    max-width: 980px;
 }
 
 .edit-profile-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 18px;
+    gap: 14px;
 }
 
 .edit-profile-header h1 {
     font-size: clamp(24px, 2.5vw, 30px);
     font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.edit-profile-subtitle {
+    margin: 0;
+    font-size: 14px;
+    color: #3e628f;
+}
+
+.edit-profile-header-actions {
+    display: flex;
+    gap: 10px;
 }
 
 .edit-section {
     margin-bottom: 14px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #d4e1f1;
     box-shadow: var(--shadow-md);
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
 }
 
 .edit-section h3 {
@@ -258,8 +272,22 @@
 
 .section-desc {
     font-size: 13px;
-    color: var(--text-muted);
+    color: #4a6a93;
     margin-bottom: 12px;
+}
+
+.quick-actions-section {
+    border-color: #c8dbf3;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.quick-action-btn {
+    width: 100%;
 }
 
 /* Avatar Upload */
@@ -366,6 +394,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .social-input-icon {
@@ -384,6 +413,7 @@
 
 .social-input-row .form-input {
     flex: 1;
+    min-width: 220px;
 }
 
 /* Privacy */
@@ -475,6 +505,18 @@
 }
 
 @media (max-width: 768px) {
+    .edit-profile-header {
+        flex-direction: column;
+    }
+
+    .edit-profile-header-actions {
+        width: 100%;
+    }
+
+    .edit-profile-header-actions .btn {
+        flex: 1;
+    }
+
     .profile-header-top {
         flex-direction: column;
         align-items: center;
@@ -499,6 +541,10 @@
 
     .social-input-row {
         flex-wrap: wrap;
+    }
+
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
     }
 
     .gdpr-actions {
