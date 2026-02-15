@@ -35,8 +35,9 @@ export default function NotificationSettingsPage() {
     }, [dbUser]);
 
     useEffect(() => {
+        if (!dbUser?.id) return;
         loadTelegramInfo();
-    }, []);
+    }, [dbUser?.id]);
 
     function toggle(key) {
         setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -61,6 +62,7 @@ export default function NotificationSettingsPage() {
     }
 
     async function loadTelegramInfo() {
+        if (!dbUser?.id) return;
         setLoadingTelegram(true);
         setTelegramLoadError('');
         try {
