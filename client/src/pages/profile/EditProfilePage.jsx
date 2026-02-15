@@ -25,24 +25,6 @@ const SOCIAL_SUGGESTED_PREFIXES = {
     twitter: 'https://x.com/',
 };
 
-const PRIVACY_FIELDS = [
-    { key: 'bio', label: 'Біографія' },
-    { key: 'location', label: 'Локація' },
-    { key: 'languages', label: 'Мови' },
-    { key: 'birthYear', label: 'Рік народження' },
-    { key: 'gender', label: 'Стать' },
-    { key: 'professionalRole', label: 'Роль' },
-    { key: 'companyName', label: 'Компанія' },
-    { key: 'website', label: 'Вебсайт' },
-    { key: 'socialLinks', label: 'Соцмережі' },
-];
-
-const PRIVACY_LEVELS = [
-    { value: 'public', label: 'Всім' },
-    { value: 'verified', label: 'Перевіреним' },
-    { value: 'private', label: 'Тільки мені' },
-];
-
 export default function EditProfilePage() {
     const { dbUser, refreshUserData } = useAuthStore();
     const navigate = useNavigate();
@@ -58,7 +40,6 @@ export default function EditProfilePage() {
         website: '',
         socialLinks: {},
     });
-    const [privacy, setPrivacy] = useState({});
     const [saving, setSaving] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -81,7 +62,6 @@ export default function EditProfilePage() {
             website: dbUser.website || '',
             socialLinks: dbUser.socialLinks || {},
         });
-        setPrivacy(dbUser.privacySettings || {});
         setAvatarPreview(dbUser.photoURL || null);
     }, [dbUser]);
 
@@ -125,18 +105,6 @@ export default function EditProfilePage() {
         updateSocial(platform, prefix);
     }
 
-    function updatePrivacy(field, value) {
-        setPrivacy((prev) => ({ ...prev, [field]: value }));
-    }
-
-    function applyPrivacyPreset(level) {
-        const next = {};
-        PRIVACY_FIELDS.forEach((field) => {
-            next[field.key] = level;
-        });
-        setPrivacy((prev) => ({ ...prev, ...next }));
-    }
-
     async function loadNetworkInfo() {
         setNetworkLoading(true);
         try {
@@ -178,7 +146,6 @@ export default function EditProfilePage() {
         setSaving(true);
         try {
             await api.put('/profile', form);
-            await api.put('/profile/privacy', { privacySettings: privacy });
             toast.success('Профіль збережено!');
             refreshUserData();
         } catch {
@@ -354,41 +321,6 @@ export default function EditProfilePage() {
                                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleSocialAdd(platform.key)}>
                                     Добавить
                                 </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            <div className="card edit-section">
-                <h3>Приватність</h3>
-                <p className="section-desc">Оберіть рівень видимості для кожного поля профілю або застосуйте пресет одним кліком.</p>
-                <div className="privacy-presets">
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => applyPrivacyPreset('public')}>
-                        Відкрити все
-                    </button>
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => applyPrivacyPreset('verified')}>
-                        Лише перевіреним
-                    </button>
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => applyPrivacyPreset('private')}>
-                        Максимально приватно
-                    </button>
-                </div>
-                <div className="privacy-grid">
-                    {PRIVACY_FIELDS.map((field) => (
-                        <div key={field.key} className="privacy-row">
-                            <span className="privacy-field-label">{field.label}</span>
-                            <div className="privacy-choice-group">
-                                {PRIVACY_LEVELS.map((level) => (
-                                    <button
-                                        key={level.value}
-                                        type="button"
-                                        className={`privacy-choice ${String(privacy[field.key] || 'public') === level.value ? 'active' : ''}`}
-                                        onClick={() => updatePrivacy(field.key, level.value)}
-                                    >
-                                        {level.label}
-                                    </button>
-                                ))}
                             </div>
                         </div>
                     ))}
