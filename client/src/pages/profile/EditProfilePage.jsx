@@ -16,6 +16,15 @@ const SOCIAL_PLATFORMS = [
     { key: 'twitter', label: 'Twitter/X', icon: '🐦' },
 ];
 
+const SOCIAL_SUGGESTED_PREFIXES = {
+    telegram: 'https://t.me/',
+    youtube: 'https://youtube.com/@',
+    tiktok: 'https://www.tiktok.com/@',
+    instagram: 'https://www.instagram.com/',
+    facebook: 'https://www.facebook.com/',
+    twitter: 'https://x.com/',
+};
+
 const PRIVACY_FIELDS = [
     { key: 'bio', label: 'Біографія' },
     { key: 'location', label: 'Локація' },
@@ -93,6 +102,21 @@ export default function EditProfilePage() {
             ...prev,
             socialLinks: { ...prev.socialLinks, [platform]: value },
         }));
+    }
+
+    function handleSocialAdd(platform) {
+        if (platform === 'youtube') {
+            navigate('/my-channels');
+            return;
+        }
+
+        const currentValue = String(form.socialLinks?.[platform] || '').trim();
+        if (currentValue) {
+            return;
+        }
+
+        const prefix = SOCIAL_SUGGESTED_PREFIXES[platform] || 'https://';
+        updateSocial(platform, prefix);
     }
 
     function updatePrivacy(field, value) {
@@ -301,20 +325,22 @@ export default function EditProfilePage() {
                 <p className="section-desc">Для YouTube краще підключати канал через розділ «Мої канали», щоб статистика підтягувалась автоматично.</p>
                 <div className="social-inputs">
                     {SOCIAL_PLATFORMS.map((platform) => (
-                        <div key={platform.key} className="social-input-row">
-                            <span className="social-input-icon">{platform.icon}</span>
-                            <span className="social-input-label">{platform.label}</span>
-                            <input
-                                className="form-input"
-                                placeholder={`Посилання на ${platform.label.toLowerCase()}`}
-                                value={form.socialLinks[platform.key] || ''}
-                                onChange={(event) => updateSocial(platform.key, event.target.value)}
-                            />
-                            {platform.key === 'youtube' && (
-                                <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate('/my-channels')}>
-                                    Додати
+                        <div key={platform.key} className="social-card-row">
+                            <div className="social-card-head">
+                                <span className="social-input-icon">{platform.icon}</span>
+                                <span className="social-input-label">{platform.label}</span>
+                            </div>
+                            <div className="social-card-controls">
+                                <input
+                                    className="form-input"
+                                    placeholder={`Посилання на ${platform.label.toLowerCase()}`}
+                                    value={form.socialLinks[platform.key] || ''}
+                                    onChange={(event) => updateSocial(platform.key, event.target.value)}
+                                />
+                                <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleSocialAdd(platform.key)}>
+                                    Добавить
                                 </button>
-                            )}
+                            </div>
                         </div>
                     ))}
                 </div>

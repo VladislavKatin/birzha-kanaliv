@@ -439,16 +439,25 @@
 
 /* Socials */
 .social-inputs {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
 }
 
-.social-input-row {
+.social-card-row {
+    border: 1px solid #dbe6f3;
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.social-card-head {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
 }
 
 .social-input-icon {
@@ -465,9 +474,16 @@
     flex-shrink: 0;
 }
 
-.social-input-row .form-input {
+.social-card-controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.social-card-controls .form-input {
     flex: 1;
-    min-width: 220px;
+    min-width: 0;
 }
 
 /* Privacy */
@@ -593,8 +609,12 @@
         grid-template-columns: 1fr;
     }
 
-    .social-input-row {
-        flex-wrap: wrap;
+    .social-inputs {
+        grid-template-columns: 1fr;
+    }
+
+    .social-card-controls {
+        grid-template-columns: 1fr;
     }
 
     .quick-actions-grid {
