@@ -80,6 +80,16 @@
     gap: 16px;
 }
 
+.offer-status-warning {
+    border: 1px solid #f7d38e;
+    background: #fff8e8;
+    color: #8a5a00;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
 .offer-details-grid h3 {
     margin: 0 0 8px;
     font-size: 18px;

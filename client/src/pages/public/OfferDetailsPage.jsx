@@ -14,6 +14,19 @@ import {
 } from '../../services/publicOffers';
 import './OfferDetailsPage.css';
 
+function isOfferAvailableForResponse(offer) {
+    return offer?.status === 'open';
+}
+
+function getOfferStatusLabel(status) {
+    const map = {
+        open: 'Активна',
+        matched: 'В роботі',
+        closed: 'Закрита',
+    };
+    return map[status] || 'Недоступна';
+}
+
 export default function OfferDetailsPage() {
     const navigate = useNavigate();
     const { offerId } = useParams();
@@ -88,6 +101,11 @@ export default function OfferDetailsPage() {
     }, [user]);
 
     async function handleRespond() {
+        if (!isOfferAvailableForResponse(offer)) {
+            toast.error('Ця пропозиція зараз недоступна для обміну.');
+            return;
+        }
+
         if (!user) {
             navigate(buildAuthRedirectPath(buildOfferDetailsPath(offerId)));
             return;
@@ -140,6 +158,12 @@ export default function OfferDetailsPage() {
                                 <span>{getOfferTypeLabel(offer.type)}</span>
                             </header>
 
+                            {!isOfferAvailableForResponse(offer) && (
+                                <div className="offer-status-warning">
+                                    Статус пропозиції: <strong>{getOfferStatusLabel(offer.status)}</strong>. Перегляд доступний, але надіслати запит зараз не можна.
+                                </div>
+                            )}
+
                             <div className="offer-details-grid">
                                 <div>
                                     <h3>Опис пропозиції</h3>
@@ -168,8 +192,14 @@ export default function OfferDetailsPage() {
                                     </select>
                                 )}
 
-                                <button className="primary" onClick={handleRespond} disabled={responding}>
-                                    {user ? 'Запропонувати обмін' : 'Увійти, щоб запропонувати обмін'}
+                                <button
+                                    className="primary"
+                                    onClick={handleRespond}
+                                    disabled={responding || !isOfferAvailableForResponse(offer)}
+                                >
+                                    {isOfferAvailableForResponse(offer)
+                                        ? (user ? 'Запропонувати обмін' : 'Увійти, щоб запропонувати обмін')
+                                        : 'Пропозиція недоступна'}
                                 </button>
                                 {user && (
                                     <button
