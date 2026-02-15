@@ -27,6 +27,9 @@ export default function NotificationSettingsPage() {
     const [telegramLoadError, setTelegramLoadError] = useState('');
     const [sendingTelegramTest, setSendingTelegramTest] = useState(false);
     const [disconnectingTelegram, setDisconnectingTelegram] = useState(false);
+    const [webPushSupported, setWebPushSupported] = useState(false);
+    const [webPushPermission, setWebPushPermission] = useState('default');
+    const [sendingWebPushTest, setSendingWebPushTest] = useState(false);
 
     useEffect(() => {
         if (dbUser?.notificationPrefs) {
@@ -38,6 +41,14 @@ export default function NotificationSettingsPage() {
         if (!dbUser?.id) return;
         loadTelegramInfo();
     }, [dbUser?.id]);
+
+    useEffect(() => {
+        const supported = typeof window !== 'undefined' && 'Notification' in window;
+        setWebPushSupported(supported);
+        if (supported) {
+            setWebPushPermission(Notification.permission);
+        }
+    }, []);
 
     function toggle(key) {
         setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -52,12 +63,84 @@ export default function NotificationSettingsPage() {
                 setSaving(false);
                 return;
             }
+            if (payload.webpush && !webPushSupported) {
+                toast.error('Push-сповіщення не підтримуються у вашому браузері');
+                setSaving(false);
+                return;
+            }
+            if (payload.webpush && webPushPermission !== 'granted') {
+                const granted = await ensureWebPushPermission();
+                if (!granted) {
+                    toast.error('Дозвольте push-сповіщення у браузері');
+                    setSaving(false);
+                    return;
+                }
+            }
             await api.put('/profile/notifications', { notificationPrefs: payload });
             toast.success('Сповіщення збережено');
         } catch (error) {
             toast.error(error?.response?.data?.error || 'Не вдалося зберегти');
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function ensureWebPushPermission() {
+        if (!webPushSupported) return false;
+        if (Notification.permission === 'granted') {
+            setWebPushPermission('granted');
+            return true;
+        }
+
+        const permission = await Notification.requestPermission();
+        setWebPushPermission(permission);
+        return permission === 'granted';
+    }
+
+    async function handleToggleWebPush() {
+        if (!prefs.webpush) {
+            const granted = await ensureWebPushPermission();
+            if (!granted) {
+                toast.error('Без дозволу браузера push-сповіщення недоступні');
+                return;
+            }
+        }
+        toggle('webpush');
+    }
+
+    async function handleWebPushTest() {
+        if (!webPushSupported) {
+            toast.error('Push-сповіщення не підтримуються у вашому браузері');
+            return;
+        }
+
+        setSendingWebPushTest(true);
+        try {
+            const granted = await ensureWebPushPermission();
+            if (!granted) {
+                toast.error('Дозвіл на push-сповіщення не надано');
+                return;
+            }
+
+            const title = 'Біржа Каналів';
+            const options = {
+                body: 'Тестове push-сповіщення працює.',
+                icon: '/vite.svg',
+                badge: '/vite.svg',
+                tag: 'birzha-webpush-test',
+            };
+
+            if ('serviceWorker' in navigator) {
+                const registration = await navigator.serviceWorker.ready;
+                await registration.showNotification(title, options);
+            } else {
+                new Notification(title, options);
+            }
+            toast.success('Тестове push-сповіщення надіслано');
+        } catch (error) {
+            toast.error(error?.message || 'Не вдалося показати push-сповіщення');
+        } finally {
+            setSendingWebPushTest(false);
         }
     }
 
@@ -157,8 +240,23 @@ export default function NotificationSettingsPage() {
                 <p className="section-desc">Сповіщення в браузері навіть коли вкладка закрита</p>
                 <div className="toggle-row">
                     <span>Push-сповіщення</span>
-                    <button className={`toggle-switch ${prefs.webpush ? 'on' : ''}`} onClick={() => toggle('webpush')}>
+                    <button
+                        className={`toggle-switch ${prefs.webpush ? 'on' : ''}`}
+                        onClick={handleToggleWebPush}
+                        disabled={!webPushSupported}
+                        title={!webPushSupported ? 'Браузер не підтримує push-сповіщення' : ''}
+                    >
                         <span className="toggle-thumb" />
+                    </button>
+                </div>
+                <div className="connect-hint">
+                    {webPushSupported
+                        ? `Дозвіл браузера: ${webPushPermission === 'granted' ? 'дозволено' : webPushPermission === 'denied' ? 'заборонено' : 'ще не надано'}`
+                        : 'Ваш браузер не підтримує push-сповіщення'}
+                </div>
+                <div className="settings-actions-row">
+                    <button className="btn btn-secondary btn-sm" onClick={handleWebPushTest} disabled={!webPushSupported || sendingWebPushTest}>
+                        {sendingWebPushTest ? 'Надсилання...' : 'Тест push'}
                     </button>
                 </div>
             </div>
