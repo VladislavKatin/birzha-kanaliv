@@ -133,6 +133,19 @@ export default function EditProfilePage() {
     }
 
     async function handleSave() {
+        const normalizedWebsite = String(form.website || '').trim();
+        if (normalizedWebsite) {
+            try {
+                const parsed = new URL(normalizedWebsite);
+                if (!['http:', 'https:'].includes(parsed.protocol)) {
+                    throw new Error('Invalid protocol');
+                }
+            } catch {
+                toast.error('Вкажіть коректне посилання сайту (http:// або https://)');
+                return;
+            }
+        }
+
         setSaving(true);
         try {
             const payload = {
@@ -142,7 +155,7 @@ export default function EditProfilePage() {
                 location: String(form.location || '').trim(),
                 professionalRole: String(form.professionalRole || '').trim(),
                 companyName: String(form.companyName || '').trim() || null,
-                website: String(form.website || '').trim() || null,
+                website: normalizedWebsite || null,
                 gender: String(form.gender || '').trim() || null,
                 birthYear: form.birthYear === '' || form.birthYear === null ? null : Number(form.birthYear),
                 socialLinks: Object.fromEntries(
