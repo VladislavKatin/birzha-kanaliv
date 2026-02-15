@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import api from '../../services/api';
+import { markThreadSeen } from '../../services/menuBadges';
 import './SupportChatsPage.css';
 
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
@@ -92,6 +93,20 @@ export default function SupportChatsPage() {
     useEffect(() => {
         listEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    useEffect(() => {
+        if (!activeThread) return;
+        const latestMessage = [...messages]
+            .sort((a, b) => new Date(a?.createdAt || 0).getTime() - new Date(b?.createdAt || 0).getTime())
+            .at(-1);
+        if (!latestMessage) return;
+
+        markThreadSeen({
+            id: activeThread.id,
+            lastMessage: latestMessage,
+            lastMessageAt: latestMessage.createdAt,
+        });
+    }, [activeThread, messages]);
 
     useEffect(() => {
         if (!activeThread) return;
@@ -363,7 +378,7 @@ export default function SupportChatsPage() {
                                 {selectedImage && (
                                     <div className="support-chat-preview">
                                         <img src={selectedImage} alt="Preview" />
-                                        <button type="button" onClick={() => setSelectedImage('')}>✕</button>
+                                        <button type="button" onClick={() => setSelectedImage('')}>x</button>
                                     </div>
                                 )}
 
@@ -395,3 +410,6 @@ export default function SupportChatsPage() {
         </div>
     );
 }
+
+
+

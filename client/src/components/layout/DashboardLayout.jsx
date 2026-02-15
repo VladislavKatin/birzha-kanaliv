@@ -1,9 +1,15 @@
 ﻿import { useEffect, useRef, useState } from 'react';
-import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import useGlobalSocket from '../../hooks/useGlobalSocket';
+import api from '../../services/api';
 import { buildNotificationKey, formatToastMessage } from '../../services/globalNotifications';
+import {
+    computeMenuBadgeCounts,
+    getSupportLastMessage,
+    markThreadsSeen,
+} from '../../services/menuBadges';
 import Icon from '../common/Icon';
 import './DashboardLayout.css';
 
@@ -27,13 +33,23 @@ const topLinks = [
 export default function DashboardLayout() {
     const { user, dbUser, signOut } = useAuthStore();
     const { connected, notifications, onlineUsers, clearNotification, clearAllNotifications } = useGlobalSocket();
+    const location = useLocation();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [menuBadges, setMenuBadges] = useState({ incoming: 0, outgoing: 0, messages: 0 });
+    const menuThreadsRef = useRef([]);
     const seenNotificationKeysRef = useRef(new Set());
     const visibleNavItems = dbUser?.role === 'admin'
         ? [{ path: '/admin', label: 'Адмінка', description: 'Управління платформою', icon: 'settings' }, ...navItems]
         : navItems;
+
+    const getBadgeCountByPath = (path) => {
+        if (path === '/swaps/incoming') return menuBadges.incoming;
+        if (path === '/swaps/outgoing') return menuBadges.outgoing;
+        if (path === '/support/chats') return menuBadges.messages;
+        return 0;
+    };
 
     const handleSignOut = async () => {
         await signOut();
@@ -54,6 +70,66 @@ export default function DashboardLayout() {
             }
         });
     }, [notifications]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadMenuBadges() {
+            if (!dbUser) {
+                if (!cancelled) {
+                    setMenuBadges({ incoming: 0, outgoing: 0, messages: 0 });
+                }
+                return;
+            }
+
+            try {
+                const [incomingResponse, outgoingResponse, threadsResponse, supportResponse] = await Promise.all([
+                    api.get('/swaps/incoming'),
+                    api.get('/swaps/outgoing'),
+                    api.get('/chat/threads'),
+                    api.get('/support/chat'),
+                ]);
+
+                const supportLastMessage = getSupportLastMessage(supportResponse.data?.messages || []);
+                const messageThreads = [
+                    ...(supportLastMessage ? [{ id: 'support', lastMessage: supportLastMessage, lastMessageAt: supportLastMessage.createdAt }] : []),
+                    ...((threadsResponse.data?.threads || []).map((thread) => ({
+                        id: thread.id,
+                        lastMessage: thread.lastMessage || null,
+                        lastMessageAt: thread.lastMessageAt,
+                    }))),
+                ];
+
+                const counts = computeMenuBadgeCounts({
+                    incomingSwaps: incomingResponse.data?.swaps || [],
+                    outgoingSwaps: outgoingResponse.data?.swaps || [],
+                    messageThreads,
+                }, {
+                    myUserId: supportResponse.data?.myUserId || dbUser.id || '',
+                });
+
+                if (!cancelled) {
+                    menuThreadsRef.current = messageThreads;
+                    setMenuBadges(counts);
+                }
+            } catch (error) {
+                console.error('Failed to load menu badges:', error);
+            }
+        }
+
+        loadMenuBadges();
+        const intervalId = setInterval(loadMenuBadges, 30000);
+        return () => {
+            cancelled = true;
+            clearInterval(intervalId);
+        };
+    }, [dbUser, notifications.length]);
+
+    useEffect(() => {
+        if (!location.pathname.startsWith('/support/chats')) return;
+        markThreadsSeen(menuThreadsRef.current);
+        setMenuBadges((prev) => ({ ...prev, messages: 0 }));
+    }, [location.pathname]);
 
     return (
         <div className="dashboard-layout">
@@ -84,6 +160,9 @@ export default function DashboardLayout() {
                                 <span className="nav-label">{item.label}</span>
                                 <span className="nav-desc">{item.description}</span>
                             </span>
+                            {getBadgeCountByPath(item.path) > 0 && (
+                                <span className="nav-badge">{getBadgeCountByPath(item.path)}</span>
+                            )}
                         </NavLink>
                     ))}
                 </nav>
