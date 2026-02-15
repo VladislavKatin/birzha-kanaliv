@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -37,10 +37,26 @@ export default function NotificationSettingsPage() {
         }
     }, [dbUser]);
 
+    const loadTelegramInfo = useCallback(async () => {
+        if (!dbUser?.id) return;
+        setLoadingTelegram(true);
+        setTelegramLoadError('');
+        try {
+            const response = await api.get('/profile/notifications/telegram-link');
+            setTelegramInfo(response.data || {});
+        } catch (error) {
+            const message = error?.response?.data?.error || 'Не вдалося отримати Telegram-налаштування';
+            setTelegramLoadError(message);
+            toast.error(message);
+        } finally {
+            setLoadingTelegram(false);
+        }
+    }, [dbUser?.id]);
+
     useEffect(() => {
         if (!dbUser?.id) return;
         loadTelegramInfo();
-    }, [dbUser?.id]);
+    }, [dbUser?.id, loadTelegramInfo]);
 
     useEffect(() => {
         const supported = typeof window !== 'undefined' && 'Notification' in window;
@@ -141,22 +157,6 @@ export default function NotificationSettingsPage() {
             toast.error(error?.message || 'Не вдалося показати push-сповіщення');
         } finally {
             setSendingWebPushTest(false);
-        }
-    }
-
-    async function loadTelegramInfo() {
-        if (!dbUser?.id) return;
-        setLoadingTelegram(true);
-        setTelegramLoadError('');
-        try {
-            const response = await api.get('/profile/notifications/telegram-link');
-            setTelegramInfo(response.data || {});
-        } catch (error) {
-            const message = error?.response?.data?.error || 'Не вдалося отримати Telegram-налаштування';
-            setTelegramLoadError(message);
-            toast.error(message);
-        } finally {
-            setLoadingTelegram(false);
         }
     }
 
@@ -286,3 +286,6 @@ export default function NotificationSettingsPage() {
         </div>
     );
 }
+
+
+

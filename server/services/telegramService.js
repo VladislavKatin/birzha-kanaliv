@@ -1,4 +1,4 @@
-const axios = require('axios');
+﻿const axios = require('axios');
 const { sequelize, User, ActionLog } = require('../models');
 const { verifyTelegramLinkToken } = require('./telegramLinkToken');
 
@@ -171,7 +171,6 @@ async function pollTelegramUpdates() {
             const message = update?.message;
             const text = String(message?.text || '');
             if (text.startsWith('/start')) {
-                // eslint-disable-next-line no-await-in-loop
                 await handleTelegramStartCommand(message);
             }
         }
@@ -203,3 +202,4 @@ module.exports = {
     startTelegramBotPolling,
     unlinkTelegramChatForUser,
 };
+

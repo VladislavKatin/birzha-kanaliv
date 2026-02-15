@@ -245,7 +245,7 @@ router.get('/activity', auth, async (req, res) => {
                         preview: msg.content.substring(0, 60),
                         date: msg.createdAt,
                         avatar: msg.sender?.photoURL,
-                        link: `/chat/${msg.chatRoom.matchId}`,
+                        link: `/support/chats?thread=match-${msg.chatRoom.matchId}`,
                     });
                 }
             }

@@ -70,7 +70,7 @@ export default function SupportChatsPage() {
 
     useEffect(() => {
         loadInitialData();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -111,7 +111,7 @@ export default function SupportChatsPage() {
     useEffect(() => {
         if (!activeThread) return;
         loadThreadMessages(activeThread);
-    }, [activeThread]);
+    }, [activeThread]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         function handleSupportMessage(event) {
@@ -410,6 +410,10 @@ export default function SupportChatsPage() {
         </div>
     );
 }
+
+
+
+
 
 
 

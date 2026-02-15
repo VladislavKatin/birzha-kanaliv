@@ -128,7 +128,6 @@ export default function DashboardLayout() {
     useEffect(() => {
         if (!location.pathname.startsWith('/support/chats')) return;
         markThreadsSeen(menuThreadsRef.current);
-        setMenuBadges((prev) => ({ ...prev, messages: 0 }));
     }, [location.pathname]);
 
     return (

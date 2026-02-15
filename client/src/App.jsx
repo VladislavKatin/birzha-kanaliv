@@ -1,5 +1,5 @@
 ﻿import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './stores/authStore';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -21,7 +21,6 @@ const IncomingSwapsPage = lazy(() => import('./pages/swaps/IncomingSwapsPage'));
 const OutgoingSwapsPage = lazy(() => import('./pages/swaps/OutgoingSwapsPage'));
 const ExchangesPage = lazy(() => import('./pages/exchanges/ExchangesPage'));
 const OffersPage = lazy(() => import('./pages/offers/OffersPage'));
-const ChatPage = lazy(() => import('./pages/chat/ChatPage'));
 const PublicProfilePage = lazy(() => import('./pages/profile/PublicProfilePage'));
 const EditProfilePage = lazy(() => import('./pages/profile/EditProfilePage'));
 const NotificationSettingsPage = lazy(() => import('./pages/settings/NotificationSettingsPage'));
@@ -46,6 +45,12 @@ function PageFallback() {
             <p>Завантаження сторінки...</p>
         </div>
     );
+}
+
+function LegacyChatRedirect() {
+    const { transactionId } = useParams();
+    const threadId = transactionId ? `match-${transactionId}` : 'support';
+    return <Navigate to={`/support/chats?thread=${threadId}`} replace />;
 }
 
 export default function App() {
@@ -92,7 +97,7 @@ export default function App() {
                                     <Route path="/dashboard/admin" element={<AdminControlCenterPage />} />
                                 </Route>
                             </Route>
-                            <Route path="/chat/:transactionId" element={<ChatPage />} />
+                            <Route path="/chat/:transactionId" element={<LegacyChatRedirect />} />
                         </Route>
                         <Route path="*" element={<NotFoundPage />} />
                     </Routes>
