@@ -15,7 +15,7 @@ export default function NotificationSettingsPage() {
     });
     const [saving, setSaving] = useState(false);
     const [telegramInfo, setTelegramInfo] = useState({
-        configured: false,
+        configured: null,
         botUsername: null,
         deepLink: null,
         connected: false,
@@ -24,6 +24,7 @@ export default function NotificationSettingsPage() {
         telegramLinkedAt: null,
     });
     const [loadingTelegram, setLoadingTelegram] = useState(false);
+    const [telegramLoadError, setTelegramLoadError] = useState('');
     const [sendingTelegramTest, setSendingTelegramTest] = useState(false);
     const [disconnectingTelegram, setDisconnectingTelegram] = useState(false);
 
@@ -61,11 +62,14 @@ export default function NotificationSettingsPage() {
 
     async function loadTelegramInfo() {
         setLoadingTelegram(true);
+        setTelegramLoadError('');
         try {
             const response = await api.get('/profile/notifications/telegram-link');
             setTelegramInfo(response.data || {});
         } catch (error) {
-            toast.error(error?.response?.data?.error || 'Не вдалося отримати Telegram-налаштування');
+            const message = error?.response?.data?.error || 'Не вдалося отримати Telegram-налаштування';
+            setTelegramLoadError(message);
+            toast.error(message);
         } finally {
             setLoadingTelegram(false);
         }
@@ -115,17 +119,20 @@ export default function NotificationSettingsPage() {
                         <span className="toggle-thumb" />
                     </button>
                 </div>
-                {!telegramInfo.configured && !loadingTelegram && (
+                {!!telegramLoadError && !loadingTelegram && (
+                    <div className="connect-hint">{telegramLoadError}</div>
+                )}
+                {telegramInfo.configured === false && !loadingTelegram && !telegramLoadError && (
                     <div className="connect-hint">Telegram-бот ще не налаштований на сервері.</div>
                 )}
-                {telegramInfo.configured && (
+                {telegramInfo.configured === true && (
                     <div className="connect-hint">
                         {telegramInfo.connected
                             ? `Підключено як ${telegramInfo.telegramUsername ? `@${telegramInfo.telegramUsername}` : 'Telegram-користувач'}`
                             : 'Telegram не підключений'}
                     </div>
                 )}
-                {telegramInfo.configured && telegramInfo.deepLink && (
+                {telegramInfo.configured === true && telegramInfo.deepLink && (
                     <div className="settings-actions-row">
                         <a className="btn btn-secondary btn-sm" href={telegramInfo.deepLink} target="_blank" rel="noopener noreferrer">
                             Підключити Telegram
