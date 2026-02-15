@@ -204,9 +204,6 @@ export default function EditProfilePage() {
                     <button className="btn btn-secondary" onClick={handleResetChanges} disabled={!isDirty || saving}>
                         Скинути зміни
                     </button>
-                    <button className="btn btn-secondary" onClick={() => navigate('/profile')}>
-                        Переглянути профіль
-                    </button>
                     <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
                         {saving ? 'Збереження...' : 'Зберегти'}
                     </button>
