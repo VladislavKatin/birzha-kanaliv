@@ -1,5 +1,5 @@
 ﻿const router = require('express').Router();
-const { sequelize, TrafficMatch, TrafficOffer, YouTubeAccount, User, ChatRoom, ActionLog } = require('../models');
+const { sequelize, TrafficMatch, TrafficOffer, YouTubeAccount, User, ChatRoom, ActionLog, Review } = require('../models');
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const { emitSwapStatusChanged, emitNotification } = require('../socketSetup');
@@ -30,7 +30,7 @@ router.get('/incoming', auth, async (req, res) => {
         const swaps = await TrafficMatch.findAll({
             where: {
                 targetChannelId: { [Op.in]: result.channelIds },
-                status: 'pending',
+                status: { [Op.in]: ['pending', 'accepted', 'completed'] },
             },
             include: [
                 {
@@ -44,11 +44,30 @@ router.get('/incoming', auth, async (req, res) => {
                     as: 'offer',
                     attributes: ['type', 'description', 'niche'],
                 },
+                {
+                    model: Review,
+                    as: 'reviews',
+                    attributes: ['id', 'fromChannelId'],
+                    required: false,
+                },
             ],
             order: [['createdAt', 'DESC']],
         });
 
-        res.json({ swaps });
+        const serialized = swaps.map((swap) => {
+            const plain = swap.toJSON();
+            const myChannelId = plain.targetChannelId;
+            const hasReviewed = Array.isArray(plain.reviews)
+                ? plain.reviews.some((review) => review.fromChannelId === myChannelId)
+                : false;
+            return {
+                ...plain,
+                myChannelId,
+                hasReviewed,
+            };
+        });
+
+        res.json({ swaps: serialized });
     } catch (error) {
         console.error('Get incoming swaps error:', error);
         res.status(500).json({ error: 'Failed to get incoming swaps' });
@@ -69,7 +88,7 @@ router.get('/outgoing', auth, async (req, res) => {
         const swaps = await TrafficMatch.findAll({
             where: {
                 initiatorChannelId: { [Op.in]: result.channelIds },
-                status: { [Op.in]: ['pending', 'accepted'] },
+                status: { [Op.in]: ['pending', 'accepted', 'completed'] },
             },
             include: [
                 {
@@ -83,11 +102,30 @@ router.get('/outgoing', auth, async (req, res) => {
                     as: 'offer',
                     attributes: ['type', 'description', 'niche'],
                 },
+                {
+                    model: Review,
+                    as: 'reviews',
+                    attributes: ['id', 'fromChannelId'],
+                    required: false,
+                },
             ],
             order: [['createdAt', 'DESC']],
         });
 
-        res.json({ swaps });
+        const serialized = swaps.map((swap) => {
+            const plain = swap.toJSON();
+            const myChannelId = plain.initiatorChannelId;
+            const hasReviewed = Array.isArray(plain.reviews)
+                ? plain.reviews.some((review) => review.fromChannelId === myChannelId)
+                : false;
+            return {
+                ...plain,
+                myChannelId,
+                hasReviewed,
+            };
+        });
+
+        res.json({ swaps: serialized });
     } catch (error) {
         console.error('Get outgoing swaps error:', error);
         res.status(500).json({ error: 'Failed to get outgoing swaps' });
@@ -166,7 +204,7 @@ router.post('/:id/accept', auth, async (req, res) => {
                 type: 'swap_accepted',
                 title: 'Пропозицію прийнято',
                 message: 'Вашу пропозицію обміну прийнято. Перейдіть до чату.',
-                link: `/chat/${payload.match.id}`,
+                link: `/support/chats?thread=match-${payload.match.id}`,
             });
         }
     } catch (error) {

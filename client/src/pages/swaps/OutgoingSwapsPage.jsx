@@ -22,6 +22,7 @@ function timeAgo(dateStr) {
 const statusLabels = {
     pending: { text: 'Очікує', color: '#f59e0b' },
     accepted: { text: 'Прийнято', color: '#22c55e' },
+    completed: { text: 'Завершено', color: '#22c55e' },
 };
 
 export default function OutgoingSwapsPage() {
@@ -51,6 +52,17 @@ export default function OutgoingSwapsPage() {
             setSwaps((prev) => prev.filter((item) => item.id !== swapId));
         } catch {
             toast.error('Не вдалося скасувати пропозицію');
+        }
+    }
+
+    async function handleComplete(swapId) {
+        try {
+            const response = await api.post(`/chat/${swapId}/complete`);
+            const completed = response.data?.match?.status === 'completed';
+            toast.success(completed ? 'Обмін завершено' : 'Підтверджено, очікуємо партнера');
+            await loadSwaps();
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося підтвердити обмін');
         }
     }
 
@@ -104,9 +116,24 @@ export default function OutgoingSwapsPage() {
 
                                 <div className="swap-item-actions">
                                     {swap.status === 'accepted' ? (
-                                        <button className="btn btn-primary btn-sm" onClick={() => navigate(`/chat/${swap.id}`)}>
-                                            Перейти до чату
-                                        </button>
+                                        <>
+                                            <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/support/chats?thread=match-${swap.id}`)}>
+                                                Повідомлення
+                                            </button>
+                                            <button className="btn btn-primary btn-sm" onClick={() => handleComplete(swap.id)}>
+                                                Обмін завершено
+                                            </button>
+                                        </>
+                                    ) : swap.status === 'completed' ? (
+                                        swap.hasReviewed ? (
+                                            <span className="swap-status-badge" style={{ color: '#64748b', borderColor: '#64748b' }}>
+                                                Відгук залишено
+                                            </span>
+                                        ) : (
+                                            <button className="btn btn-primary btn-sm" onClick={() => navigate('/exchanges')}>
+                                                Залишити відгук
+                                            </button>
+                                        )
                                     ) : (
                                         <button className="btn btn-secondary btn-sm" onClick={() => handleCancel(swap.id)}>
                                             Скасувати

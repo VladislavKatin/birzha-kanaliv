@@ -81,6 +81,15 @@ export default function SupportChatsPage() {
     }, [location.search]);
 
     useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const requestedThread = params.get('thread');
+        if (!requestedThread) return;
+        if (threads.some((thread) => thread.id === requestedThread)) {
+            setActiveThreadId(requestedThread);
+        }
+    }, [location.search, threads]);
+
+    useEffect(() => {
         listEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 

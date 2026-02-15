@@ -44,9 +44,9 @@ export default function IncomingSwapsPage() {
         setProcessing(swapId);
         try {
             await api.post(`/swaps/${swapId}/accept`);
-            toast.success('Пропозицію прийнято! Відкриваємо чат...');
-            setSwaps((prev) => prev.filter((item) => item.id !== swapId));
-            navigate(`/chat/${swapId}`);
+            toast.success('Пропозицію прийнято! Відкриваємо повідомлення...');
+            await loadSwaps();
+            navigate(`/support/chats?thread=match-${swapId}`);
         } catch {
             toast.error('Не вдалося прийняти пропозицію');
         } finally {
@@ -62,6 +62,20 @@ export default function IncomingSwapsPage() {
             setSwaps((prev) => prev.filter((item) => item.id !== swapId));
         } catch {
             toast.error('Не вдалося відхилити пропозицію');
+        } finally {
+            setProcessing(null);
+        }
+    }
+
+    async function handleComplete(swapId) {
+        setProcessing(swapId);
+        try {
+            const response = await api.post(`/chat/${swapId}/complete`);
+            const completed = response.data?.match?.status === 'completed';
+            toast.success(completed ? 'Обмін завершено' : 'Підтверджено, очікуємо партнера');
+            await loadSwaps();
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося підтвердити обмін');
         } finally {
             setProcessing(null);
         }
@@ -111,12 +125,42 @@ export default function IncomingSwapsPage() {
                             </div>
 
                             <div className="swap-item-actions">
-                                <button className="btn btn-primary btn-sm" onClick={() => handleAccept(swap.id)} disabled={processing === swap.id}>
-                                    Прийняти
-                                </button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDecline(swap.id)} disabled={processing === swap.id}>
-                                    Відхилити
-                                </button>
+                                {swap.status === 'pending' && (
+                                    <>
+                                        <button className="btn btn-primary btn-sm" onClick={() => handleAccept(swap.id)} disabled={processing === swap.id}>
+                                            Прийняти
+                                        </button>
+                                        <button className="btn btn-danger btn-sm" onClick={() => handleDecline(swap.id)} disabled={processing === swap.id}>
+                                            Відхилити
+                                        </button>
+                                    </>
+                                )}
+                                {swap.status === 'accepted' && (
+                                    <>
+                                        <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/support/chats?thread=match-${swap.id}`)}>
+                                            Повідомлення
+                                        </button>
+                                        <button className="btn btn-primary btn-sm" onClick={() => handleComplete(swap.id)} disabled={processing === swap.id}>
+                                            Обмін завершено
+                                        </button>
+                                    </>
+                                )}
+                                {swap.status === 'completed' && (
+                                    <>
+                                        <span className="swap-status-badge" style={{ color: '#22c55e', borderColor: '#22c55e' }}>
+                                            Завершено
+                                        </span>
+                                        {swap.hasReviewed ? (
+                                            <span className="swap-status-badge" style={{ color: '#64748b', borderColor: '#64748b' }}>
+                                                Відгук залишено
+                                            </span>
+                                        ) : (
+                                            <button className="btn btn-primary btn-sm" onClick={() => navigate('/exchanges')}>
+                                                Залишити відгук
+                                            </button>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </div>
                     ))}
