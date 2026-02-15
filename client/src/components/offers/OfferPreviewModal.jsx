@@ -1,7 +1,13 @@
-import { formatPublicNumber, getLanguageLabel, getNicheLabel, getOfferTypeLabel, normalizeOfferDescription } from '../../services/publicOffers';
+﻿import {
+    formatPublicNumber,
+    getLanguageLabel,
+    getNicheLabel,
+    getOfferTypeLabel,
+    normalizeOfferDescription,
+} from '../../services/publicOffers';
 import './OfferPreviewModal.css';
 
-export default function OfferPreviewModal({ offer, onClose }) {
+export default function OfferPreviewModal({ offer, onClose, onPropose }) {
     if (!offer) {
         return null;
     }
@@ -12,7 +18,7 @@ export default function OfferPreviewModal({ offer, onClose }) {
         <div className="offer-preview-overlay" role="dialog" aria-modal="true">
             <div className="offer-preview-modal">
                 <button className="offer-preview-close" onClick={onClose} aria-label="Закрити">
-                    ×
+                    x
                 </button>
 
                 <header className="offer-preview-header">
@@ -52,6 +58,14 @@ export default function OfferPreviewModal({ offer, onClose }) {
                     <h4>Коментар від автора пропозиції</h4>
                     <p>{normalizeOfferDescription(offer.description, channel.channelTitle) || 'Коментар не додано.'}</p>
                 </div>
+
+                {typeof onPropose === 'function' && (
+                    <div className="offer-preview-actions">
+                        <button type="button" className="offer-preview-propose" onClick={() => onPropose(offer)}>
+                            Запропонувати обмін
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

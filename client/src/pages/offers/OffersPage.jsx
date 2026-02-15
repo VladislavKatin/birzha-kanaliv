@@ -185,7 +185,16 @@ export default function OffersPage() {
                 </div>
             )}
 
-            {selectedOffer && <OfferPreviewModal offer={selectedOffer} onClose={() => setSelectedOffer(null)} />}
+            {selectedOffer && (
+                <OfferPreviewModal
+                    offer={selectedOffer}
+                    onClose={() => setSelectedOffer(null)}
+                    onPropose={(offer) => {
+                        setSelectedOffer(null);
+                        navigate(buildOfferDetailsPath(offer.id));
+                    }}
+                />
+            )}
         </div>
     );
 }

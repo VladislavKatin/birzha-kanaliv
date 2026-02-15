@@ -185,7 +185,20 @@ export default function OffersCatalogPage() {
                 </div>
             </section>
 
-            {selectedOffer && <OfferPreviewModal offer={selectedOffer} onClose={() => setSelectedOffer(null)} />}
+            {selectedOffer && (
+                <OfferPreviewModal
+                    offer={selectedOffer}
+                    onClose={() => setSelectedOffer(null)}
+                    onPropose={(offer) => {
+                        setSelectedOffer(null);
+                        if (user) {
+                            navigate(buildOfferDetailsPath(offer.id));
+                            return;
+                        }
+                        setAuthPromptOfferId(offer.id);
+                    }}
+                />
+            )}
             {authPromptOfferId && (
                 <div className="auth-required-modal" role="dialog" aria-modal="true">
                     <div className="auth-required-card">
