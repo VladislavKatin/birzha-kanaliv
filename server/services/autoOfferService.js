@@ -17,6 +17,7 @@ async function ensureAutoOffersForChannels({
         const where = {
             isActive: true,
             isFlagged: false,
+            channelId: { [Op.notLike]: 'UC_DEMO_%' },
         };
 
         if (Array.isArray(channelIds) && channelIds.length > 0) {

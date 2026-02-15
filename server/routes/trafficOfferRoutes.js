@@ -152,14 +152,31 @@ router.get('/', async (req, res) => {
                 {
                     model: YouTubeAccount,
                     as: 'channel',
-                    where: { isActive: true, isFlagged: false },
-                    attributes: ['channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'totalViews', 'niche', 'language', 'country'],
+                    where: {
+                        isActive: true,
+                        isFlagged: false,
+                        channelId: { [Op.notLike]: 'UC_DEMO_%' },
+                    },
+                    attributes: [
+                        'id',
+                        'channelId',
+                        'channelTitle',
+                        'channelAvatar',
+                        'description',
+                        'subscribers',
+                        'totalViews',
+                        'totalVideos',
+                        'avgViews30d',
+                        'subGrowth30d',
+                        'averageWatchTime',
+                        'ctr',
+                        'niche',
+                        'language',
+                        'country',
+                    ],
                 },
             ],
-            order: [
-                [sequelize.literal(`CASE WHEN "channel"."channelId" LIKE 'UC_DEMO_%' THEN 1 ELSE 0 END`), 'ASC'],
-                ['createdAt', 'DESC'],
-            ],
+            order: [['createdAt', 'DESC']],
             limit: parseInt(limit),
             offset,
         });
@@ -219,12 +236,34 @@ router.get('/my', auth, async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     try {
-        const offer = await TrafficOffer.findByPk(req.params.id, {
+        const offer = await TrafficOffer.findOne({
+            where: { id: req.params.id },
             include: [
                 {
                     model: YouTubeAccount,
                     as: 'channel',
-                    attributes: ['id', 'channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'totalViews', 'niche', 'language', 'country'],
+                    where: {
+                        isActive: true,
+                        isFlagged: false,
+                        channelId: { [Op.notLike]: 'UC_DEMO_%' },
+                    },
+                    attributes: [
+                        'id',
+                        'channelId',
+                        'channelTitle',
+                        'channelAvatar',
+                        'description',
+                        'subscribers',
+                        'totalViews',
+                        'totalVideos',
+                        'avgViews30d',
+                        'subGrowth30d',
+                        'averageWatchTime',
+                        'ctr',
+                        'niche',
+                        'language',
+                        'country',
+                    ],
                 },
             ],
         });

@@ -1,8 +1,9 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
+import { buildAuthRedirectPath } from '../../services/navigation';
+import OfferPreviewModal from '../../components/offers/OfferPreviewModal';
 import {
     buildOfferDetailsPath,
     getLanguageLabel,
@@ -10,10 +11,8 @@ import {
     getLanguageSearchValue,
     getNicheLabel,
     getNicheOptions,
-    isDemoChannel,
     normalizeOfferDescription,
     resolveLanguageCode,
-    splitOffersByChannelKind,
 } from '../../services/publicOffers';
 import './OffersPage.css';
 
@@ -31,9 +30,7 @@ export default function OffersPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [filter, setFilter] = useState({ niche: '', language: '' });
-    const [respondingOfferId, setRespondingOfferId] = useState('');
-    const [myChannels, setMyChannels] = useState([]);
-    const [selectedChannelId, setSelectedChannelId] = useState('');
+    const [selectedOffer, setSelectedOffer] = useState(null);
 
     const nicheOptions = getNicheOptions();
     const languageOptions = getLanguageOptions();
@@ -56,58 +53,17 @@ export default function OffersPage() {
             params.set('limit', '60');
             const response = await api.get(`/offers?${params.toString()}`);
             setOffers(response.data.offers || response.data || []);
-        } catch (error) {
-            console.error('Failed to load offers:', error);
+        } catch (loadError) {
+            console.error('Failed to load offers:', loadError);
             setError('Не вдалося завантажити пропозиції. Спробуйте ще раз.');
         } finally {
             setLoading(false);
         }
     }, [filter.niche, filter.language]);
 
-    const loadMyChannels = useCallback(async () => {
-        try {
-            const response = await api.get('/channels/my');
-            const channels = response.data.channels || [];
-            setMyChannels(channels);
-            if (channels.length > 0) {
-                setSelectedChannelId(channels[0].id);
-            }
-        } catch (error) {
-            console.error('Failed to load channels:', error);
-        }
-    }, []);
-
     useEffect(() => {
         loadOffers();
     }, [loadOffers]);
-
-    useEffect(() => {
-        if (user) {
-            loadMyChannels();
-        }
-    }, [user, loadMyChannels]);
-
-    async function handleRespond(offerId) {
-        if (!selectedChannelId) {
-            toast.error('Спочатку підключіть канал.');
-            return;
-        }
-
-        if (respondingOfferId) {
-            return;
-        }
-
-        setRespondingOfferId(offerId);
-        try {
-            await api.post(`/offers/${offerId}/respond`, { channelId: selectedChannelId });
-            toast.success('Відгук надіслано.');
-            loadOffers();
-        } catch (error) {
-            toast.error(error.response?.data?.error || 'Не вдалося надіслати відгук.');
-        } finally {
-            setRespondingOfferId('');
-        }
-    }
 
     if (loading) {
         return (
@@ -118,15 +74,14 @@ export default function OffersPage() {
         );
     }
 
-    const { realOffers, demoOffers } = splitOffersByChannelKind(offers);
-    const visibleOffers = [...realOffers, ...demoOffers];
+    const visibleOffers = offers;
 
     return (
         <div className="offers-page">
             <div className="offers-header">
                 <div>
                     <h1>Каталог пропозицій</h1>
-                    <p className="offers-subtitle">Активні канали відображаються автоматично. Реальні канали показані першими.</p>
+                    <p className="offers-subtitle">Переглядайте доступні канали та надсилайте пропозиції для обміну.</p>
                 </div>
             </div>
 
@@ -160,19 +115,6 @@ export default function OffersPage() {
                         <option key={option.code} value={getLanguageSearchValue(option)} />
                     ))}
                 </datalist>
-                {user && myChannels.length > 1 && (
-                    <select
-                        className="filter-select"
-                        value={selectedChannelId}
-                        onChange={(event) => setSelectedChannelId(event.target.value)}
-                    >
-                        {myChannels.map((channel) => (
-                            <option key={channel.id} value={channel.id}>
-                                Мій канал: {channel.channelTitle}
-                            </option>
-                        ))}
-                    </select>
-                )}
             </div>
 
             {error ? (
@@ -195,16 +137,9 @@ export default function OffersPage() {
                     {visibleOffers.map((offer) => (
                         <div key={offer.id} className="offer-card card">
                             <div className="offer-card-top">
-                                <img src={offer.channel?.channelAvatar || ''} alt="" className="offer-card-avatar" />
+                                <img src={offer.channel?.channelAvatar || ''} alt={offer.channel?.channelTitle || 'Канал'} className="offer-card-avatar" />
                                 <div className="offer-card-channel">
-                                    <span className="offer-card-name">
-                                        {offer.channel?.channelTitle || 'Канал'}
-                                        {isDemoChannel(offer.channel) && (
-                                            <span className="offer-demo-badge" title="Демо-канал" aria-label="Демо-канал">
-                                                DEMO
-                                            </span>
-                                        )}
-                                    </span>
+                                    <span className="offer-card-name">{offer.channel?.channelTitle || 'Канал'}</span>
                                     <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} підписників</span>
                                 </div>
                                 <span className={`offer-type-badge ${offer.type}`}>{offer.type === 'subs' ? 'Підписники' : 'Перегляди'}</span>
@@ -222,27 +157,22 @@ export default function OffersPage() {
                             </div>
 
                             <div className="offer-card-actions">
-                                <button className="btn btn-secondary btn-sm" onClick={() => navigate(buildOfferDetailsPath(offer.id))}>
-                                    Деталі
+                                <button className="btn btn-secondary btn-sm" onClick={() => setSelectedOffer(offer)}>
+                                    Просмотреть
                                 </button>
-                                {user ? (
-                                    <button
-                                        className="btn btn-primary btn-sm"
-                                        onClick={() => handleRespond(offer.id)}
-                                        disabled={respondingOfferId === offer.id || offer.status !== 'open'}
-                                    >
-                                        {respondingOfferId === offer.id ? 'Надсилаємо...' : offer.status === 'open' ? 'Відгукнутися' : 'Недоступно'}
-                                    </button>
-                                ) : (
-                                    <button className="btn btn-secondary btn-sm" onClick={() => navigate('/auth')}>
-                                        Увійти для відгуку
-                                    </button>
-                                )}
+                                <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => navigate(user ? buildOfferDetailsPath(offer.id) : buildAuthRedirectPath(buildOfferDetailsPath(offer.id)))}
+                                >
+                                    Предложить обмен
+                                </button>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
+
+            {selectedOffer && <OfferPreviewModal offer={selectedOffer} onClose={() => setSelectedOffer(null)} />}
         </div>
     );
 }

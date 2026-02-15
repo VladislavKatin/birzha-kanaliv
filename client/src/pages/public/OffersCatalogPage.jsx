@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PublicLayout from '../../components/layout/PublicLayout';
+import OfferPreviewModal from '../../components/offers/OfferPreviewModal';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import { buildAuthRedirectPath } from '../../services/navigation';
@@ -8,11 +9,12 @@ import {
     buildOfferDetailsPath,
     buildPublicOffersQuery,
     formatPublicNumber,
+    getLanguageLabel,
     getLanguageOptions,
     getLanguageSearchValue,
+    getNicheLabel,
     getNicheOptions,
     getOfferTypeLabel,
-    isDemoChannel,
     normalizeOfferDescription,
 } from '../../services/publicOffers';
 import './OffersCatalogPage.css';
@@ -24,19 +26,18 @@ export default function OffersCatalogPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [filter, setFilter] = useState({ niche: '', language: '' });
+    const [selectedOffer, setSelectedOffer] = useState(null);
 
     const nicheOptions = useMemo(() => getNicheOptions(), []);
     const languageOptions = useMemo(() => getLanguageOptions(), []);
     const query = useMemo(() => buildPublicOffersQuery(filter), [filter]);
     const visibleOffers = useMemo(() => {
-        const realOffers = offers.filter((offer) => !isDemoChannel(offer.channel));
-        const demoOffers = offers.filter((offer) => isDemoChannel(offer.channel));
         const byCreatedAtDesc = (a, b) => {
             const timeA = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
             const timeB = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
             return timeB - timeA;
         };
-        return [...realOffers.sort(byCreatedAtDesc), ...demoOffers.sort(byCreatedAtDesc)];
+        return [...offers].sort(byCreatedAtDesc);
     }, [offers]);
 
     useEffect(() => {
@@ -62,7 +63,7 @@ export default function OffersCatalogPage() {
             setLoading(true);
             setError('');
             try {
-                const suffix = query ? `${query}&includeAll=true` : '?includeAll=true';
+                const suffix = query ? `${query}&includeAll=true&limit=60` : '?includeAll=true&limit=60';
                 const response = await api.get(`/offers${suffix}`);
                 if (cancelled) {
                     return;
@@ -92,7 +93,7 @@ export default function OffersCatalogPage() {
                 <div className="offers-catalog-inner">
                     <header className="offers-catalog-header">
                         <h1>Каталог пропозицій обміну</h1>
-                        <p>Переглядайте відкриті пропозиції від каналів. Відповідати на них можуть лише авторизовані користувачі.</p>
+                        <p>Переглядайте канали та пропонуйте обмін. Для відправки пропозиції потрібна авторизація.</p>
                     </header>
 
                     <div className="offers-catalog-filters">
@@ -140,16 +141,9 @@ export default function OffersCatalogPage() {
                             {visibleOffers.map((offer) => (
                                 <article key={offer.id} className="public-offer-card">
                                     <div className="public-offer-head">
-                                        <img src={offer.channel?.channelAvatar || ''} alt="" />
+                                        <img src={offer.channel?.channelAvatar || ''} alt={offer.channel?.channelTitle || 'Канал'} />
                                         <div>
-                                            <h3>
-                                                {offer.channel?.channelTitle || 'Канал'}
-                                                {isDemoChannel(offer.channel) && (
-                                                    <span className="demo-badge" title="Демо-канал" aria-label="Демо-канал">
-                                                        DEMO
-                                                    </span>
-                                                )}
-                                            </h3>
+                                            <h3>{offer.channel?.channelTitle || 'Канал'}</h3>
                                             <p>{formatPublicNumber(offer.channel?.subscribers)} підписників</p>
                                         </div>
                                         <span>{getOfferTypeLabel(offer.type)}</span>
@@ -162,23 +156,20 @@ export default function OffersCatalogPage() {
                                     )}
 
                                     <div className="public-offer-meta">
-                                        {offer.niche && <span>{offer.niche}</span>}
-                                        {offer.language && <span>{offer.language}</span>}
+                                        {offer.niche && <span>{getNicheLabel(offer.niche)}</span>}
+                                        {offer.language && <span>{getLanguageLabel(offer.language)}</span>}
                                         {offer.minSubscribers > 0 && <span>від {formatPublicNumber(offer.minSubscribers)}</span>}
                                         {offer.channel?.totalViews > 0 && <span>{formatPublicNumber(offer.channel.totalViews)} переглядів</span>}
                                     </div>
 
                                     <div className="public-offer-actions">
-                                        <button onClick={() => navigate(buildOfferDetailsPath(offer.id))}>Деталі</button>
-                                        {user ? (
-                                            <button className="primary" onClick={() => navigate(`/offers/${offer.id}`)}>
-                                                Запропонувати обмін
-                                            </button>
-                                        ) : (
-                                            <button className="primary" onClick={() => navigate(buildAuthRedirectPath(buildOfferDetailsPath(offer.id)))}>
-                                                Увійти, щоб відповісти
-                                            </button>
-                                        )}
+                                        <button onClick={() => setSelectedOffer(offer)}>Просмотреть</button>
+                                        <button
+                                            className="primary"
+                                            onClick={() => navigate(user ? buildOfferDetailsPath(offer.id) : buildAuthRedirectPath(buildOfferDetailsPath(offer.id)))}
+                                        >
+                                            Предложить обмен
+                                        </button>
                                     </div>
                                 </article>
                             ))}
@@ -186,6 +177,8 @@ export default function OffersCatalogPage() {
                     )}
                 </div>
             </section>
+
+            {selectedOffer && <OfferPreviewModal offer={selectedOffer} onClose={() => setSelectedOffer(null)} />}
         </PublicLayout>
     );
 }
