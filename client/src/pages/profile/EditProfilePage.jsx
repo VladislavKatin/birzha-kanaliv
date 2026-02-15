@@ -135,12 +135,29 @@ export default function EditProfilePage() {
     async function handleSave() {
         setSaving(true);
         try {
-            await api.put('/profile', form);
+            const payload = {
+                ...form,
+                displayName: String(form.displayName || '').trim(),
+                bio: String(form.bio || '').trim(),
+                location: String(form.location || '').trim(),
+                professionalRole: String(form.professionalRole || '').trim(),
+                companyName: String(form.companyName || '').trim() || null,
+                website: String(form.website || '').trim() || null,
+                gender: String(form.gender || '').trim() || null,
+                birthYear: form.birthYear === '' || form.birthYear === null ? null : Number(form.birthYear),
+                socialLinks: Object.fromEntries(
+                    Object.entries(form.socialLinks || {}).filter(([, value]) => String(value || '').trim())
+                ),
+            };
+
+            await api.put('/profile', payload);
             toast.success('Профіль збережено!');
-            setInitialForm(form);
+            setForm(payload);
+            setInitialForm(payload);
             refreshUserData();
-        } catch {
-            toast.error('Не вдалося зберегти');
+        } catch (error) {
+            const message = error?.response?.data?.error || 'Не вдалося зберегти';
+            toast.error(message);
         } finally {
             setSaving(false);
         }
@@ -331,7 +348,7 @@ export default function EditProfilePage() {
                                     onChange={(event) => updateSocial(platform.key, event.target.value)}
                                 />
                                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleSocialAdd(platform.key)}>
-                                    Добавить
+                                    Додати
                                 </button>
                             </div>
                         </div>
