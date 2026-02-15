@@ -37,6 +37,12 @@ const PRIVACY_FIELDS = [
     { key: 'socialLinks', label: 'Соцмережі' },
 ];
 
+const PRIVACY_LEVELS = [
+    { value: 'public', label: 'Всім' },
+    { value: 'verified', label: 'Перевіреним' },
+    { value: 'private', label: 'Тільки мені' },
+];
+
 export default function EditProfilePage() {
     const { dbUser, refreshUserData } = useAuthStore();
     const navigate = useNavigate();
@@ -121,6 +127,14 @@ export default function EditProfilePage() {
 
     function updatePrivacy(field, value) {
         setPrivacy((prev) => ({ ...prev, [field]: value }));
+    }
+
+    function applyPrivacyPreset(level) {
+        const next = {};
+        PRIVACY_FIELDS.forEach((field) => {
+            next[field.key] = level;
+        });
+        setPrivacy((prev) => ({ ...prev, ...next }));
     }
 
     async function loadNetworkInfo() {
@@ -348,16 +362,34 @@ export default function EditProfilePage() {
 
             <div className="card edit-section">
                 <h3>Приватність</h3>
-                <p className="section-desc">Оберіть, хто бачить вашу інформацію</p>
+                <p className="section-desc">Оберіть рівень видимості для кожного поля профілю або застосуйте пресет одним кліком.</p>
+                <div className="privacy-presets">
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => applyPrivacyPreset('public')}>
+                        Відкрити все
+                    </button>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => applyPrivacyPreset('verified')}>
+                        Лише перевіреним
+                    </button>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => applyPrivacyPreset('private')}>
+                        Максимально приватно
+                    </button>
+                </div>
                 <div className="privacy-grid">
                     {PRIVACY_FIELDS.map((field) => (
                         <div key={field.key} className="privacy-row">
                             <span className="privacy-field-label">{field.label}</span>
-                            <select className="privacy-select" value={privacy[field.key] || 'public'} onChange={(event) => updatePrivacy(field.key, event.target.value)}>
-                                <option value="public">Всім</option>
-                                <option value="verified">Перевіреним</option>
-                                <option value="private">Тільки мені</option>
-                            </select>
+                            <div className="privacy-choice-group">
+                                {PRIVACY_LEVELS.map((level) => (
+                                    <button
+                                        key={level.value}
+                                        type="button"
+                                        className={`privacy-choice ${String(privacy[field.key] || 'public') === level.value ? 'active' : ''}`}
+                                        onClick={() => updatePrivacy(field.key, level.value)}
+                                    >
+                                        {level.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     ))}
                 </div>

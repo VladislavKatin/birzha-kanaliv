@@ -493,20 +493,56 @@
     gap: 8px;
 }
 
-.privacy-row {
+.privacy-presets {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.privacy-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
     gap: 12px;
-    padding: 8px 12px;
+    padding: 10px 12px;
     background: #f7fbff;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    border: 1px solid #d9e7f7;
 }
 
 .privacy-field-label {
     font-size: 14px;
     color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+}
+
+.privacy-choice-group {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.privacy-choice {
+    border: 1px solid #dbe6f3;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #4f6c91;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.privacy-choice:hover {
+    border-color: #98bce8;
+}
+
+.privacy-choice.active {
+    border-color: #2f73c6;
+    background: #e9f2ff;
+    color: #0c4f98;
 }
 
 .privacy-select {
@@ -623,6 +659,14 @@
 
     .network-info-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .privacy-row {
+        grid-template-columns: 1fr;
+    }
+
+    .privacy-choice-group {
+        grid-template-columns: 1fr;
     }
 
     .gdpr-actions {
