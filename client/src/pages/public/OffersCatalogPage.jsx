@@ -27,6 +27,7 @@ export default function OffersCatalogPage() {
     const [error, setError] = useState('');
     const [filter, setFilter] = useState({ niche: '', language: '' });
     const [selectedOffer, setSelectedOffer] = useState(null);
+    const [authPromptOfferId, setAuthPromptOfferId] = useState('');
 
     const nicheOptions = useMemo(() => getNicheOptions(), []);
     const languageOptions = useMemo(() => getLanguageOptions(), []);
@@ -166,7 +167,13 @@ export default function OffersCatalogPage() {
                                         <button onClick={() => setSelectedOffer(offer)}>Просмотреть</button>
                                         <button
                                             className="primary"
-                                            onClick={() => navigate(user ? buildOfferDetailsPath(offer.id) : buildAuthRedirectPath(buildOfferDetailsPath(offer.id)))}
+                                            onClick={() => {
+                                                if (user) {
+                                                    navigate(buildOfferDetailsPath(offer.id));
+                                                    return;
+                                                }
+                                                setAuthPromptOfferId(offer.id);
+                                            }}
                                         >
                                             Предложить обмен
                                         </button>
@@ -179,6 +186,26 @@ export default function OffersCatalogPage() {
             </section>
 
             {selectedOffer && <OfferPreviewModal offer={selectedOffer} onClose={() => setSelectedOffer(null)} />}
+            {authPromptOfferId && (
+                <div className="auth-required-modal" role="dialog" aria-modal="true">
+                    <div className="auth-required-card">
+                        <h3>Потрібна реєстрація</h3>
+                        <p>Щоб запропонувати обмін, спочатку потрібно зареєструватися або увійти.</p>
+                        <div className="auth-required-actions">
+                            <button type="button" onClick={() => setAuthPromptOfferId('')}>
+                                Скасувати
+                            </button>
+                            <button
+                                type="button"
+                                className="primary"
+                                onClick={() => navigate(buildAuthRedirectPath(`/dashboard/offers?targetOfferId=${authPromptOfferId}`))}
+                            >
+                                Зареєструватися / Увійти
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </PublicLayout>
     );
 }

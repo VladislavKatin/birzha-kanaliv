@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import { buildAuthRedirectPath } from '../../services/navigation';
@@ -26,6 +26,7 @@ function formatNumber(num) {
 export default function OffersPage() {
     const { user } = useAuthStore();
     const navigate = useNavigate();
+    const location = useLocation();
     const [offers, setOffers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -64,6 +65,18 @@ export default function OffersPage() {
     useEffect(() => {
         loadOffers();
     }, [loadOffers]);
+
+    useEffect(() => {
+        if (!offers.length) return;
+        const params = new URLSearchParams(location.search);
+        const targetOfferId = params.get('targetOfferId');
+        if (!targetOfferId) return;
+
+        const targetOffer = offers.find((offer) => offer.id === targetOfferId);
+        if (targetOffer) {
+            setSelectedOffer(targetOffer);
+        }
+    }, [offers, location.search]);
 
     if (loading) {
         return (
@@ -176,3 +189,4 @@ export default function OffersPage() {
         </div>
     );
 }
+

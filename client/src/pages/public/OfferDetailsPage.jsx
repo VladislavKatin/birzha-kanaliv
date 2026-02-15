@@ -6,7 +6,6 @@ import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import { buildAuthRedirectPath } from '../../services/navigation';
 import {
-    buildOfferDetailsPath,
     formatPublicNumber,
     getOfferTypeLabel,
     isDemoChannel,
@@ -37,6 +36,7 @@ export default function OfferDetailsPage() {
     const [responding, setResponding] = useState(false);
     const [myChannels, setMyChannels] = useState([]);
     const [selectedChannelId, setSelectedChannelId] = useState('');
+    const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -107,7 +107,7 @@ export default function OfferDetailsPage() {
         }
 
         if (!user) {
-            navigate(buildAuthRedirectPath(buildOfferDetailsPath(offerId)));
+            setShowAuthPrompt(true);
             return;
         }
 
@@ -216,6 +216,26 @@ export default function OfferDetailsPage() {
                     )}
                 </div>
             </section>
+            {showAuthPrompt && (
+                <div className="auth-required-modal" role="dialog" aria-modal="true">
+                    <div className="auth-required-card">
+                        <h3>Потрібна реєстрація</h3>
+                        <p>Щоб запропонувати обмін, спочатку потрібно зареєструватися або увійти.</p>
+                        <div className="auth-required-actions">
+                            <button type="button" onClick={() => setShowAuthPrompt(false)}>
+                                Скасувати
+                            </button>
+                            <button
+                                type="button"
+                                className="primary"
+                                onClick={() => navigate(buildAuthRedirectPath(`/dashboard/offers?targetOfferId=${offerId}`))}
+                            >
+                                Зареєструватися / Увійти
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </PublicLayout>
     );
 }
