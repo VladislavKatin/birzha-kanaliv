@@ -222,18 +222,6 @@ export default function EditProfilePage() {
                     </div>
                 </div>
                 <div className="network-info-actions">
-                    <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => {
-                            if (networkInfo?.networkInfo?.city) {
-                                updateField('location', networkInfo.networkInfo.city);
-                            }
-                        }}
-                        disabled={!networkInfo?.networkInfo?.city}
-                    >
-                        Підставити місто в локацію
-                    </button>
                     <small>Остання перевірка: {networkInfo?.checkedAt ? new Date(networkInfo.checkedAt).toLocaleString('uk-UA') : 'ще не виконувалась'}</small>
                 </div>
             </div>
