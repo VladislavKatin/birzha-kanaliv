@@ -10,6 +10,31 @@ async function getUser(firebaseUid, transaction = null) {
     return User.findOne({ where: { firebaseUid }, ...(transaction ? { transaction } : {}) });
 }
 
+function normalizeIp(rawIp) {
+    const value = String(rawIp || '').trim();
+    if (!value) return '';
+    if (value.startsWith('::ffff:')) return value.replace('::ffff:', '');
+    if (value === '::1') return '127.0.0.1';
+    return value;
+}
+
+function resolveClientIp(req) {
+    const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+    const realIp = String(req.headers['x-real-ip'] || '').trim();
+    const cfIp = String(req.headers['cf-connecting-ip'] || '').trim();
+    const candidate = cfIp || forwarded || realIp || req.ip || '';
+    return normalizeIp(candidate);
+}
+
+function isLocalOrPrivateIp(ip) {
+    if (!ip) return true;
+    if (ip === '127.0.0.1' || ip === '0.0.0.0') return true;
+    if (ip.startsWith('10.') || ip.startsWith('192.168.') || ip.startsWith('169.254.')) return true;
+    if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(ip)) return true;
+    if (ip.includes(':')) return ip === '::1' || ip.startsWith('fe80:') || ip.startsWith('fd') || ip.startsWith('fc');
+    return false;
+}
+
 router.get('/me', auth, async (req, res) => {
     try {
         const user = await getUser(req.firebaseUser.uid);
@@ -32,6 +57,78 @@ router.get('/me', auth, async (req, res) => {
     } catch (error) {
         console.error('Get own profile error:', error);
         return res.status(500).json({ error: 'Failed to get profile' });
+    }
+});
+
+router.get('/network-info', auth, async (req, res) => {
+    try {
+        const payload = await sequelize.transaction(async (transaction) => {
+            const user = await getUser(req.firebaseUser.uid, transaction);
+            if (!user) {
+                return { error: { status: 404, body: { error: 'User not found' } } };
+            }
+
+            const clientIp = resolveClientIp(req);
+            const fromHeaders = {
+                ip: clientIp || 'Невідомо',
+                city: String(req.headers['cf-ipcity'] || '').trim() || null,
+                provider: String(req.headers['cf-isp'] || '').trim() || null,
+                country: String(req.headers['cf-ipcountry'] || '').trim() || null,
+                source: 'headers',
+            };
+
+            let networkInfo = fromHeaders;
+
+            if (!isLocalOrPrivateIp(clientIp)) {
+                try {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 1800);
+                    const response = await fetch(`https://ipwho.is/${encodeURIComponent(clientIp)}`, {
+                        signal: controller.signal,
+                        headers: { accept: 'application/json' },
+                    });
+                    clearTimeout(timeout);
+                    if (response.ok) {
+                        const body = await response.json();
+                        if (body?.success !== false) {
+                            networkInfo = {
+                                ip: body.ip || fromHeaders.ip,
+                                city: body.city || fromHeaders.city || null,
+                                provider: body.connection?.isp || fromHeaders.provider || null,
+                                country: body.country || fromHeaders.country || null,
+                                source: 'ipwhois',
+                            };
+                        }
+                    }
+                } catch {
+                    // fallback to headers only
+                }
+            }
+
+            await ActionLog.create({
+                userId: user.id,
+                action: 'profile_network_info_viewed',
+                details: {
+                    ip: networkInfo.ip,
+                    source: networkInfo.source,
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                networkInfo,
+                checkedAt: new Date().toISOString(),
+            };
+        });
+
+        if (payload.error) {
+            return res.status(payload.error.status).json(payload.error.body);
+        }
+
+        return res.json(payload);
+    } catch (error) {
+        console.error('Get network info error:', error);
+        return res.status(500).json({ error: 'Failed to get network info' });
     }
 });
 

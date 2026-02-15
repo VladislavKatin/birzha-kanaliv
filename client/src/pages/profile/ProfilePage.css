@@ -262,6 +262,7 @@
     border: 1px solid #d4e1f1;
     box-shadow: var(--shadow-md);
     background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    border-radius: 16px;
 }
 
 .edit-section h3 {
@@ -288,6 +289,59 @@
 
 .quick-action-btn {
     width: 100%;
+}
+
+.network-info-section {
+    border-color: #b9d4f4;
+    background: linear-gradient(180deg, #ffffff 0%, #f2f8ff 100%);
+}
+
+.network-info-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.network-info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.network-info-item {
+    border: 1px solid #d7e6f8;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.network-info-item span {
+    font-size: 12px;
+    color: #607ea6;
+}
+
+.network-info-item strong {
+    font-size: 14px;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.network-info-actions {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.network-info-actions small {
+    font-size: 12px;
+    color: #607ea6;
 }
 
 /* Avatar Upload */
@@ -545,6 +599,10 @@
 
     .quick-actions-grid {
         grid-template-columns: 1fr;
+    }
+
+    .network-info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .gdpr-actions {

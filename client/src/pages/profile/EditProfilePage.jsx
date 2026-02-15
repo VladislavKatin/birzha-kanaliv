@@ -48,6 +48,8 @@ export default function EditProfilePage() {
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState('');
+    const [networkInfo, setNetworkInfo] = useState(null);
+    const [networkLoading, setNetworkLoading] = useState(false);
 
     useEffect(() => {
         if (!dbUser) return;
@@ -66,6 +68,11 @@ export default function EditProfilePage() {
         });
         setPrivacy(dbUser.privacySettings || {});
         setAvatarPreview(dbUser.photoURL || null);
+    }, [dbUser]);
+
+    useEffect(() => {
+        if (!dbUser) return;
+        loadNetworkInfo();
     }, [dbUser]);
 
     function updateField(key, value) {
@@ -90,6 +97,18 @@ export default function EditProfilePage() {
 
     function updatePrivacy(field, value) {
         setPrivacy((prev) => ({ ...prev, [field]: value }));
+    }
+
+    async function loadNetworkInfo() {
+        setNetworkLoading(true);
+        try {
+            const response = await api.get('/profile/network-info');
+            setNetworkInfo(response.data || null);
+        } catch {
+            setNetworkInfo(null);
+        } finally {
+            setNetworkLoading(false);
+        }
     }
 
     async function handleAvatarChange(event) {
@@ -189,6 +208,49 @@ export default function EditProfilePage() {
                     <button className="btn btn-secondary quick-action-btn" onClick={() => navigate('/support/chats')}>
                         Написати адміністрації
                     </button>
+                </div>
+            </div>
+
+            <div className="card edit-section network-info-section">
+                <div className="network-info-head">
+                    <h3>Мережева інформація</h3>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={loadNetworkInfo} disabled={networkLoading}>
+                        {networkLoading ? 'Оновлення...' : 'Оновити'}
+                    </button>
+                </div>
+                <p className="section-desc">IP-адреса, провайдер і місто визначаються автоматично для вашого поточного входу.</p>
+                <div className="network-info-grid">
+                    <div className="network-info-item">
+                        <span>IP</span>
+                        <strong>{networkInfo?.networkInfo?.ip || 'Невідомо'}</strong>
+                    </div>
+                    <div className="network-info-item">
+                        <span>Провайдер</span>
+                        <strong>{networkInfo?.networkInfo?.provider || 'Невідомо'}</strong>
+                    </div>
+                    <div className="network-info-item">
+                        <span>Місто</span>
+                        <strong>{networkInfo?.networkInfo?.city || 'Невідомо'}</strong>
+                    </div>
+                    <div className="network-info-item">
+                        <span>Країна</span>
+                        <strong>{networkInfo?.networkInfo?.country || 'Невідомо'}</strong>
+                    </div>
+                </div>
+                <div className="network-info-actions">
+                    <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => {
+                            if (networkInfo?.networkInfo?.city) {
+                                updateField('location', networkInfo.networkInfo.city);
+                            }
+                        }}
+                        disabled={!networkInfo?.networkInfo?.city}
+                    >
+                        Підставити місто в локацію
+                    </button>
+                    <small>Остання перевірка: {networkInfo?.checkedAt ? new Date(networkInfo.checkedAt).toLocaleString('uk-UA') : 'ще не виконувалась'}</small>
                 </div>
             </div>
 
