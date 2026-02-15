@@ -1,5 +1,6 @@
 ﻿const router = require('express').Router();
 const { sequelize, ChatRoom, Message, TrafficMatch, TrafficOffer, YouTubeAccount, User, ActionLog } = require('../models');
+const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const { completeMatchInTransaction } = require('../services/chatCompletionService');
 const { normalizeIncomingMessagePayload, formatMessageForClient } = require('../services/chatMessagePayload');
@@ -27,6 +28,103 @@ async function verifyMatchParticipant(firebaseUid, matchId) {
     return { user, match, channelIds };
 }
 
+/**
+ * @route GET /api/chat/threads
+ * @description Get all chat threads for current user
+ * @access Private
+ */
+router.get('/threads', auth, async (req, res) => {
+    try {
+        const user = await User.findOne({ where: { firebaseUid: req.firebaseUser.uid } });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const channels = await YouTubeAccount.findAll({
+            where: { userId: user.id },
+            attributes: ['id'],
+        });
+        const channelIds = channels.map((channel) => channel.id);
+        if (channelIds.length === 0) return res.json({ threads: [] });
+
+        const matches = await TrafficMatch.findAll({
+            where: {
+                [Op.or]: [
+                    { initiatorChannelId: { [Op.in]: channelIds } },
+                    { targetChannelId: { [Op.in]: channelIds } },
+                ],
+                status: { [Op.in]: ['pending', 'accepted', 'completed'] },
+            },
+            include: [
+                {
+                    model: YouTubeAccount,
+                    as: 'initiatorChannel',
+                    attributes: ['id', 'channelTitle', 'channelAvatar'],
+                    include: [{ model: User, as: 'owner', attributes: ['displayName', 'photoURL'] }],
+                },
+                {
+                    model: YouTubeAccount,
+                    as: 'targetChannel',
+                    attributes: ['id', 'channelTitle', 'channelAvatar'],
+                    include: [{ model: User, as: 'owner', attributes: ['displayName', 'photoURL'] }],
+                },
+                {
+                    model: ChatRoom,
+                    as: 'chatRoom',
+                    attributes: ['id'],
+                    required: false,
+                },
+            ],
+            order: [['updatedAt', 'DESC']],
+        });
+
+        const threads = await Promise.all(matches.map(async (match) => {
+            const isInitiator = channelIds.includes(match.initiatorChannelId);
+            const partner = isInitiator ? match.targetChannel : match.initiatorChannel;
+            const chatRoomId = match.chatRoom?.id || null;
+
+            let lastMessage = null;
+            if (chatRoomId) {
+                const message = await Message.findOne({
+                    where: { chatRoomId },
+                    include: [{ model: User, as: 'sender', attributes: ['id', 'displayName', 'photoURL'] }],
+                    order: [['createdAt', 'DESC']],
+                });
+                if (message) {
+                    lastMessage = formatMessageForClient(message);
+                }
+            }
+
+            return {
+                id: `match-${match.id}`,
+                type: 'match',
+                matchId: match.id,
+                status: match.status,
+                partner: partner
+                    ? {
+                        channelTitle: partner.channelTitle,
+                        channelAvatar: partner.channelAvatar,
+                        owner: partner.owner
+                            ? {
+                                displayName: partner.owner.displayName,
+                                photoURL: partner.owner.photoURL,
+                            }
+                            : null,
+                    }
+                    : null,
+                lastMessage,
+                lastMessageAt: lastMessage?.createdAt || match.updatedAt,
+            };
+        }));
+
+        threads.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+        return res.json({ threads });
+    } catch (error) {
+        logError('chat.threads.load.failed', {
+            firebaseUid: req.firebaseUser?.uid || null,
+            error,
+        });
+        return res.status(500).json({ error: 'Failed to load chat threads' });
+    }
+});
 /**
  * @route GET /api/chat/:matchId/messages
  * @description Get all messages for a match chat, with partner info
@@ -209,4 +307,5 @@ router.post('/:matchId/complete', auth, async (req, res) => {
 });
 
 module.exports = router;
+
 

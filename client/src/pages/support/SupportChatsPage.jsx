@@ -24,20 +24,51 @@ function fileToDataUrl(file) {
     });
 }
 
+function getThreadTitle(thread) {
+    if (thread.type === 'support') return 'Адміністрація';
+    return thread.partner?.channelTitle || 'Чат користувача';
+}
+
+function getThreadSubtitle(thread) {
+    if (thread.type === 'support') return 'Підтримка та повідомлення про помилки';
+    const statusMap = {
+        pending: 'Очікує підтвердження',
+        accepted: 'Активний обмін',
+        completed: 'Завершений обмін',
+    };
+    return statusMap[thread.status] || 'Обмін';
+}
+
+function getThreadAvatar(thread) {
+    if (thread.type === 'support') {
+        return { image: '', fallback: 'A' };
+    }
+
+    const image = thread.partner?.channelAvatar || '';
+    const fallback = (thread.partner?.channelTitle || 'U').slice(0, 1).toUpperCase();
+    return { image, fallback };
+}
+
 export default function SupportChatsPage() {
     const location = useLocation();
     const fileInputRef = useRef(null);
     const listEndRef = useRef(null);
 
     const [loading, setLoading] = useState(true);
+    const [threads, setThreads] = useState([]);
+    const [activeThreadId, setActiveThreadId] = useState('support');
     const [messages, setMessages] = useState([]);
     const [myUserId, setMyUserId] = useState('');
+    const [supportCache, setSupportCache] = useState({ adminWelcome: null, messages: [] });
     const [inputValue, setInputValue] = useState('');
     const [selectedImage, setSelectedImage] = useState('');
     const [sending, setSending] = useState(false);
+    const [loadingMessages, setLoadingMessages] = useState(false);
+
+    const activeThread = useMemo(() => threads.find((thread) => thread.id === activeThreadId) || null, [threads, activeThreadId]);
 
     useEffect(() => {
-        loadSupportChat();
+        loadInitialData();
     }, []);
 
     useEffect(() => {
@@ -45,6 +76,7 @@ export default function SupportChatsPage() {
         const prefill = params.get('prefill');
         if (prefill) {
             setInputValue(prefill);
+            setActiveThreadId('support');
         }
     }, [location.search]);
 
@@ -53,32 +85,103 @@ export default function SupportChatsPage() {
     }, [messages]);
 
     useEffect(() => {
+        if (!activeThread) return;
+        loadThreadMessages(activeThread);
+    }, [activeThread]);
+
+    useEffect(() => {
         function handleSupportMessage(event) {
             const incoming = event.detail;
             if (!incoming?.id) return;
 
-            setMessages((prev) => {
-                if (prev.some((item) => item.id === incoming.id)) {
+            setSupportCache((prev) => {
+                if (prev.messages.some((item) => item.id === incoming.id)) {
                     return prev;
                 }
-                return [...prev, incoming];
+                return { ...prev, messages: [...prev.messages, incoming] };
             });
+
+            setThreads((prev) => prev.map((thread) => {
+                if (thread.id !== 'support') return thread;
+                return { ...thread, lastMessage: incoming, lastMessageAt: incoming.createdAt };
+            }));
+
+            if (activeThreadId === 'support') {
+                setMessages((prev) => {
+                    if (prev.some((item) => item.id === incoming.id)) return prev;
+                    return [...prev, incoming];
+                });
+            }
         }
 
         window.addEventListener('support:message', handleSupportMessage);
         return () => window.removeEventListener('support:message', handleSupportMessage);
-    }, []);
+    }, [activeThreadId]);
 
-    async function loadSupportChat() {
+    async function loadInitialData() {
+        setLoading(true);
         try {
-            const response = await api.get('/support/chat');
-            setMyUserId(response.data.myUserId);
-            const initial = [response.data.adminWelcome, ...(response.data.messages || [])];
-            setMessages(initial);
+            const [supportResponse, threadsResponse] = await Promise.all([
+                api.get('/support/chat'),
+                api.get('/chat/threads'),
+            ]);
+
+            const supportMessages = [supportResponse.data.adminWelcome, ...(supportResponse.data.messages || [])];
+            setMyUserId(supportResponse.data.myUserId || '');
+            setSupportCache({
+                adminWelcome: supportResponse.data.adminWelcome,
+                messages: supportResponse.data.messages || [],
+            });
+
+            const supportLast = supportMessages[supportMessages.length - 1] || supportResponse.data.adminWelcome;
+            const matchThreads = (threadsResponse.data.threads || []).map((thread) => ({
+                ...thread,
+                lastMessage: thread.lastMessage || null,
+                lastMessageAt: thread.lastMessageAt || thread.lastMessage?.createdAt || new Date().toISOString(),
+            }));
+
+            const nextThreads = [
+                {
+                    id: 'support',
+                    type: 'support',
+                    lastMessage: supportLast,
+                    lastMessageAt: supportLast?.createdAt || new Date(0).toISOString(),
+                },
+                ...matchThreads,
+            ];
+
+            setThreads(nextThreads);
+            if (!nextThreads.some((thread) => thread.id === activeThreadId)) {
+                setActiveThreadId(nextThreads[0]?.id || 'support');
+            }
         } catch (error) {
-            console.error('Failed to load support chat:', error);
+            console.error('Failed to load messages workspace:', error);
+            setThreads([{ id: 'support', type: 'support', lastMessage: null, lastMessageAt: new Date(0).toISOString() }]);
+            setActiveThreadId('support');
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function loadThreadMessages(thread) {
+        setLoadingMessages(true);
+        try {
+            if (thread.type === 'support') {
+                const supportMessages = [supportCache.adminWelcome, ...(supportCache.messages || [])].filter(Boolean);
+                setMessages(supportMessages);
+                return;
+            }
+
+            const response = await api.get(`/chat/${thread.matchId}/messages`);
+            setMessages(response.data.messages || []);
+            if (response.data.myUserId) {
+                setMyUserId(response.data.myUserId);
+            }
+        } catch (error) {
+            console.error('Failed to load thread messages:', error);
+            setMessages([]);
+        } finally {
+            setLoadingMessages(false);
         }
     }
 
@@ -87,12 +190,8 @@ export default function SupportChatsPage() {
         if (!file) return;
 
         try {
-            if (!file.type.startsWith('image/')) {
-                return;
-            }
-            if (file.size > MAX_IMAGE_BYTES) {
-                return;
-            }
+            if (!file.type.startsWith('image/')) return;
+            if (file.size > MAX_IMAGE_BYTES) return;
             const dataUrl = await fileToDataUrl(file);
             setSelectedImage(dataUrl);
         } catch (error) {
@@ -104,7 +203,7 @@ export default function SupportChatsPage() {
 
     async function handleSend() {
         const content = inputValue.trim();
-        if ((!content && !selectedImage) || sending) return;
+        if ((!content && !selectedImage) || sending || !activeThread) return;
 
         setSending(true);
         const payload = {
@@ -113,127 +212,172 @@ export default function SupportChatsPage() {
         };
 
         try {
-            const response = await api.post('/support/chat/messages', payload);
-            setMessages((prev) => {
-                if (prev.some((item) => item.id === response.data.message?.id)) {
-                    return prev;
-                }
-                return [...prev, response.data.message];
-            });
+            let message = null;
+
+            if (activeThread.type === 'support') {
+                const response = await api.post('/support/chat/messages', payload);
+                message = response.data.message;
+
+                setSupportCache((prev) => ({
+                    ...prev,
+                    messages: prev.messages.some((item) => item.id === message.id)
+                        ? prev.messages
+                        : [...prev.messages, message],
+                }));
+            } else {
+                const response = await api.post(`/chat/${activeThread.matchId}/messages`, payload);
+                message = response.data.message;
+            }
+
+            if (message) {
+                setMessages((prev) => (prev.some((item) => item.id === message.id) ? prev : [...prev, message]));
+                setThreads((prev) => prev.map((thread) => {
+                    if (thread.id !== activeThread.id) return thread;
+                    return { ...thread, lastMessage: message, lastMessageAt: message.createdAt || new Date().toISOString() };
+                }));
+            }
+
             setInputValue('');
             setSelectedImage('');
         } catch (error) {
-            console.error('Failed to send support message:', error);
+            console.error('Failed to send message:', error);
         } finally {
             setSending(false);
         }
     }
 
-    const visibleMessages = useMemo(
-        () => messages.filter((message) => message.isAdmin || message.sender?.id === myUserId || message.isSystem),
-        [messages, myUserId]
-    );
-
-    const grouped = useMemo(() => {
+    const groupedMessages = useMemo(() => {
         const result = [];
         let lastDate = '';
-        for (const message of visibleMessages) {
+        for (const message of messages) {
             const date = formatDate(message.createdAt);
             if (date !== lastDate) {
-                result.push({ type: 'date', date, id: `date-${date}` });
+                result.push({ type: 'date', id: `date-${date}`, date });
                 lastDate = date;
             }
             result.push({ type: 'message', ...message });
         }
         return result;
-    }, [visibleMessages]);
+    }, [messages]);
 
     return (
         <div className="support-page">
             <div className="support-header">
                 <h1>Повідомлення</h1>
-                <p>Чат з адміністрацією у форматі особистого діалогу.</p>
-                <div className="support-chat-peer">
-                    <span className="support-chat-peer-avatar">A</span>
-                    <span className="support-chat-peer-meta">
-                        <strong>Адміністрація</strong>
-                        <small>Відповідаємо в цьому чаті</small>
-                    </span>
-                </div>
+                <p>Усі переписки в одному місці. Обирайте чат ліворуч і швидко перемикайтеся між діалогами.</p>
             </div>
 
-            <section className="card support-chat-card">
+            <section className="card support-workspace">
                 {loading ? (
-                    <div className="support-chat-empty">Завантаження чату...</div>
+                    <div className="support-chat-empty">Завантаження чатів...</div>
                 ) : (
                     <>
-                        <div className="support-chat-list">
-                            {grouped.map((item) => {
-                                if (item.type === 'date') {
-                                    return (
-                                        <div key={item.id} className="support-chat-date">
-                                            <span>{item.date}</span>
-                                        </div>
-                                    );
-                                }
-
-                                const mine = item.sender?.id === myUserId;
+                        <aside className="support-thread-list" aria-label="Список чатів">
+                            {threads.map((thread) => {
+                                const active = thread.id === activeThreadId;
+                                const avatar = getThreadAvatar(thread);
                                 return (
-                                    <div key={item.id} className={`support-chat-message ${mine ? 'mine' : 'theirs'}`}>
-                                        <div className="support-chat-bubble">
-                                            <div className="support-chat-author">
-                                                {item.isAdmin ? 'Адміністрація' : 'Ви'}
-                                                {item.isAdmin && <span className="support-chat-role">ADMIN</span>}
-                                            </div>
-                                            {item.imageData && (
-                                                <a href={item.imageData} target="_blank" rel="noreferrer" className="support-chat-image-link">
-                                                    <img src={item.imageData} alt="Вкладення" className="support-chat-image" />
-                                                </a>
-                                            )}
-                                            {item.content && <p>{item.content}</p>}
-                                            <div className="support-chat-time">{formatTime(item.createdAt)}</div>
-                                        </div>
-                                    </div>
+                                    <button
+                                        key={thread.id}
+                                        type="button"
+                                        className={`support-thread-item ${active ? 'active' : ''}`}
+                                        onClick={() => setActiveThreadId(thread.id)}
+                                    >
+                                        {avatar.image ? (
+                                            <img src={avatar.image} alt={getThreadTitle(thread)} className="support-thread-avatar" />
+                                        ) : (
+                                            <span className="support-thread-avatar support-thread-avatar-fallback">{avatar.fallback}</span>
+                                        )}
+                                        <span className="support-thread-meta">
+                                            <strong>{getThreadTitle(thread)}</strong>
+                                            <small>{getThreadSubtitle(thread)}</small>
+                                            <em>{thread.lastMessage?.content || (thread.type === 'support' ? 'Напишіть адміністрації' : 'Відкрийте чат')}</em>
+                                        </span>
+                                    </button>
                                 );
                             })}
-                            <div ref={listEndRef} />
-                        </div>
+                        </aside>
 
-                        <div className="support-chat-input-wrap">
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/png,image/jpeg,image/webp,image/gif"
-                                onChange={handlePickImage}
-                                style={{ display: 'none' }}
-                            />
+                        <div className="support-chat-panel">
+                            <div className="support-chat-topbar">
+                                <h2>{activeThread ? getThreadTitle(activeThread) : 'Чат'}</h2>
+                                <span>{activeThread ? getThreadSubtitle(activeThread) : ''}</span>
+                            </div>
 
-                            {selectedImage && (
-                                <div className="support-chat-preview">
-                                    <img src={selectedImage} alt="Preview" />
-                                    <button type="button" onClick={() => setSelectedImage('')}>✕</button>
-                                </div>
-                            )}
+                            <div className="support-chat-list">
+                                {loadingMessages ? (
+                                    <div className="support-chat-empty">Завантаження повідомлень...</div>
+                                ) : groupedMessages.length === 0 ? (
+                                    <div className="support-chat-empty">Повідомлень поки немає.</div>
+                                ) : (
+                                    groupedMessages.map((item) => {
+                                        if (item.type === 'date') {
+                                            return (
+                                                <div key={item.id} className="support-chat-date">
+                                                    <span>{item.date}</span>
+                                                </div>
+                                            );
+                                        }
 
-                            <div className="support-chat-controls">
-                                <button type="button" className="btn btn-secondary" onClick={() => fileInputRef.current?.click()}>
-                                    Додати скріншот
-                                </button>
-                                <textarea
-                                    className="support-chat-input"
-                                    rows={2}
-                                    value={inputValue}
-                                    onChange={(event) => setInputValue(event.target.value)}
-                                    placeholder="Напишіть повідомлення адміністрації..."
+                                        const mine = item.sender?.id === myUserId;
+                                        return (
+                                            <div key={item.id} className={`support-chat-message ${mine ? 'mine' : 'theirs'}`}>
+                                                <div className="support-chat-bubble">
+                                                    <div className="support-chat-author">
+                                                        {mine ? 'Ви' : (item.isAdmin ? 'Адміністрація' : (item.sender?.displayName || 'Користувач'))}
+                                                        {item.isAdmin && <span className="support-chat-role">ADMIN</span>}
+                                                    </div>
+                                                    {item.imageData && (
+                                                        <a href={item.imageData} target="_blank" rel="noreferrer" className="support-chat-image-link">
+                                                            <img src={item.imageData} alt="Вкладення" className="support-chat-image" />
+                                                        </a>
+                                                    )}
+                                                    {item.content && <p>{item.content}</p>}
+                                                    <div className="support-chat-time">{formatTime(item.createdAt)}</div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                                <div ref={listEndRef} />
+                            </div>
+
+                            <div className="support-chat-input-wrap">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp,image/gif"
+                                    onChange={handlePickImage}
+                                    style={{ display: 'none' }}
                                 />
-                                <button
-                                    type="button"
-                                    className="btn btn-primary"
-                                    onClick={handleSend}
-                                    disabled={sending || (!inputValue.trim() && !selectedImage)}
-                                >
-                                    Надіслати
-                                </button>
+
+                                {selectedImage && (
+                                    <div className="support-chat-preview">
+                                        <img src={selectedImage} alt="Preview" />
+                                        <button type="button" onClick={() => setSelectedImage('')}>✕</button>
+                                    </div>
+                                )}
+
+                                <div className="support-chat-controls">
+                                    <button type="button" className="btn btn-secondary" onClick={() => fileInputRef.current?.click()}>
+                                        Додати зображення
+                                    </button>
+                                    <textarea
+                                        className="support-chat-input"
+                                        rows={2}
+                                        value={inputValue}
+                                        onChange={(event) => setInputValue(event.target.value)}
+                                        placeholder={activeThread?.type === 'support' ? 'Напишіть повідомлення адміністрації...' : 'Напишіть повідомлення користувачу...'}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary"
+                                        onClick={handleSend}
+                                        disabled={sending || (!inputValue.trim() && !selectedImage)}
+                                    >
+                                        Надіслати
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </>
