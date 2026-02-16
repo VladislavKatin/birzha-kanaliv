@@ -1,5 +1,5 @@
 ﻿const router = require('express').Router();
-const { User, YouTubeAccount, TrafficMatch, TrafficOffer, Review, ActionLog, Message } = require('../models');
+const { sequelize, User, YouTubeAccount, TrafficMatch, TrafficOffer, Review, ActionLog, Message } = require('../models');
 const auth = require('../middleware/auth');
 
 /**
@@ -117,31 +117,33 @@ router.delete('/account', auth, async (req, res) => {
             return res.status(400).json({ error: 'Для підтвердження надішліть { confirmation: "DELETE_MY_ACCOUNT" }' });
         }
 
-        await user.update({
-            displayName: 'Видалений користувач',
-            email: `deleted_${user.id}@deleted.local`,
-            photoURL: null,
-            bio: null,
-            location: null,
-            languages: [],
-            birthYear: null,
-            gender: null,
-            professionalRole: null,
-            companyName: null,
-            website: null,
-            socialLinks: {},
-            privacySettings: {},
-            badges: [],
-            notificationPrefs: {},
-        });
+        await sequelize.transaction(async (transaction) => {
+            await user.update({
+                displayName: 'Видалений користувач',
+                email: `deleted_${user.id}@deleted.local`,
+                photoURL: null,
+                bio: null,
+                location: null,
+                languages: [],
+                birthYear: null,
+                gender: null,
+                professionalRole: null,
+                companyName: null,
+                website: null,
+                socialLinks: {},
+                privacySettings: {},
+                badges: [],
+                notificationPrefs: {},
+            }, { transaction });
 
-        await YouTubeAccount.destroy({ where: { userId: user.id } });
+            await YouTubeAccount.destroy({ where: { userId: user.id }, transaction });
 
-        await ActionLog.create({
-            userId: user.id,
-            action: 'account_deleted',
-            details: { timestamp: new Date().toISOString() },
-            ip: req.ip,
+            await ActionLog.create({
+                userId: user.id,
+                action: 'account_deleted',
+                details: { timestamp: new Date().toISOString() },
+                ip: req.ip,
+            }, { transaction });
         });
 
         return res.json({ message: 'Акаунт видалено. Ваші дані анонімізовані.' });

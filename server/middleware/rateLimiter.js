@@ -1,4 +1,19 @@
 const rateLimit = require('express-rate-limit');
+const { RedisStore } = require('rate-limit-redis');
+const Redis = require('ioredis');
+
+let redisClient = null;
+
+function getRedisClient() {
+    if (redisClient) return redisClient;
+    if (!process.env.REDIS_URL) return null;
+
+    redisClient = new Redis(process.env.REDIS_URL, {
+        maxRetriesPerRequest: 1,
+        enableOfflineQueue: false,
+    });
+    return redisClient;
+}
 
 /**
  * Creates a rate limiter middleware.
@@ -18,6 +33,7 @@ function createRateLimiter({
     message = 'Too many requests. Please try again later.',
     skip = () => false,
 } = {}) {
+    const redis = getRedisClient();
     return rateLimit({
         windowMs,
         max,
@@ -25,8 +41,11 @@ function createRateLimiter({
         legacyHeaders: false,
         message: { error: message },
         skip: (req) => req.method === 'OPTIONS' || skip(req),
-        // When Redis is available, uncomment:
-        // store: new RedisStore({ sendCommand: (...args) => redisClient.call(...args) }),
+        ...(redis ? {
+            store: new RedisStore({
+                sendCommand: (...args) => redis.call(...args),
+            }),
+        } : {}),
     });
 }
 

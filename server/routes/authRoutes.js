@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { User, YouTubeAccount } = require('../models');
+const { sequelize, User, YouTubeAccount, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
 const { logInfo, logError } = require('../services/logger');
 
@@ -14,18 +14,30 @@ router.post('/login', auth, async (req, res) => {
         const { uid, email, name, picture } = req.firebaseUser;
         logInfo('auth.login.request', { firebaseUid: uid });
 
-        let user = await User.findOne({ where: { firebaseUid: uid } });
+        let user;
         let created = false;
 
-        if (!user) {
-            user = await User.create({
-                firebaseUid: uid,
-                email,
-                displayName: name || email.split('@')[0],
-                photoURL: picture || null,
+        await sequelize.transaction(async (transaction) => {
+            const [resolvedUser, wasCreated] = await User.findOrCreate({
+                where: { firebaseUid: uid },
+                defaults: {
+                    firebaseUid: uid,
+                    email,
+                    displayName: name || email.split('@')[0],
+                    photoURL: picture || null,
+                },
+                transaction,
             });
-            created = true;
-        }
+            user = resolvedUser;
+            created = wasCreated;
+
+            await ActionLog.create({
+                userId: user.id,
+                action: created ? 'auth_login_created_user' : 'auth_login',
+                details: { firebaseUid: uid },
+                ip: req.ip,
+            }, { transaction });
+        });
 
         // Check if user has connected YouTube
         const youtubeAccount = await YouTubeAccount.findOne({

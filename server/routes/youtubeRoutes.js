@@ -5,24 +5,8 @@ const youtubeService = require('../services/youtubeService');
 const { logInfo, logWarn, logError } = require('../services/logger');
 const { ensureAutoOffersForChannels } = require('../services/autoOfferService');
 const { resolveClientRedirectUrl } = require('../config/clientOrigins');
-
-function serializeState(payload) {
-    return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
-}
-
-function deserializeState(rawState) {
-    if (!rawState) return { firebaseUid: null, redirectOrigin: null };
-
-    try {
-        const parsed = JSON.parse(Buffer.from(rawState, 'base64url').toString('utf8'));
-        return {
-            firebaseUid: parsed?.firebaseUid || null,
-            redirectOrigin: parsed?.redirectOrigin || null,
-        };
-    } catch {
-        return { firebaseUid: rawState, redirectOrigin: null };
-    }
-}
+const { encodeState, decodeState } = require('../services/oauthStateService');
+const { encryptToken, decryptToken } = require('../services/tokenCryptoService');
 
 /**
  * @route GET /api/youtube/connect
@@ -70,7 +54,7 @@ router.get('/connect', auth, async (req, res) => {
             }, { transaction });
         });
 
-        const state = serializeState({ firebaseUid, redirectOrigin });
+        const state = encodeState({ firebaseUid, redirectOrigin });
         const authUrl = youtubeService.getAuthUrl(state);
         logInfo('youtube.connect.url.generated', { firebaseUid, redirectOrigin });
         res.json({ authUrl });
@@ -91,15 +75,20 @@ router.get('/connect', auth, async (req, res) => {
 router.get('/callback', async (req, res) => {
     try {
         const { code, state } = req.query;
-        const decodedState = deserializeState(state);
+        const decodedState = decodeState(state);
         const firebaseUid = decodedState.firebaseUid;
-        const clientUrl = resolveClientRedirectUrl(decodedState.redirectOrigin);
+        const clientUrl = resolveClientRedirectUrl(decodedState.redirectOrigin || req.headers.origin);
         logInfo('youtube.callback.request', {
             firebaseUid: firebaseUid || null,
             redirectOrigin: decodedState.redirectOrigin || null,
         });
 
-        if (!code || !firebaseUid) {
+        if (!decodedState.valid || !code || !firebaseUid) {
+            logWarn('youtube.callback.invalid_state', {
+                firebaseUid: firebaseUid || null,
+                expired: !!decodedState.expired,
+                legacy: !!decodedState.legacy,
+            });
             return res.redirect(`${clientUrl}/dashboard?youtube=error`);
         }
 
@@ -109,22 +98,7 @@ router.get('/callback', async (req, res) => {
         // Get channel info
         const channelInfo = await youtubeService.getMyChannel(tokens.accessToken);
         if (!channelInfo) {
-            return res.status(400).json({ error: 'No YouTube channel found for this account' });
-        }
-
-        // Find user by firebase UID (state = firebase uid)
-        const user = await User.findOne({ where: { firebaseUid } });
-        if (!user) {
             return res.redirect(`${clientUrl}/dashboard?youtube=error`);
-        }
-
-        // Check if channel already connected by another user
-        const existingAccount = await YouTubeAccount.findOne({
-            where: { channelId: channelInfo.channelId },
-        });
-
-        if (existingAccount && existingAccount.userId !== user.id) {
-            return res.status(409).json({ error: 'This channel is already connected by another user' });
         }
 
         // Get analytics
@@ -167,26 +141,51 @@ router.get('/callback', async (req, res) => {
             averageWatchTime: analytics.averageWatchTime,
             ctr: analytics.ctr,
             recentVideos,
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
+            accessToken: encryptToken(tokens.accessToken),
+            refreshToken: tokens.refreshToken ? encryptToken(tokens.refreshToken) : null,
             lastAnalyticsUpdate: new Date(),
             connectedAt: new Date(),
         };
 
         let account;
-        if (existingAccount) {
-            await existingAccount.update(accountData);
-            account = existingAccount;
-        } else {
-            account = await YouTubeAccount.create(accountData);
-        }
+        let user;
+        let reusedExistingAccount = false;
+        await sequelize.transaction(async (transaction) => {
+            user = await User.findOne({
+                where: { firebaseUid },
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+            });
+            if (!user) {
+                throw new Error('USER_NOT_FOUND');
+            }
 
-        // Log action
-        await ActionLog.create({
-            userId: user.id,
-            action: 'youtube_connect',
-            details: { channelId: channelInfo.channelId, channelTitle: channelInfo.channelTitle },
-            ip: req.ip,
+            const existingAccount = await YouTubeAccount.findOne({
+                where: { channelId: channelInfo.channelId },
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+            });
+
+            if (existingAccount && existingAccount.userId !== user.id) {
+                const conflictError = new Error('CHANNEL_ALREADY_CONNECTED_BY_ANOTHER_USER');
+                conflictError.code = 'CHANNEL_ALREADY_CONNECTED_BY_ANOTHER_USER';
+                throw conflictError;
+            }
+
+            if (existingAccount) {
+                await existingAccount.update(accountData, { transaction });
+                account = existingAccount;
+                reusedExistingAccount = true;
+            } else {
+                account = await YouTubeAccount.create(accountData, { transaction });
+            }
+
+            await ActionLog.create({
+                userId: user.id,
+                action: 'youtube_connect',
+                details: { channelId: channelInfo.channelId, channelTitle: channelInfo.channelTitle },
+                ip: req.ip,
+            }, { transaction });
         });
 
         await ensureAutoOffersForChannels({
@@ -203,16 +202,22 @@ router.get('/callback', async (req, res) => {
             firebaseUid,
             userId: user.id,
             channelId: channelInfo.channelId,
-            reusedExistingAccount: !!existingAccount,
+            reusedExistingAccount,
         });
         res.redirect(`${clientUrl}/dashboard?youtube=connected`);
     } catch (error) {
-        const decodedState = deserializeState(req.query?.state);
+        if (error.code === 'CHANNEL_ALREADY_CONNECTED_BY_ANOTHER_USER') {
+            const decodedState = decodeState(req.query?.state);
+            const clientUrl = resolveClientRedirectUrl(decodedState.redirectOrigin || req.headers.origin);
+            return res.redirect(`${clientUrl}/dashboard?youtube=error`);
+        }
+
+        const decodedState = decodeState(req.query?.state);
         logError('youtube.callback.failed', {
             firebaseUid: decodedState.firebaseUid || null,
             error,
         });
-        const clientUrl = resolveClientRedirectUrl(decodedState.redirectOrigin);
+        const clientUrl = resolveClientRedirectUrl(decodedState.redirectOrigin || req.headers.origin);
         res.redirect(`${clientUrl}/dashboard?youtube=error`);
     }
 });
@@ -274,11 +279,11 @@ router.post('/refresh', auth, async (req, res) => {
         if (!account) return res.status(404).json({ error: 'No YouTube channel connected' });
 
         // Refresh access token if needed
-        let accessToken = account.accessToken;
+        let accessToken = decryptToken(account.accessToken);
         try {
-            const refreshed = await youtubeService.refreshAccessToken(account.refreshToken);
+            const refreshed = await youtubeService.refreshAccessToken(decryptToken(account.refreshToken));
             accessToken = refreshed.accessToken;
-            await account.update({ accessToken });
+            await account.update({ accessToken: encryptToken(accessToken) });
         } catch (e) {
             logWarn('youtube.refresh.token.partial_failure', {
                 userId: user.id,
@@ -299,26 +304,27 @@ router.post('/refresh', auth, async (req, res) => {
             previousSubs
         );
 
-        await account.update({
-            subscribers: channelInfo?.subscribers || account.subscribers,
-            totalViews: channelInfo?.totalViews || account.totalViews,
-            totalVideos: channelInfo?.totalVideos || account.totalVideos,
-            avgViews30d: analytics.avgViews30d,
-            subGrowth30d: analytics.subGrowth30d,
-            averageWatchTime: analytics.averageWatchTime,
-            ctr: analytics.ctr,
-            recentVideos,
-            lastAnalyticsUpdate: new Date(),
-            isFlagged: isAnomalous ? true : account.isFlagged,
-            flagReason: isAnomalous ? 'Аномальний ріст підписників' : account.flagReason,
-        });
+        await sequelize.transaction(async (transaction) => {
+            await account.update({
+                subscribers: channelInfo?.subscribers || account.subscribers,
+                totalViews: channelInfo?.totalViews || account.totalViews,
+                totalVideos: channelInfo?.totalVideos || account.totalVideos,
+                avgViews30d: analytics.avgViews30d,
+                subGrowth30d: analytics.subGrowth30d,
+                averageWatchTime: analytics.averageWatchTime,
+                ctr: analytics.ctr,
+                recentVideos,
+                lastAnalyticsUpdate: new Date(),
+                isFlagged: isAnomalous ? true : account.isFlagged,
+                flagReason: isAnomalous ? 'Аномальний ріст підписників' : account.flagReason,
+            }, { transaction });
 
-        // Log action
-        await ActionLog.create({
-            userId: user.id,
-            action: 'analytics_refresh',
-            details: { channelId: account.channelId, anomalous: isAnomalous },
-            ip: req.ip,
+            await ActionLog.create({
+                userId: user.id,
+                action: 'analytics_refresh',
+                details: { channelId: account.channelId, anomalous: isAnomalous },
+                ip: req.ip,
+            }, { transaction });
         });
 
         res.json({ message: 'Analytics refreshed', flagged: isAnomalous });
@@ -353,9 +359,18 @@ router.put('/profile', auth, async (req, res) => {
         const account = await YouTubeAccount.findOne({ where: { userId: user.id } });
         if (!account) return res.status(404).json({ error: 'No YouTube channel connected' });
 
-        await account.update({
-            niche: niche || account.niche,
-            language: language || account.language,
+        await sequelize.transaction(async (transaction) => {
+            await account.update({
+                niche: niche || account.niche,
+                language: language || account.language,
+            }, { transaction });
+
+            await ActionLog.create({
+                userId: user.id,
+                action: 'youtube_profile_updated',
+                details: { channelId: account.channelId, fields: ['niche', 'language'] },
+                ip: req.ip,
+            }, { transaction });
         });
 
         res.json({ message: 'Profile updated' });

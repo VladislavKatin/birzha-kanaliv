@@ -12,6 +12,8 @@ async function completeMatchInTransaction({
     sequelize,
     TrafficOffer,
     ActionLog,
+    extraAuditAction = null,
+    extraAuditDetails = null,
     now = () => new Date(),
 }) {
     const transaction = await sequelize.transaction();
@@ -45,6 +47,18 @@ async function completeMatchInTransaction({
             },
             ip,
         }, { transaction });
+
+        if (extraAuditAction) {
+            await ActionLog.create({
+                userId: actorUserId,
+                action: extraAuditAction,
+                details: {
+                    matchId: match.id,
+                    ...(extraAuditDetails || {}),
+                },
+                ip,
+            }, { transaction });
+        }
 
         await transaction.commit();
 

@@ -227,17 +227,10 @@ router.put('/:id/confirm', auth, async (req, res) => {
             sequelize,
             TrafficOffer,
             ActionLog,
-        });
-
-        await ActionLog.create({
-            userId: result.user.id,
-            action: 'match_confirmed',
-            details: {
-                matchId: match.id,
+            extraAuditAction: 'match_confirmed',
+            extraAuditDetails: {
                 side: isInitiator ? 'initiator' : 'target',
-                bothConfirmed: match.initiatorConfirmed && match.targetConfirmed,
             },
-            ip: req.ip,
         });
 
         res.json({ match });
