@@ -14,6 +14,7 @@ function formatNumber(num) {
 export default function PartnerRecommendations() {
     const [recs, setRecs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -21,17 +22,28 @@ export default function PartnerRecommendations() {
     }, []);
 
     async function loadRecs() {
+        setLoadError('');
         try {
             const response = await api.get('/user/recommendations');
             setRecs(response.data.recommendations || []);
         } catch (error) {
             console.error('Failed to load recommendations:', error);
+            setLoadError(error?.response?.data?.error || 'Не вдалося завантажити рекомендації.');
+            setRecs([]);
         } finally {
             setLoading(false);
         }
     }
 
     if (loading) return null;
+    if (loadError) {
+        return (
+            <div className="partner-recs card">
+                <h3>Рекомендовані партнери</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>{loadError}</p>
+            </div>
+        );
+    }
     if (recs.length === 0) return null;
 
     const visibleRecs = recs.slice(0, 2);
@@ -60,4 +72,3 @@ export default function PartnerRecommendations() {
         </div>
     );
 }
-

@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
@@ -29,15 +30,22 @@ export default function PublicProfilePage() {
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
 
     const isOwn = dbUser?.id === userId;
 
     const loadProfile = useCallback(async () => {
+        setLoadError('');
+        setLoading(true);
         try {
             const response = await api.get(`/profile/${userId}`);
             setProfile(response.data.profile);
         } catch (error) {
             console.error('Failed to load profile:', error);
+            const message = error?.response?.data?.error || 'Не вдалося завантажити профіль.';
+            setLoadError(message);
+            setProfile(null);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -59,10 +67,15 @@ export default function PublicProfilePage() {
     if (!profile) {
         return (
             <div className="profile-not-found card">
-                <h3>Профіль не знайдено</h3>
-                <button className="btn btn-secondary" onClick={() => navigate('/dashboard')}>
-                    ← На головну
-                </button>
+                <h3>{loadError || 'Профіль не знайдено'}</h3>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn btn-secondary" onClick={loadProfile}>
+                        Оновити
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => navigate('/dashboard')}>
+                        ← На головну
+                    </button>
+                </div>
             </div>
         );
     }
@@ -192,4 +205,3 @@ export default function PublicProfilePage() {
         </div>
     );
 }
-

@@ -4,6 +4,10 @@ import toast from 'react-hot-toast';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './ExchangesPage.css';
 
+function getApiErrorMessage(error, fallbackMessage) {
+    return error?.response?.data?.error || fallbackMessage;
+}
+
 function formatNumber(num) {
     if (!num) return '0';
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
@@ -14,17 +18,22 @@ export default function ExchangesPage() {
     const [exchanges, setExchanges] = useState([]);
     const [loading, setLoading] = useState(true);
     const [reviewForm, setReviewForm] = useState(null);
+    const [loadError, setLoadError] = useState('');
 
     useEffect(() => {
         loadExchanges();
     }, []);
 
     async function loadExchanges() {
+        setLoadError('');
         try {
             const response = await api.get('/exchanges');
             setExchanges(response.data.exchanges || []);
         } catch (error) {
             console.error('Failed to load exchanges:', error);
+            const message = getApiErrorMessage(error, 'Не вдалося завантажити завершені обміни.');
+            setLoadError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -54,6 +63,21 @@ export default function ExchangesPage() {
             <div className="dashboard-loading">
                 <div className="loading-pulse" />
                 <p>Завантаження...</p>
+            </div>
+        );
+    }
+
+    if (loadError && exchanges.length === 0) {
+        return (
+            <div className="exchanges-page">
+                <div className="swaps-empty card">
+                    <span className="swaps-empty-icon">!</span>
+                    <h3>Помилка завантаження</h3>
+                    <p>{loadError}</p>
+                    <button className="btn btn-secondary btn-sm" onClick={loadExchanges}>
+                        Спробувати ще раз
+                    </button>
+                </div>
             </div>
         );
     }
@@ -159,4 +183,3 @@ export default function ExchangesPage() {
         </div>
     );
 }
-

@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import TrustLevelCard from './TrustLevelCard';
@@ -9,11 +10,16 @@ import InfluenceChart from '../../components/common/InfluenceChart';
 import PartnerRecommendations from '../../components/common/PartnerRecommendations';
 import './DashboardPage.css';
 
+function getApiErrorMessage(error, fallbackMessage) {
+    return error?.response?.data?.error || fallbackMessage;
+}
+
 export default function DashboardPage() {
     const { refreshUserData } = useAuthStore();
     const [stats, setStats] = useState(null);
     const [activity, setActivity] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
 
     useEffect(() => {
         loadData();
@@ -26,12 +32,17 @@ export default function DashboardPage() {
     }, [refreshUserData]);
 
     async function loadData() {
+        setLoadError('');
+        setLoading(true);
         try {
             const [statsRes, activityRes] = await Promise.all([api.get('/user/stats'), api.get('/user/activity?limit=5')]);
             setStats(statsRes.data);
             setActivity(activityRes.data.events || []);
         } catch (error) {
             console.error('Failed to load dashboard data:', error);
+            const message = getApiErrorMessage(error, 'Не вдалося завантажити дані дашборду.');
+            setLoadError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -42,6 +53,17 @@ export default function DashboardPage() {
             <div className="dashboard-loading">
                 <div className="loading-pulse" />
                 <p>Завантаження даних...</p>
+            </div>
+        );
+    }
+
+    if (loadError && !stats) {
+        return (
+            <div className="dashboard-loading">
+                <p>{loadError}</p>
+                <button className="btn btn-secondary btn-sm" onClick={loadData}>
+                    Спробувати ще раз
+                </button>
             </div>
         );
     }

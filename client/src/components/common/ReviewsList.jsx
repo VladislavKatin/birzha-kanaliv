@@ -10,6 +10,7 @@ function renderStars(rating) {
 export default function ReviewsList({ channelIds }) {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
 
     useEffect(() => {
         let cancelled = false;
@@ -19,11 +20,13 @@ export default function ReviewsList({ channelIds }) {
                 if (!cancelled) {
                     setLoading(false);
                     setReviews([]);
+                    setLoadError('');
                 }
                 return;
             }
 
             setLoading(true);
+            setLoadError('');
             try {
                 const all = [];
                 for (const cid of channelIds) {
@@ -47,6 +50,7 @@ export default function ReviewsList({ channelIds }) {
                 console.error('Failed to load reviews:', error);
                 if (!cancelled) {
                     setReviews([]);
+                    setLoadError(error?.response?.data?.error || 'Не вдалося завантажити відгуки.');
                 }
             } finally {
                 if (!cancelled) {
@@ -63,6 +67,7 @@ export default function ReviewsList({ channelIds }) {
     }, [channelIds]);
 
     if (loading) return <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Завантаження відгуків...</p>;
+    if (loadError) return <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{loadError}</p>;
     if (reviews.length === 0) return <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Ще немає відгуків</p>;
 
     return (
@@ -83,4 +88,3 @@ export default function ReviewsList({ channelIds }) {
         </div>
     );
 }
-
