@@ -1,4 +1,4 @@
-/* ─── Swaps Pages ────────────────────────────────── */
+﻿/* Swaps Pages */
 .swaps-page {
     max-width: 980px;
 }
@@ -48,6 +48,14 @@
     text-decoration: underline;
     font-size: inherit;
     padding: 0;
+}
+
+.swaps-controls {
+    display: grid;
+    grid-template-columns: 180px 220px minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 12px;
 }
 
 .swaps-list {
@@ -107,6 +115,12 @@
     margin-top: 2px;
 }
 
+.swap-item-age {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
 .swap-item-details {
     display: flex;
     flex-direction: column;
@@ -134,6 +148,28 @@
     color: var(--text-muted);
 }
 
+.swap-urgency {
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: var(--radius-full);
+    padding: 2px 8px;
+}
+
+.swap-urgency.low {
+    background: rgba(59, 130, 246, 0.14);
+    color: #2563eb;
+}
+
+.swap-urgency.medium {
+    background: rgba(245, 158, 11, 0.16);
+    color: #b45309;
+}
+
+.swap-urgency.high {
+    background: rgba(239, 68, 68, 0.15);
+    color: #b91c1c;
+}
+
 .swap-status-badge {
     font-size: 12px;
     font-weight: 600;
@@ -157,7 +193,23 @@
     box-shadow: var(--shadow-glow);
 }
 
+.decline-comment {
+    width: 100%;
+    margin-top: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    padding: 10px 12px;
+    resize: vertical;
+    min-height: 84px;
+}
+
 @media (max-width: 768px) {
+    .swaps-controls {
+        grid-template-columns: 1fr;
+    }
+
     .swap-item {
         flex-direction: column;
         align-items: stretch;

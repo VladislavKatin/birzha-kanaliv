@@ -40,6 +40,7 @@ async function runApiSmokeFunctionalTests() {
             accept: false,
         });
 
+        await smokeIncomingSwapsFilters(baseUrl);
         await smokeSwapDecline(baseUrl, declineFlow.matchId, RESPONDER_UID);
     } finally {
         await new Promise((resolve) => server.close(resolve));
@@ -158,15 +159,51 @@ async function createAndProgressMatchFlow(baseUrl, {
     return { offerId, matchId };
 }
 
+async function smokeIncomingSwapsFilters(baseUrl) {
+    const allIncoming = await request(baseUrl, {
+        method: 'GET',
+        path: '/api/swaps/incoming',
+        uid: OFFER_OWNER_UID,
+    });
+
+    assert.equal(allIncoming.status, 200);
+    assert.equal(Array.isArray(allIncoming.body.swaps), true);
+
+    const filtered = await request(baseUrl, {
+        method: 'GET',
+        path: '/api/swaps/incoming?status=pending&sort=largest&search=smoke-offer-decline',
+        uid: OFFER_OWNER_UID,
+    });
+
+    assert.equal(filtered.status, 200);
+    assert.equal(Array.isArray(filtered.body.swaps), true);
+    assert.equal(
+        filtered.body.swaps.every((swap) => swap.status === 'pending'),
+        true
+    );
+}
+
 async function smokeSwapDecline(baseUrl, matchId, uid) {
+    const { ActionLog } = require('../models');
     const response = await request(baseUrl, {
         method: 'POST',
         path: `/api/swaps/${matchId}/decline`,
         uid,
+        body: { reason: 'Невідповідна ніша: smoke test reason' },
     });
 
     assert.equal(response.status, 200);
     assert.equal(response.body.match.status, 'rejected');
+
+    const logs = await ActionLog.findAll({
+        where: { action: 'swap_declined' },
+        order: [['createdAt', 'DESC']],
+        limit: 30,
+    });
+
+    const relevant = logs.find((entry) => entry.details?.matchId === matchId);
+    assert.equal(!!relevant, true);
+    assert.equal(String(relevant.details?.reason || '').includes('smoke test reason'), true);
 }
 
 async function smokeChatSend(baseUrl, matchId, uid) {
@@ -265,3 +302,4 @@ async function request(baseUrl, {
 module.exports = {
     runApiSmokeFunctionalTests,
 };
+

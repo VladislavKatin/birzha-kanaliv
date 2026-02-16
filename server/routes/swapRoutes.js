@@ -3,6 +3,51 @@ const { sequelize, TrafficMatch, TrafficOffer, YouTubeAccount, User, ChatRoom, A
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 const { emitSwapStatusChanged, emitNotification } = require('../socketSetup');
+const { normalizeOptionalString } = require('../utils/validators');
+
+function parseIncomingStatus(value) {
+    const allowed = new Set(['pending', 'accepted', 'completed', 'all']);
+    const normalized = String(value || 'all').toLowerCase();
+    return allowed.has(normalized) ? normalized : 'all';
+}
+
+function parseIncomingSort(value) {
+    const allowed = new Set(['newest', 'largest', 'relevance']);
+    const normalized = String(value || 'newest').toLowerCase();
+    return allowed.has(normalized) ? normalized : 'newest';
+}
+
+function getRelevanceScore(swap) {
+    const initiator = swap.initiatorChannel || {};
+    const target = swap.targetChannel || {};
+    const offer = swap.offer || {};
+    let score = 0;
+
+    const initiatorNiche = String(initiator.niche || '').trim().toLowerCase();
+    const targetNiche = String(target.niche || '').trim().toLowerCase();
+    const offerNiche = String(offer.niche || '').trim().toLowerCase();
+
+    if (initiatorNiche && targetNiche && initiatorNiche === targetNiche) {
+        score += 40;
+    }
+    if (offerNiche && targetNiche && offerNiche === targetNiche) {
+        score += 20;
+    }
+
+    const initiatorSubs = Number(initiator.subscribers || 0);
+    const targetSubs = Number(target.subscribers || 0);
+    const maxSubs = Math.max(initiatorSubs, targetSubs);
+    if (maxSubs > 0) {
+        const closeness = 1 - Math.min(Math.abs(initiatorSubs - targetSubs) / maxSubs, 1);
+        score += Math.round(closeness * 30);
+    }
+
+    if (swap.status === 'pending') {
+        score += 10;
+    }
+
+    return score;
+}
 
 /**
  * Get user and their channels by Firebase UID.
@@ -26,6 +71,9 @@ router.get('/incoming', auth, async (req, res) => {
         const result = await getUserChannels(req.firebaseUser.uid);
         if (!result) return res.status(404).json({ error: 'User not found' });
         if (result.channelIds.length === 0) return res.json({ swaps: [] });
+        const statusFilter = parseIncomingStatus(req.query.status);
+        const sort = parseIncomingSort(req.query.sort);
+        const search = String(normalizeOptionalString(req.query.search) || '').toLowerCase();
 
         const swaps = await TrafficMatch.findAll({
             where: {
@@ -36,8 +84,13 @@ router.get('/incoming', auth, async (req, res) => {
                 {
                     model: YouTubeAccount,
                     as: 'initiatorChannel',
-                    attributes: ['id', 'channelTitle', 'channelAvatar', 'subscribers', 'niche'],
+                    attributes: ['id', 'channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'niche'],
                     include: [{ model: User, as: 'owner', attributes: ['displayName', 'photoURL'] }],
+                },
+                {
+                    model: YouTubeAccount,
+                    as: 'targetChannel',
+                    attributes: ['id', 'channelTitle', 'subscribers', 'niche'],
                 },
                 {
                     model: TrafficOffer,
@@ -64,10 +117,45 @@ router.get('/incoming', auth, async (req, res) => {
                 ...plain,
                 myChannelId,
                 hasReviewed,
+                relevanceScore: getRelevanceScore(plain),
             };
         });
 
-        res.json({ swaps: serialized });
+        let filtered = serialized;
+
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter((swap) => swap.status === statusFilter);
+        }
+
+        if (search) {
+            filtered = filtered.filter((swap) => {
+                const haystack = [
+                    swap.initiatorChannel?.channelTitle || '',
+                    swap.initiatorChannel?.channelId || '',
+                    swap.offer?.description || '',
+                    swap.offer?.niche || '',
+                ]
+                    .join(' ')
+                    .toLowerCase();
+                return haystack.includes(search);
+            });
+        }
+
+        if (sort === 'largest') {
+            filtered = filtered.sort((a, b) => {
+                const diff = Number(b.initiatorChannel?.subscribers || 0) - Number(a.initiatorChannel?.subscribers || 0);
+                if (diff !== 0) return diff;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+        } else if (sort === 'relevance') {
+            filtered = filtered.sort((a, b) => {
+                const diff = Number(b.relevanceScore || 0) - Number(a.relevanceScore || 0);
+                if (diff !== 0) return diff;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+        }
+
+        res.json({ swaps: filtered });
     } catch (error) {
         console.error('Get incoming swaps error:', error);
         res.status(500).json({ error: 'Failed to get incoming swaps' });
@@ -222,6 +310,10 @@ router.post('/:id/decline', auth, async (req, res) => {
     try {
         const result = await getUserChannels(req.firebaseUser.uid);
         if (!result) return res.status(404).json({ error: 'User not found' });
+        const declineReason = normalizeOptionalString(req.body?.reason);
+        if (declineReason && declineReason.length > 240) {
+            return res.status(400).json({ error: 'Причина відхилення занадто довга (максимум 240 символів)' });
+        }
 
         const payload = await sequelize.transaction(async (transaction) => {
             const match = await TrafficMatch.findByPk(req.params.id, {
@@ -258,7 +350,13 @@ router.post('/:id/decline', auth, async (req, res) => {
             await ActionLog.create({
                 userId: result.user.id,
                 action: 'swap_declined',
-                details: { matchId: match.id, offerId: match.offerId, isTarget, isInitiator },
+                details: {
+                    matchId: match.id,
+                    offerId: match.offerId,
+                    isTarget,
+                    isInitiator,
+                    reason: declineReason || null,
+                },
                 ip: req.ip,
             }, { transaction });
 
