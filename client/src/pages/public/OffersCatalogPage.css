@@ -168,6 +168,21 @@
     color: #475569;
 }
 
+.offers-catalog-empty p {
+    margin: 0 0 12px;
+}
+
+.offers-catalog-empty button {
+    border: 1px solid #bfd6f0;
+    border-radius: 10px;
+    background: #edf5ff;
+    color: #1f4f83;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 14px;
+    cursor: pointer;
+}
+
 .auth-required-modal {
     position: fixed;
     inset: 0;

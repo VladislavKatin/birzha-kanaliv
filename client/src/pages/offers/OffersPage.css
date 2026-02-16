@@ -1,4 +1,4 @@
-/* ─── Offers Page ────────────────────────────────── */
+﻿/* Offers Page */
 .offers-page {
     max-width: 1100px;
 }
@@ -193,7 +193,7 @@
     margin-bottom: 0;
 }
 
-/* ─── Influence Score Colors (shared) ────────────── */
+/* Influence Score Colors (shared) */
 :root {
     --score-a-plus: #22c55e;
     --score-a: #3b82f6;
