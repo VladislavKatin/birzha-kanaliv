@@ -12,6 +12,7 @@ import {
     getNicheLabel,
     getNicheOptions,
     normalizeOfferDescription,
+    prepareOffersForCatalog,
     resolveLanguageCode,
 } from '../../services/publicOffers';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
@@ -88,7 +89,7 @@ export default function OffersPage() {
         );
     }
 
-    const visibleOffers = offers;
+    const visibleOffers = prepareOffersForCatalog(offers);
 
     return (
         <div className="offers-page">
@@ -159,7 +160,10 @@ export default function OffersPage() {
                                     className="offer-card-avatar"
                                 />
                                 <div className="offer-card-channel">
-                                    <span className="offer-card-name">{offer.channel?.channelTitle || 'Канал'}</span>
+                                    <span className="offer-card-name">
+                                        {offer.channel?.channelTitle || 'Канал'}
+                                        {offer.__isDemo && <span className="offer-demo-badge">DEMO</span>}
+                                    </span>
                                     <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} підписників</span>
                                 </div>
                                 <span className={`offer-type-badge ${offer.type}`}>{offer.type === 'subs' ? 'Підписники' : 'Перегляди'}</span>
@@ -178,13 +182,13 @@ export default function OffersPage() {
 
                             <div className="offer-card-actions">
                                 <button className="btn btn-secondary btn-sm" onClick={() => setSelectedOffer(offer)}>
-                                    Просмотреть
+                                    Переглянути
                                 </button>
                                 <button
                                     className="btn btn-primary btn-sm"
                                     onClick={() => navigate(user ? buildOfferDetailsPath(offer.id) : buildAuthRedirectPath(buildOfferDetailsPath(offer.id)))}
                                 >
-                                    Предложить обмен
+                                    Запропонувати обмін
                                 </button>
                             </div>
                         </div>

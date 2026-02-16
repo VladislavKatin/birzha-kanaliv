@@ -7,6 +7,7 @@ import {
     getNicheOptions,
     getOfferTypeLabel,
     isDemoChannel,
+    prepareOffersForCatalog,
     resolveLanguageCode,
     splitOffersByChannelKind,
     uniqueOffersByChannel,
@@ -40,6 +41,18 @@ export function runPublicOffersUnitTests() {
     assert.equal(unique.length, 2);
     assert.equal(unique.some((offer) => offer.id === 'new'), true);
     assert.equal(unique.some((offer) => offer.id === 'old'), false);
+    const orderedCatalog = prepareOffersForCatalog([
+        { id: 'demo-a', channel: { channelId: 'UC_DEMO_001', subscribers: 9999 }, createdAt: '2026-02-10T10:00:00.000Z' },
+        { id: 'real-old', channel: { channelId: 'UC_REAL_001', subscribers: 1200 }, createdAt: '2026-02-10T10:00:00.000Z' },
+        { id: 'real-new', channel: { channelId: 'UC_REAL_001', subscribers: 1200 }, createdAt: '2026-02-12T10:00:00.000Z' },
+        { id: 'real-top', channel: { channelId: 'UC_REAL_002', subscribers: 3200 }, createdAt: '2026-02-11T10:00:00.000Z' },
+    ]);
+    assert.equal(orderedCatalog.length, 3);
+    assert.equal(orderedCatalog[0].id, 'real-top');
+    assert.equal(orderedCatalog[0].__isDemo, false);
+    assert.equal(orderedCatalog[1].id, 'real-new');
+    assert.equal(orderedCatalog[2].id, 'demo-a');
+    assert.equal(orderedCatalog[2].__isDemo, true);
 
     const niches = getNicheOptions();
     assert.equal(niches.some((niche) => niche.value === 'other'), true);

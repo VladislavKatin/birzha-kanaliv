@@ -175,6 +175,15 @@ export function splitOffersByChannelKind(offers = []) {
     return { realOffers, demoOffers };
 }
 
+export function prepareOffersForCatalog(offers = []) {
+    const { realOffers, demoOffers } = splitOffersByChannelKind(offers);
+    const withFlag = (offer, isDemo) => ({ ...offer, __isDemo: isDemo });
+    return [
+        ...realOffers.map((offer) => withFlag(offer, false)),
+        ...demoOffers.map((offer) => withFlag(offer, true)),
+    ];
+}
+
 export function buildPublicOffersQuery(filter = {}) {
     const params = new URLSearchParams();
     const niche = filter.niche ? filter.niche.trim() : '';

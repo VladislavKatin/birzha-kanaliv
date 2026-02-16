@@ -17,6 +17,7 @@ import {
     getNicheOptions,
     getOfferTypeLabel,
     normalizeOfferDescription,
+    prepareOffersForCatalog,
 } from '../../services/publicOffers';
 import './OffersCatalogPage.css';
 
@@ -33,14 +34,7 @@ export default function OffersCatalogPage() {
     const nicheOptions = useMemo(() => getNicheOptions(), []);
     const languageOptions = useMemo(() => getLanguageOptions(), []);
     const query = useMemo(() => buildPublicOffersQuery(filter), [filter]);
-    const visibleOffers = useMemo(() => {
-        const byCreatedAtDesc = (a, b) => {
-            const timeA = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
-            const timeB = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
-            return timeB - timeA;
-        };
-        return [...offers].sort(byCreatedAtDesc);
-    }, [offers]);
+    const visibleOffers = useMemo(() => prepareOffersForCatalog(offers), [offers]);
 
     useEffect(() => {
         try {
@@ -145,7 +139,10 @@ export default function OffersCatalogPage() {
                                     <div className="public-offer-head">
                                         <img src={resolveChannelAvatar(offer.channel?.channelAvatar, offer.channel?.channelTitle)} data-fallback-src={buildFallbackAvatar(offer.channel?.channelTitle)} onError={handleAvatarError} alt={offer.channel?.channelTitle || 'Канал'} />
                                         <div>
-                                            <h3>{offer.channel?.channelTitle || 'Канал'}</h3>
+                                            <h3>
+                                                {offer.channel?.channelTitle || 'Канал'}
+                                                {offer.__isDemo && <span className="demo-badge">DEMO</span>}
+                                            </h3>
                                             <p>{formatPublicNumber(offer.channel?.subscribers)} підписників</p>
                                         </div>
                                         <span>{getOfferTypeLabel(offer.type)}</span>
@@ -165,7 +162,7 @@ export default function OffersCatalogPage() {
                                     </div>
 
                                     <div className="public-offer-actions">
-                                        <button onClick={() => setSelectedOffer(offer)}>Просмотреть</button>
+                                        <button onClick={() => setSelectedOffer(offer)}>Переглянути</button>
                                         <button
                                             className="primary"
                                             onClick={() => {
@@ -176,7 +173,7 @@ export default function OffersCatalogPage() {
                                                 setAuthPromptOfferId(offer.id);
                                             }}
                                         >
-                                            Предложить обмен
+                                            Запропонувати обмін
                                         </button>
                                     </div>
                                 </article>
