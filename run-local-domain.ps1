@@ -1,9 +1,9 @@
-$ErrorActionPreference = 'Stop'
-Set-StrictMode -Version Latest
-
 param(
     [switch]$WithAdmin
 )
+
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
 
 function Write-Step {
     param([string]$Text)
@@ -66,6 +66,12 @@ if ($WithAdmin) {
 Write-Step "Запуск cloudflared tunnel через config.yml..."
 $cloudflaredCommand = "& '$cloudflaredExe' tunnel --config '$cloudflaredConfig' run"
 $processes += Start-WindowProcess -Name "Cloudflared" -WorkDir $root -Command $cloudflaredCommand
+
+Write-Step "Ожидание запуска сервисов..."
+Start-Sleep -Seconds 6
+
+Write-Step "Открытие сайта в браузере..."
+Start-Process "https://$domain"
 
 Write-Host ""
 Write-Host "Backend:      http://localhost:3001"
