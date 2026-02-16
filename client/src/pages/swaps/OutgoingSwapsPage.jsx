@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -17,6 +17,7 @@ const completionChecklistDefaults = {
     checkEvidence: false,
     checkAgreement: false,
 };
+const PAGE_LIMIT = 12;
 function getApiErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.error || fallbackMessage;
 }
@@ -66,6 +67,26 @@ function formatDeadline(value) {
     });
 }
 
+function formatSlaHint(swap) {
+    if (swap.status === 'pending' && Number.isFinite(swap.hoursLeft)) {
+        if (swap.isOverdue) {
+            return `Прострочено на ${Math.abs(swap.hoursLeft)} год`;
+        }
+        return `Залишилось ${Math.max(0, swap.hoursLeft)} год`;
+    }
+    if (swap.status === 'accepted' && Number.isFinite(swap.daysLeft)) {
+        if (swap.isOverdue) {
+            return `Прострочено на ${Math.abs(swap.daysLeft)} дн`;
+        }
+        return `Залишилось ${Math.max(0, swap.daysLeft)} дн`;
+    }
+    return '';
+}
+
+function isCanceledRequest(error) {
+    return error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED';
+}
+
 function isSelectableSwap(swap) {
     return ['pending', 'accepted'].includes(swap.status);
 }
@@ -76,6 +97,16 @@ export default function OutgoingSwapsPage() {
     const [processing, setProcessing] = useState(null);
     const [loadError, setLoadError] = useState('');
     const [filters, setFilters] = useState({ status: 'all', sort: 'newest', search: '' });
+    const [searchInput, setSearchInput] = useState('');
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: PAGE_LIMIT,
+        total: 0,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false,
+    });
     const [declineState, setDeclineState] = useState({
         swapId: '',
         reason: declineReasonOptions[0].value,
@@ -95,18 +126,49 @@ export default function OutgoingSwapsPage() {
         comment: '',
         submitting: false,
     });
+    const [bulkConfirm, setBulkConfirm] = useState({ open: false, action: '' });
+    const abortRef = useRef(null);
 
     const loadSwaps = useCallback(async () => {
         setLoadError('');
         try {
+            if (abortRef.current) {
+                abortRef.current.abort();
+            }
+            const controller = new AbortController();
+            abortRef.current = controller;
+
             const params = new URLSearchParams();
             if (filters.status && filters.status !== 'all') params.set('status', filters.status);
             if (filters.sort) params.set('sort', filters.sort);
             if (filters.search.trim()) params.set('search', filters.search.trim());
+            params.set('page', String(page));
+            params.set('limit', String(PAGE_LIMIT));
 
-            const response = await api.get(`/swaps/outgoing?${params.toString()}`);
+            const response = await api.get(`/swaps/outgoing?${params.toString()}`, {
+                signal: controller.signal,
+            });
             setSwaps(response.data.swaps || []);
+            if (response.data?.pagination) {
+                setPagination(response.data.pagination);
+                if (response.data.pagination.page !== page) {
+                    setPage(response.data.pagination.page);
+                }
+            } else {
+                const total = Array.isArray(response.data.swaps) ? response.data.swaps.length : 0;
+                setPagination({
+                    page,
+                    limit: PAGE_LIMIT,
+                    total,
+                    totalPages: 1,
+                    hasNext: false,
+                    hasPrev: false,
+                });
+            }
         } catch (loadSwapsError) {
+            if (isCanceledRequest(loadSwapsError)) {
+                return;
+            }
             console.error('Failed to load outgoing swaps:', loadSwapsError);
             const message = getApiErrorMessage(loadSwapsError, 'Не вдалося завантажити вихідні запити.');
             setLoadError(message);
@@ -114,11 +176,24 @@ export default function OutgoingSwapsPage() {
         } finally {
             setLoading(false);
         }
-    }, [filters.status, filters.sort, filters.search]);
+    }, [filters.status, filters.sort, filters.search, page]);
 
     useEffect(() => {
         loadSwaps();
     }, [loadSwaps]);
+    useEffect(() => () => abortRef.current?.abort(), []);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setFilters((prev) => {
+                const normalized = searchInput.trim();
+                if (prev.search === normalized) return prev;
+                return { ...prev, search: normalized };
+            });
+            setPage(1);
+        }, 350);
+        return () => clearTimeout(timeoutId);
+    }, [searchInput]);
     const selectableIds = useMemo(() => swaps.filter((swap) => isSelectableSwap(swap)).map((swap) => swap.id), [swaps]);
     const selectedCount = selectedIds.length;
 
@@ -134,12 +209,17 @@ export default function OutgoingSwapsPage() {
         setSelectedIds((prev) => (prev.length === selectableIds.length ? [] : [...selectableIds]));
     }
 
-    async function handleBulkAction(action) {
+    function handleBulkAction(action) {
         if (!selectedIds.length) {
             toast.error('Оберіть хоча б один запит');
             return;
         }
+        setBulkConfirm({ open: true, action });
+    }
 
+    async function executeBulkAction() {
+        const action = bulkConfirm.action;
+        if (!action) return;
         const reason = action === 'decline' ? 'Масове скасування вихідних запитів' : 'Масово відкладено з вихідних запитів';
 
         setBulkBusy(true);
@@ -162,6 +242,7 @@ export default function OutgoingSwapsPage() {
             }
             setSelectedIds([]);
             toast.success(`Масова дія виконана: ${processedCount}, пропущено: ${skippedCount}`);
+            setBulkConfirm({ open: false, action: '' });
         } catch (error) {
             toast.error(error?.response?.data?.error || 'Не вдалося виконати масову дію');
         } finally {
@@ -323,7 +404,10 @@ export default function OutgoingSwapsPage() {
                 <select
                     className="filter-select"
                     value={filters.status}
-                    onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}
+                    onChange={(event) => {
+                        setPage(1);
+                        setFilters((prev) => ({ ...prev, status: event.target.value }));
+                    }}
                 >
                     <option value="all">Усі статуси</option>
                     <option value="pending">Очікують</option>
@@ -333,7 +417,10 @@ export default function OutgoingSwapsPage() {
                 <select
                     className="filter-select"
                     value={filters.sort}
-                    onChange={(event) => setFilters((prev) => ({ ...prev, sort: event.target.value }))}
+                    onChange={(event) => {
+                        setPage(1);
+                        setFilters((prev) => ({ ...prev, sort: event.target.value }));
+                    }}
                 >
                     <option value="newest">Найновіші</option>
                     <option value="largest">Найбільші канали</option>
@@ -343,8 +430,8 @@ export default function OutgoingSwapsPage() {
                     className="filter-input"
                     type="text"
                     placeholder="Пошук за назвою, ID або описом"
-                    value={filters.search}
-                    onChange={(event) => setFilters((prev) => ({ ...prev, search: event.target.value }))}
+                    value={searchInput}
+                    onChange={(event) => setSearchInput(event.target.value)}
                 />
             </div>
             {selectableIds.length > 0 && (
@@ -450,6 +537,11 @@ export default function OutgoingSwapsPage() {
                                             Дедлайн завершення: {formatDeadline(swap.completionDeadlineAt)}
                                         </span>
                                     )}
+                                    {formatSlaHint(swap) && (
+                                        <span className={`swap-sla-hint ${swap.isOverdue ? 'overdue' : ''}`}>
+                                            {formatSlaHint(swap)}
+                                        </span>
+                                    )}
                                     {swap.deferredByMe && <span className="swap-deferred-tag">Відкладено</span>}
                                     <span className="swap-item-time">{timeAgo(swap.createdAt)}</span>
                                 </div>
@@ -481,9 +573,6 @@ export default function OutgoingSwapsPage() {
                                                 onClick={() => handleDefer(swap.id)}
                                                 disabled={processing === swap.id}
                                             >
-                                                Відкласти
-                                            </button>
-                                            <button className="btn btn-secondary btn-sm" onClick={() => handleDefer(swap.id)} disabled={processing === swap.id}>
                                                 Відкласти
                                             </button>
                                             <button className="btn btn-danger btn-sm" onClick={() => openCancelModal(swap.id)} disabled={processing === swap.id}>
@@ -534,6 +623,41 @@ export default function OutgoingSwapsPage() {
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {pagination.totalPages > 1 && (
+                <div className="swaps-pagination card">
+                    <button className="btn btn-secondary btn-sm" disabled={!pagination.hasPrev} onClick={() => setPage((prev) => Math.max(1, prev - 1))}>
+                        Назад
+                    </button>
+                    <span className="swaps-pagination-info">
+                        Сторінка {pagination.page} з {pagination.totalPages} • Усього: {pagination.total}
+                    </span>
+                    <button className="btn btn-secondary btn-sm" disabled={!pagination.hasNext} onClick={() => setPage((prev) => prev + 1)}>
+                        Далі
+                    </button>
+                </div>
+            )}
+
+            {bulkConfirm.open && (
+                <div className="auth-required-modal" role="dialog" aria-modal="true">
+                    <div className="auth-required-card">
+                        <h3>Підтвердити масову дію</h3>
+                        <p>
+                            {bulkConfirm.action === 'decline'
+                                ? `Скасувати ${selectedCount} запит(ів)?`
+                                : `Відкласти ${selectedCount} запит(ів)?`}
+                        </p>
+                        <div className="auth-required-actions">
+                            <button type="button" onClick={() => setBulkConfirm({ open: false, action: '' })} disabled={bulkBusy}>
+                                Скасувати
+                            </button>
+                            <button type="button" className="primary" onClick={executeBulkAction} disabled={bulkBusy}>
+                                Підтвердити
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -690,6 +814,7 @@ export default function OutgoingSwapsPage() {
         </div>
     );
 }
+
 
 
 

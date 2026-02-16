@@ -17,6 +17,14 @@ function parseIncomingSort(value) {
     return allowed.has(normalized) ? normalized : 'newest';
 }
 
+function parsePositiveInt(value, fallback, min = 1, max = 100) {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed)) return fallback;
+    if (parsed < min) return min;
+    if (parsed > max) return max;
+    return parsed;
+}
+
 function getRelevanceScore(swap) {
     const initiator = swap.initiatorChannel || {};
     const target = swap.targetChannel || {};
@@ -237,6 +245,8 @@ router.get('/incoming', auth, async (req, res) => {
         const statusFilter = parseIncomingStatus(req.query.status);
         const sort = parseIncomingSort(req.query.sort);
         const search = String(normalizeOptionalString(req.query.search) || '').toLowerCase();
+        const page = parsePositiveInt(req.query.page, 1, 1, 500);
+        const limit = parsePositiveInt(req.query.limit, 12, 1, 50);
 
         const swaps = await TrafficMatch.findAll({
             where: {
@@ -359,7 +369,23 @@ router.get('/incoming', auth, async (req, res) => {
             });
         }
 
-        res.json({ swaps: filtered });
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / limit));
+        const safePage = Math.min(page, totalPages);
+        const offset = (safePage - 1) * limit;
+        const paged = filtered.slice(offset, offset + limit);
+
+        res.json({
+            swaps: paged,
+            pagination: {
+                page: safePage,
+                limit,
+                total,
+                totalPages,
+                hasNext: safePage < totalPages,
+                hasPrev: safePage > 1,
+            },
+        });
     } catch (error) {
         console.error('Get incoming swaps error:', error);
         res.status(500).json({ error: 'Failed to get incoming swaps' });
@@ -379,6 +405,8 @@ router.get('/outgoing', auth, async (req, res) => {
         const statusFilter = parseIncomingStatus(req.query.status);
         const sort = parseIncomingSort(req.query.sort);
         const search = String(normalizeOptionalString(req.query.search) || '').toLowerCase();
+        const page = parsePositiveInt(req.query.page, 1, 1, 500);
+        const limit = parsePositiveInt(req.query.limit, 12, 1, 50);
 
         const swaps = await TrafficMatch.findAll({
             where: {
@@ -502,7 +530,23 @@ router.get('/outgoing', auth, async (req, res) => {
             });
         }
 
-        res.json({ swaps: filtered });
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / limit));
+        const safePage = Math.min(page, totalPages);
+        const offset = (safePage - 1) * limit;
+        const paged = filtered.slice(offset, offset + limit);
+
+        res.json({
+            swaps: paged,
+            pagination: {
+                page: safePage,
+                limit,
+                total,
+                totalPages,
+                hasNext: safePage < totalPages,
+                hasPrev: safePage > 1,
+            },
+        });
     } catch (error) {
         console.error('Get outgoing swaps error:', error);
         res.status(500).json({ error: 'Failed to get outgoing swaps' });

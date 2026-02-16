@@ -190,6 +190,15 @@
     background: rgba(239, 68, 68, 0.14);
 }
 
+.swap-sla-hint {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.swap-sla-hint.overdue {
+    color: #b91c1c;
+}
+
 .swap-compatibility {
     display: flex;
     flex-direction: column;
@@ -276,6 +285,20 @@
 
 .swap-item .btn {
     min-height: 34px;
+}
+
+.swaps-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 10px 12px;
+    margin-top: 12px;
+}
+
+.swaps-pagination-info {
+    font-size: 13px;
+    color: var(--text-secondary);
 }
 
 .swap-item:hover {

@@ -180,6 +180,7 @@ async function smokeIncomingSwapsFilters(baseUrl) {
 
     assert.equal(allIncoming.status, 200);
     assert.equal(Array.isArray(allIncoming.body.swaps), true);
+    assert.equal(typeof allIncoming.body.pagination?.page, 'number');
 
     const filtered = await request(baseUrl, {
         method: 'GET',
@@ -189,6 +190,7 @@ async function smokeIncomingSwapsFilters(baseUrl) {
 
     assert.equal(filtered.status, 200);
     assert.equal(Array.isArray(filtered.body.swaps), true);
+    assert.equal(typeof filtered.body.pagination?.totalPages, 'number');
     assert.equal(
         filtered.body.swaps.every((swap) => swap.status === 'pending'),
         true
@@ -209,6 +211,7 @@ async function smokeOutgoingSwapsFilters(baseUrl) {
 
     assert.equal(allOutgoing.status, 200);
     assert.equal(Array.isArray(allOutgoing.body.swaps), true);
+    assert.equal(typeof allOutgoing.body.pagination?.page, 'number');
 
     const filtered = await request(baseUrl, {
         method: 'GET',
@@ -218,6 +221,7 @@ async function smokeOutgoingSwapsFilters(baseUrl) {
 
     assert.equal(filtered.status, 200);
     assert.equal(Array.isArray(filtered.body.swaps), true);
+    assert.equal(typeof filtered.body.pagination?.totalPages, 'number');
     assert.equal(
         filtered.body.swaps.every((swap) => swap.status === 'pending'),
         true
