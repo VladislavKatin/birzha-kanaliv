@@ -31,22 +31,9 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // API GET requests: network first, fallback to cache
+    // Never cache API responses to avoid stale authenticated data.
     if (url.pathname.startsWith('/api/')) {
-        event.respondWith(
-            fetch(request)
-                .then((response) => {
-                    if (response && response.ok) {
-                        const clone = response.clone();
-                        caches
-                            .open(CACHE_NAME)
-                            .then((cache) => cache.put(request, clone))
-                            .catch(() => {});
-                    }
-                    return response;
-                })
-                .catch(() => caches.match(request)),
-        );
+        event.respondWith(fetch(request));
         return;
     }
 

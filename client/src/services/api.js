@@ -14,6 +14,25 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function parseRetryAfterMs(headerValue) {
+    const raw = String(headerValue || '').trim();
+    if (!raw) {
+        return 0;
+    }
+
+    const seconds = Number(raw);
+    if (Number.isFinite(seconds) && seconds > 0) {
+        return seconds * 1000;
+    }
+
+    const date = Date.parse(raw);
+    if (Number.isFinite(date)) {
+        return Math.max(0, date - Date.now());
+    }
+
+    return 0;
+}
+
 // Add auth token to requests
 api.interceptors.request.use(async (config) => {
     const user = auth.currentUser;
@@ -37,10 +56,13 @@ api.interceptors.response.use(
         const method = String(config.method || 'get').toLowerCase();
         const retries = Number(config.__retryCount || 0);
         const retryable = method === 'get' && (status === 429 || status >= 500);
+        const maxRetries = status === 429 ? 1 : 2;
 
-        if (retryable && retries < 2 && !config.__noRetry) {
+        if (retryable && retries < maxRetries && !config.__noRetry) {
             config.__retryCount = retries + 1;
-            const delay = 300 * Math.pow(2, retries);
+            const retryAfterMs = parseRetryAfterMs(error.response?.headers?.['retry-after']);
+            const backoffMs = 300 * Math.pow(2, retries);
+            const delay = retryAfterMs > 0 ? retryAfterMs : backoffMs;
             await sleep(delay);
             return api.request(config);
         }

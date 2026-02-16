@@ -39,6 +39,8 @@ export default function DashboardLayout() {
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [menuBadges, setMenuBadges] = useState({ incoming: 0, outgoing: 0, messages: 0 });
     const menuThreadsRef = useRef([]);
+    const badgesRequestInFlightRef = useRef(false);
+    const lastMenuBadgesLoadAtRef = useRef(0);
     const seenNotificationKeysRef = useRef(new Set());
     const visibleNavItems = dbUser?.role === 'admin'
         ? [{ path: '/admin', label: 'Адмінка', description: 'Управління платформою', icon: 'settings' }, ...navItems]
@@ -81,8 +83,12 @@ export default function DashboardLayout() {
                 }
                 return;
             }
+            if (document.hidden || badgesRequestInFlightRef.current) {
+                return;
+            }
 
             try {
+                badgesRequestInFlightRef.current = true;
                 const [incomingResponse, outgoingResponse, threadsResponse, supportResponse] = await Promise.all([
                     api.get('/swaps/incoming'),
                     api.get('/swaps/outgoing'),
@@ -111,19 +117,29 @@ export default function DashboardLayout() {
                 if (!cancelled) {
                     menuThreadsRef.current = messageThreads;
                     setMenuBadges(counts);
+                    lastMenuBadgesLoadAtRef.current = Date.now();
                 }
             } catch (error) {
                 console.error('Failed to load menu badges:', error);
+            } finally {
+                badgesRequestInFlightRef.current = false;
             }
         }
 
         loadMenuBadges();
-        const intervalId = setInterval(loadMenuBadges, 30000);
+        const intervalId = setInterval(loadMenuBadges, 90000);
+        const handleVisibilityChange = () => {
+            if (!document.hidden && Date.now() - lastMenuBadgesLoadAtRef.current > 45000) {
+                loadMenuBadges();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => {
             cancelled = true;
             clearInterval(intervalId);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [dbUser, notifications.length]);
+    }, [dbUser]);
 
     useEffect(() => {
         if (!location.pathname.startsWith('/support/chats')) return;
