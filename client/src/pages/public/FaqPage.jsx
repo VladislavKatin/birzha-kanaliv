@@ -1,4 +1,6 @@
-﻿import PublicLayout from '../../components/layout/PublicLayout';
+﻿import { useEffect } from 'react';
+import PublicLayout from '../../components/layout/PublicLayout';
+import { applyJsonLd, applyPageSeo, buildFaqPageJsonLd } from '../../services/seo';
 import './FaqPage.css';
 
 const faqItems = [
@@ -29,6 +31,17 @@ const faqItems = [
 ];
 
 export default function FaqPage() {
+    useEffect(() => {
+        applyPageSeo({
+            title: 'FAQ — Біржа Каналів',
+            description: 'Поширені запитання про роботу Біржа Каналів: реєстрація, обмін, безпека, підтримка та підключення YouTube.',
+            keywords: ['faq біржа каналів', 'питання та відповіді', 'youtube обмін', 'допомога'],
+            path: '/faq',
+            type: 'website',
+        });
+        applyJsonLd('faq-page-schema', buildFaqPageJsonLd(faqItems, '/faq'));
+    }, []);
+
     return (
         <PublicLayout>
             <section className="faq-page">

@@ -20,6 +20,7 @@ import {
     normalizeOfferDescription,
     prepareOffersForCatalog,
 } from '../../services/publicOffers';
+import { applyPageSeo } from '../../services/seo';
 import './OffersCatalogPage.css';
 
 function getApiErrorMessage(error, fallbackMessage) {
@@ -65,6 +66,21 @@ export default function OffersCatalogPage() {
             }
         }
     }, [query]);
+
+    useEffect(() => {
+        applyPageSeo({
+            title: 'Каталог пропозицій обміну YouTube-каналів | Біржа Каналів',
+            description: 'Переглядайте активні пропозиції обміну аудиторією між YouTube-каналами за нішами, мовами та метриками.',
+            keywords: [
+                'каталог youtube каналів',
+                'обмін аудиторією youtube',
+                'пропозиції обміну',
+                'біржа каналів',
+            ],
+            path: '/offers',
+            type: 'website',
+        });
+    }, []);
 
     useEffect(() => {
         try {

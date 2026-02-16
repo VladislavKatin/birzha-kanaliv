@@ -13,6 +13,7 @@ import {
     normalizeDisplayText,
     normalizeOfferDescription,
 } from '../../services/publicOffers';
+import { applyPageSeo } from '../../services/seo';
 import './OfferDetailsPage.css';
 
 function isOfferAvailableForResponse(offer) {
@@ -72,6 +73,34 @@ export default function OfferDetailsPage() {
             cancelled = true;
         };
     }, [offerId]);
+
+    useEffect(() => {
+        if (!offer) {
+            applyPageSeo({
+                title: 'Пропозицію не знайдено | Біржа Каналів',
+                description: 'Ця пропозиція недоступна або була закрита.',
+                path: `/offers/${offerId || ''}`,
+                type: 'article',
+                robots: 'noindex,follow',
+            });
+            return;
+        }
+
+        const offerTypeLabel = getOfferTypeLabel(offer.type).toLowerCase();
+        applyPageSeo({
+            title: `${safeChannelTitle} — ${offerTypeLabel} | Біржа Каналів`,
+            description: normalizeOfferDescription(offer.description, safeChannelTitle) || `Пропозиція обміну для каналу ${safeChannelTitle}.`,
+            keywords: [
+                'пропозиція обміну youtube',
+                'обмін підписниками',
+                'обмін переглядами',
+                safeChannelTitle,
+            ],
+            path: `/offers/${offer.id}`,
+            type: 'article',
+            robots: isOfferAvailableForResponse(offer) ? 'index,follow,max-image-preview:large' : 'noindex,follow',
+        });
+    }, [offer, offerId, safeChannelTitle]);
 
     useEffect(() => {
         if (!user) {

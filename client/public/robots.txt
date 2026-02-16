@@ -1,4 +1,23 @@
 User-agent: *
 Allow: /
 
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /my-channels
+Disallow: /my-channels/
+Disallow: /swaps
+Disallow: /swaps/
+Disallow: /exchanges
+Disallow: /profile
+Disallow: /profile/
+Disallow: /settings
+Disallow: /settings/
+Disallow: /support
+Disallow: /support/
+Disallow: /chat
+Disallow: /chat/
+Disallow: /admin
+Disallow: /admin/
+
 Sitemap: https://birzha-kanaliv.biz.ua/sitemap.xml

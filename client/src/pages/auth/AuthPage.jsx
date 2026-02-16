@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import { resolvePostAuthPath } from '../../services/navigation';
+import { applyPageSeo } from '../../services/seo';
 import './AuthPage.css';
 
 export default function AuthPage() {
@@ -11,6 +12,15 @@ export default function AuthPage() {
     const location = useLocation();
     const [isLoading, setIsLoading] = useState(false);
     const nextPath = resolvePostAuthPath(location.search, '/dashboard');
+
+    useEffect(() => {
+        applyPageSeo({
+            title: 'Вхід — Біржа Каналів',
+            description: 'Увійдіть до Біржа Каналів через Google, щоб керувати каналами та обмінами.',
+            path: '/auth',
+            robots: 'noindex,nofollow',
+        });
+    }, []);
 
     useEffect(() => {
         if (!loading && user) {

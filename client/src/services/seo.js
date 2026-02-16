@@ -26,6 +26,7 @@ export function buildSeoPayload(input = {}) {
         url,
         image,
         type: input.type || 'website',
+        robots: input.robots || 'index,follow,max-image-preview:large',
     };
 }
 
@@ -88,6 +89,24 @@ export function buildBlogArticleFaqJsonLd(article) {
     };
 }
 
+export function buildFaqPageJsonLd(items = [], pagePath = '/faq') {
+    const entries = Array.isArray(items) ? items : [];
+
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        url: toAbsoluteUrl(pagePath),
+        mainEntity: entries.map((item) => ({
+            '@type': 'Question',
+            name: item.q,
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: item.a,
+            },
+        })),
+    };
+}
+
 function upsertMeta(selector, attrName, attrValue, content) {
     if (!document) {
         return;
@@ -123,6 +142,9 @@ export function applyPageSeo(input = {}) {
     upsertMeta('meta[name="twitter:title"]', 'name', 'twitter:title', payload.title);
     upsertMeta('meta[name="twitter:description"]', 'name', 'twitter:description', payload.description);
     upsertMeta('meta[name="twitter:image"]', 'name', 'twitter:image', payload.image);
+    upsertMeta('meta[name="robots"]', 'name', 'robots', payload.robots);
+    upsertMeta('meta[property="og:site_name"]', 'property', 'og:site_name', 'Біржа Каналів');
+    upsertMeta('meta[property="og:locale"]', 'property', 'og:locale', 'uk_UA');
 
     let canonical = document.querySelector('link[rel="canonical"]');
 
