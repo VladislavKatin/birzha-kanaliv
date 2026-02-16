@@ -5,6 +5,12 @@ import toast from 'react-hot-toast';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './SwapsPage.css';
 
+const completionChecklistDefaults = {
+    checkPublished: false,
+    checkEvidence: false,
+    checkAgreement: false,
+};
+
 function getApiErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.error || fallbackMessage;
 }
@@ -24,6 +30,16 @@ function timeAgo(dateStr) {
     return `${days} дн тому`;
 }
 
+function formatDeadline(value) {
+    if (!value) return '';
+    return new Date(value).toLocaleString('uk-UA', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
 const statusLabels = {
     pending: { text: 'Очікує', color: '#f59e0b' },
     accepted: { text: 'Прийнято', color: '#22c55e' },
@@ -35,6 +51,18 @@ export default function OutgoingSwapsPage() {
     const [swaps, setSwaps] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
+    const [processing, setProcessing] = useState(null);
+    const [completeState, setCompleteState] = useState({
+        swapId: '',
+        checks: { ...completionChecklistDefaults },
+        submitting: false,
+    });
+    const [reviewState, setReviewState] = useState({
+        swapId: '',
+        rating: 5,
+        comment: '',
+        submitting: false,
+    });
 
     useEffect(() => {
         loadSwaps();
@@ -65,14 +93,62 @@ export default function OutgoingSwapsPage() {
         }
     }
 
-    async function handleComplete(swapId) {
+    function openCompleteChecklist(swapId) {
+        setCompleteState({
+            swapId,
+            checks: { ...completionChecklistDefaults },
+            submitting: false,
+        });
+    }
+
+    async function handleCompleteSubmit() {
+        if (!completeState.swapId) return;
+        const allChecked = Object.values(completeState.checks).every(Boolean);
+        if (!allChecked) {
+            toast.error('Підтвердіть усі пункти чек-листа');
+            return;
+        }
+
+        setCompleteState((prev) => ({ ...prev, submitting: true }));
+        setProcessing(completeState.swapId);
         try {
-            const response = await api.post(`/chat/${swapId}/complete`);
+            const response = await api.post(`/chat/${completeState.swapId}/complete`);
             const completed = response.data?.match?.status === 'completed';
             toast.success(completed ? 'Обмін завершено' : 'Підтверджено, очікуємо партнера');
+            setCompleteState({ swapId: '', checks: { ...completionChecklistDefaults }, submitting: false });
             await loadSwaps();
         } catch (error) {
             toast.error(error?.response?.data?.error || 'Не вдалося підтвердити обмін');
+            setCompleteState((prev) => ({ ...prev, submitting: false }));
+        } finally {
+            setProcessing(null);
+        }
+    }
+
+    function openReviewModal(swapId) {
+        setReviewState({
+            swapId,
+            rating: 5,
+            comment: '',
+            submitting: false,
+        });
+    }
+
+    async function submitReview() {
+        if (!reviewState.swapId) return;
+        setReviewState((prev) => ({ ...prev, submitting: true }));
+        try {
+            await api.post('/reviews', {
+                matchId: reviewState.swapId,
+                rating: reviewState.rating,
+                comment: reviewState.comment.trim(),
+            });
+            toast.success('Відгук збережено');
+            setSwaps((prev) => prev.map((swap) => (swap.id === reviewState.swapId ? { ...swap, hasReviewed: true } : swap)));
+            setReviewState({ swapId: '', rating: 5, comment: '', submitting: false });
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося зберегти відгук');
+            setReviewState((prev) => ({ ...prev, submitting: false }));
         }
     }
 
@@ -142,6 +218,16 @@ export default function OutgoingSwapsPage() {
                                     <div className="swap-status-badge" style={{ color: status.color, borderColor: status.color }}>
                                         {status.text}
                                     </div>
+                                    {swap.responseDeadlineAt && (
+                                        <span className={`swap-sla ${swap.isOverdue ? 'overdue' : ''}`}>
+                                            Дедлайн відповіді: {formatDeadline(swap.responseDeadlineAt)}
+                                        </span>
+                                    )}
+                                    {swap.completionDeadlineAt && (
+                                        <span className={`swap-sla ${swap.isOverdue ? 'overdue' : ''}`}>
+                                            Дедлайн завершення: {formatDeadline(swap.completionDeadlineAt)}
+                                        </span>
+                                    )}
                                     <span className="swap-item-time">{timeAgo(swap.createdAt)}</span>
                                 </div>
 
@@ -151,7 +237,7 @@ export default function OutgoingSwapsPage() {
                                             <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/support/chats?thread=match-${swap.id}`)}>
                                                 Повідомлення
                                             </button>
-                                            <button className="btn btn-primary btn-sm" onClick={() => handleComplete(swap.id)}>
+                                            <button className="btn btn-primary btn-sm" onClick={() => openCompleteChecklist(swap.id)} disabled={processing === swap.id}>
                                                 Обмін завершено
                                             </button>
                                         </>
@@ -161,7 +247,7 @@ export default function OutgoingSwapsPage() {
                                                 Відгук залишено
                                             </span>
                                         ) : (
-                                            <button className="btn btn-primary btn-sm" onClick={() => navigate('/exchanges')}>
+                                            <button className="btn btn-primary btn-sm" onClick={() => openReviewModal(swap.id)}>
                                                 Залишити відгук
                                             </button>
                                         )
@@ -174,6 +260,109 @@ export default function OutgoingSwapsPage() {
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {completeState.swapId && (
+                <div className="auth-required-modal" role="dialog" aria-modal="true">
+                    <div className="auth-required-card">
+                        <h3>Чек-лист завершення обміну</h3>
+                        <p>Підтвердьте, що умови виконані з обох сторін.</p>
+                        <label className="modal-checkline">
+                            <input
+                                type="checkbox"
+                                checked={completeState.checks.checkPublished}
+                                onChange={(event) =>
+                                    setCompleteState((prev) => ({
+                                        ...prev,
+                                        checks: { ...prev.checks, checkPublished: event.target.checked },
+                                    }))
+                                }
+                            />
+                            <span>Публікація/дія за обміном виконана</span>
+                        </label>
+                        <label className="modal-checkline">
+                            <input
+                                type="checkbox"
+                                checked={completeState.checks.checkEvidence}
+                                onChange={(event) =>
+                                    setCompleteState((prev) => ({
+                                        ...prev,
+                                        checks: { ...prev.checks, checkEvidence: event.target.checked },
+                                    }))
+                                }
+                            />
+                            <span>Підтвердження додані в чат</span>
+                        </label>
+                        <label className="modal-checkline">
+                            <input
+                                type="checkbox"
+                                checked={completeState.checks.checkAgreement}
+                                onChange={(event) =>
+                                    setCompleteState((prev) => ({
+                                        ...prev,
+                                        checks: { ...prev.checks, checkAgreement: event.target.checked },
+                                    }))
+                                }
+                            />
+                            <span>Партнер погодив завершення</span>
+                        </label>
+                        <div className="auth-required-actions">
+                            <button
+                                type="button"
+                                onClick={() => setCompleteState({ swapId: '', checks: { ...completionChecklistDefaults }, submitting: false })}
+                                disabled={completeState.submitting}
+                            >
+                                Скасувати
+                            </button>
+                            <button type="button" className="primary" onClick={handleCompleteSubmit} disabled={completeState.submitting}>
+                                Підтвердити завершення
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {reviewState.swapId && (
+                <div className="auth-required-modal" role="dialog" aria-modal="true">
+                    <div className="auth-required-card">
+                        <h3>Залишити відгук</h3>
+                        <p>Оцініть обмін, щоб підвищити якість рекомендацій.</p>
+                        <label className="review-label" htmlFor="outgoing-review-rating">Оцінка</label>
+                        <select
+                            id="outgoing-review-rating"
+                            className="filter-select"
+                            value={reviewState.rating}
+                            onChange={(event) => setReviewState((prev) => ({ ...prev, rating: Number(event.target.value) }))}
+                            disabled={reviewState.submitting}
+                        >
+                            <option value={5}>5 — Відмінно</option>
+                            <option value={4}>4 — Добре</option>
+                            <option value={3}>3 — Нормально</option>
+                            <option value={2}>2 — Слабо</option>
+                            <option value={1}>1 — Погано</option>
+                        </select>
+                        <textarea
+                            className="decline-comment"
+                            rows={3}
+                            placeholder="Коментар (необов'язково)"
+                            value={reviewState.comment}
+                            onChange={(event) => setReviewState((prev) => ({ ...prev, comment: event.target.value }))}
+                            disabled={reviewState.submitting}
+                        />
+                        <div className="auth-required-actions">
+                            <button
+                                type="button"
+                                onClick={() => setReviewState({ swapId: '', rating: 5, comment: '', submitting: false })}
+                                disabled={reviewState.submitting}
+                            >
+                                Скасувати
+                            </button>
+                            <button type="button" className="primary" onClick={submitReview} disabled={reviewState.submitting}>
+                                Зберегти відгук
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

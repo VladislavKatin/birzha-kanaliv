@@ -93,6 +93,35 @@ function getCompatibilityInsights(swap) {
     return { score: Math.max(0, Math.min(100, score)), reasons };
 }
 
+function getSlaInfo(swap) {
+    const createdAt = new Date(swap.createdAt);
+    const nowTs = Date.now();
+
+    if (swap.status === 'pending') {
+        const deadline = new Date(createdAt.getTime() + 72 * 60 * 60 * 1000);
+        const msLeft = deadline.getTime() - nowTs;
+        return {
+            responseDeadlineAt: deadline.toISOString(),
+            hoursLeft: Math.floor(msLeft / 3600000),
+            isOverdue: msLeft < 0,
+        };
+    }
+
+    if (swap.status === 'accepted') {
+        const deadline = new Date(createdAt.getTime() + 10 * 24 * 60 * 60 * 1000);
+        const msLeft = deadline.getTime() - nowTs;
+        return {
+            completionDeadlineAt: deadline.toISOString(),
+            daysLeft: Math.floor(msLeft / (24 * 3600000)),
+            isOverdue: msLeft < 0,
+        };
+    }
+
+    return {
+        isOverdue: false,
+    };
+}
+
 async function buildPartnerStatsMap(channelIds) {
     const ids = Array.from(new Set(channelIds.filter(Boolean)));
     const stats = new Map();
@@ -278,6 +307,7 @@ router.get('/incoming', auth, async (req, res) => {
 
         const serialized = baseSwaps.map((swap) => {
             const compatibility = getCompatibilityInsights(swap);
+            const sla = getSlaInfo(swap);
             return {
                 ...swap,
                 partnerStats: partnerStatsMap.get(swap.initiatorChannelId) || {
@@ -291,6 +321,7 @@ router.get('/incoming', auth, async (req, res) => {
                 compatibility,
                 deferredByMe: deferredMatchIds.has(swap.id),
                 relevanceScore: Math.max(getRelevanceScore(swap), compatibility.score),
+                ...sla,
             };
         });
 
@@ -379,10 +410,12 @@ router.get('/outgoing', auth, async (req, res) => {
             const hasReviewed = Array.isArray(plain.reviews)
                 ? plain.reviews.some((review) => review.fromChannelId === myChannelId)
                 : false;
+            const sla = getSlaInfo(plain);
             return {
                 ...plain,
                 myChannelId,
                 hasReviewed,
+                ...sla,
             };
         });
 
@@ -632,6 +665,109 @@ router.post('/:id/defer', auth, async (req, res) => {
     } catch (error) {
         console.error('Defer swap error:', error);
         return res.status(500).json({ error: 'Failed to defer swap' });
+    }
+});
+
+/**
+ * @route POST /api/swaps/bulk-action
+ * @description Apply bulk action for participant swaps.
+ * @access Private
+ */
+router.post('/bulk-action', auth, async (req, res) => {
+    try {
+        const result = await getUserChannels(req.firebaseUser.uid);
+        if (!result) return res.status(404).json({ error: 'User not found' });
+
+        const action = String(req.body?.action || '').trim().toLowerCase();
+        const matchIds = Array.isArray(req.body?.matchIds) ? req.body.matchIds.filter(Boolean) : [];
+        const reason = normalizeOptionalString(req.body?.reason);
+
+        if (!['defer', 'decline'].includes(action)) {
+            return res.status(400).json({ error: 'Невідома масова дія' });
+        }
+        if (!matchIds.length) {
+            return res.status(400).json({ error: 'Список обмінів порожній' });
+        }
+        if (reason && reason.length > 240) {
+            return res.status(400).json({ error: 'Причина занадто довга (максимум 240 символів)' });
+        }
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const matches = await TrafficMatch.findAll({
+                where: { id: { [Op.in]: matchIds } },
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+            });
+
+            const byId = new Map(matches.map((match) => [match.id, match]));
+            const processed = [];
+            const skipped = [];
+
+            for (const matchId of matchIds) {
+                const match = byId.get(matchId);
+                if (!match) {
+                    skipped.push({ matchId, reason: 'not_found' });
+                    continue;
+                }
+
+                const isParticipant = result.channelIds.includes(match.targetChannelId) || result.channelIds.includes(match.initiatorChannelId);
+                if (!isParticipant) {
+                    skipped.push({ matchId, reason: 'forbidden' });
+                    continue;
+                }
+
+                if (action === 'defer') {
+                    if (!['pending', 'accepted'].includes(match.status)) {
+                        skipped.push({ matchId, reason: 'invalid_status' });
+                        continue;
+                    }
+                    const deferredUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                    await ActionLog.create({
+                        userId: result.user.id,
+                        action: 'swap_deferred',
+                        details: {
+                            matchId: match.id,
+                            reason: reason || null,
+                            deferredUntil: deferredUntil.toISOString(),
+                            bulk: true,
+                        },
+                        ip: req.ip,
+                    }, { transaction });
+                    processed.push({ matchId, status: match.status });
+                    continue;
+                }
+
+                if (!['pending', 'accepted'].includes(match.status)) {
+                    skipped.push({ matchId, reason: 'invalid_status' });
+                    continue;
+                }
+
+                await match.update({ status: 'rejected' }, { transaction });
+                const offer = await TrafficOffer.findByPk(match.offerId, { transaction, lock: transaction.LOCK.UPDATE });
+                if (offer) {
+                    await offer.update({ status: 'open' }, { transaction });
+                }
+                await ActionLog.create({
+                    userId: result.user.id,
+                    action: 'swap_declined',
+                    details: {
+                        matchId: match.id,
+                        offerId: match.offerId,
+                        reason: reason || 'bulk_action',
+                        bulk: true,
+                    },
+                    ip: req.ip,
+                }, { transaction });
+                processed.push({ matchId, status: 'rejected' });
+            }
+
+            return { processed, skipped };
+        });
+
+        return res.json(payload);
+    } catch (error) {
+        console.error('Bulk swap action error:', error);
+        return res.status(500).json({ error: 'Failed to process bulk action' });
     }
 });
 

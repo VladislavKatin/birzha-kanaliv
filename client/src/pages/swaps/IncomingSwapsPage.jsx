@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -12,7 +12,11 @@ const declineReasonOptions = [
     { value: 'Немає часу зараз', label: 'Немає часу зараз' },
     { value: 'Інша причина', label: 'Інша причина' },
 ];
-
+const completionChecklistDefaults = {
+    checkPublished: false,
+    checkEvidence: false,
+    checkAgreement: false,
+};
 function getApiErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.error || fallbackMessage;
 }
@@ -52,7 +56,19 @@ function formatRating(value) {
     const num = Number(value || 0);
     return num > 0 ? num.toFixed(1) : '0.0';
 }
+function formatDeadline(value) {
+    if (!value) return '';
+    return new Date(value).toLocaleString('uk-UA', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
 
+function isSelectableSwap(swap) {
+    return ['pending', 'accepted'].includes(swap.status);
+}
 export default function IncomingSwapsPage() {
     const navigate = useNavigate();
     const [swaps, setSwaps] = useState([]);
@@ -65,6 +81,19 @@ export default function IncomingSwapsPage() {
         reason: declineReasonOptions[0].value,
         comment: '',
         isSubmitting: false,
+        });
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [bulkBusy, setBulkBusy] = useState(false);
+    const [completeState, setCompleteState] = useState({
+        swapId: '',
+        checks: { ...completionChecklistDefaults },
+        submitting: false,
+    });
+    const [reviewState, setReviewState] = useState({
+        swapId: '',
+        rating: 5,
+        comment: '',
+        submitting: false,
     });
 
     const loadSwaps = useCallback(async () => {
@@ -90,7 +119,55 @@ export default function IncomingSwapsPage() {
     useEffect(() => {
         loadSwaps();
     }, [loadSwaps]);
+    const selectableIds = useMemo(() => swaps.filter((swap) => isSelectableSwap(swap)).map((swap) => swap.id), [swaps]);
+    const selectedCount = selectedIds.length;
 
+
+
+    function toggleSelected(swapId) {
+        setSelectedIds((prev) =>
+            prev.includes(swapId) ? prev.filter((id) => id !== swapId) : [...prev, swapId]
+        );
+    }
+
+    function toggleSelectAll() {
+        setSelectedIds((prev) => (prev.length === selectableIds.length ? [] : [...selectableIds]));
+    }
+
+    async function handleBulkAction(action) {
+        if (!selectedIds.length) {
+            toast.error('Оберіть хоча б один запит');
+            return;
+        }
+
+        const reason = action === 'decline' ? 'Масове відхилення з вхідних запитів' : 'Масово відкладено з вхідних запитів';
+
+        setBulkBusy(true);
+        try {
+            const response = await api.post('/swaps/bulk-action', {
+                action,
+                matchIds: selectedIds,
+                reason,
+            });
+
+            const processedCount = Array.isArray(response.data?.processed) ? response.data.processed.length : 0;
+            const skippedCount = Array.isArray(response.data?.skipped) ? response.data.skipped.length : 0;
+
+            if (action === 'decline') {
+                setSwaps((prev) => prev.filter((swap) => !selectedIds.includes(swap.id)));
+            } else {
+                setSwaps((prev) =>
+                    prev.map((swap) => (selectedIds.includes(swap.id) ? { ...swap, deferredByMe: true } : swap))
+                );
+            }
+            setSelectedIds([]);
+            toast.success(`Масова дія виконана: ${processedCount}, пропущено: ${skippedCount}`);
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося виконати масову дію');
+        } finally {
+            setBulkBusy(false);
+        }
+    }
     async function handleAccept(swapId) {
         setProcessing(swapId);
         try {
@@ -130,6 +207,7 @@ export default function IncomingSwapsPage() {
             await api.post(`/swaps/${declineState.swapId}/decline`, { reason });
             toast.success('Пропозицію відхилено');
             setSwaps((prev) => prev.filter((item) => item.id !== declineState.swapId));
+            setSelectedIds((prev) => prev.filter((id) => id !== declineState.swapId));
             setDeclineState({
                 swapId: '',
                 reason: declineReasonOptions[0].value,
@@ -144,15 +222,33 @@ export default function IncomingSwapsPage() {
         }
     }
 
-    async function handleComplete(swapId) {
-        setProcessing(swapId);
+    async function openCompleteChecklist(swapId) {
+        setCompleteState({
+            swapId,
+            checks: { ...completionChecklistDefaults },
+            submitting: false,
+        });
+    }
+
+    async function handleCompleteSubmit() {
+        if (!completeState.swapId) return;
+        const allChecked = Object.values(completeState.checks).every(Boolean);
+        if (!allChecked) {
+            toast.error('Підтвердіть усі пункти чек-листа');
+            return;
+        }
+
+        setCompleteState((prev) => ({ ...prev, submitting: true }));
+        setProcessing(completeState.swapId);
         try {
-            const response = await api.post(`/chat/${swapId}/complete`);
+            const response = await api.post(`/chat/${completeState.swapId}/complete`);
             const completed = response.data?.match?.status === 'completed';
             toast.success(completed ? 'Обмін завершено' : 'Підтверджено, очікуємо партнера');
+            setCompleteState({ swapId: '', checks: { ...completionChecklistDefaults }, submitting: false });
             await loadSwaps();
         } catch (error) {
             toast.error(error?.response?.data?.error || 'Не вдалося підтвердити обмін');
+            setCompleteState((prev) => ({ ...prev, submitting: false }));
         } finally {
             setProcessing(null);
         }
@@ -179,6 +275,33 @@ export default function IncomingSwapsPage() {
         navigate(`/support/chats?thread=match-${swapId}&prefill=${prefill}`);
     }
 
+
+    function openReviewModal(swapId) {
+        setReviewState({
+            swapId,
+            rating: 5,
+            comment: '',
+            submitting: false,
+        });
+    }
+
+    async function submitReview() {
+        if (!reviewState.swapId) return;
+        setReviewState((prev) => ({ ...prev, submitting: true }));
+        try {
+            await api.post('/reviews', {
+                matchId: reviewState.swapId,
+                rating: reviewState.rating,
+                comment: reviewState.comment.trim(),
+            });
+            toast.success('Відгук збережено');
+            setSwaps((prev) => prev.map((swap) => (swap.id === reviewState.swapId ? { ...swap, hasReviewed: true } : swap)));
+            setReviewState({ swapId: '', rating: 5, comment: '', submitting: false });
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося зберегти відгук');
+            setReviewState((prev) => ({ ...prev, submitting: false }));
+        }
+    }
     if (loading) {
         return (
             <div className="dashboard-loading">
@@ -238,6 +361,33 @@ export default function IncomingSwapsPage() {
                     onChange={(event) => setFilters((prev) => ({ ...prev, search: event.target.value }))}
                 />
             </div>
+            {selectableIds.length > 0 && (
+                <div className="swaps-bulk card">
+                    <label className="swaps-bulk-selectall">
+                        <input
+                            type="checkbox"
+                            checked={selectedCount > 0 && selectedCount === selectableIds.length}
+                            onChange={toggleSelectAll}
+                        />
+                        <span>Обрати всі</span>
+                    </label>
+                    <span className="swaps-bulk-count">Обрано: {selectedCount}</span>
+                    <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleBulkAction('defer')}
+                        disabled={!selectedCount || bulkBusy}
+                    >
+                        Масово відкласти
+                    </button>
+                    <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleBulkAction('decline')}
+                        disabled={!selectedCount || bulkBusy}
+                    >
+                        Масово відхилити
+                    </button>
+                </div>
+            )}
 
             {swaps.length === 0 ? (
                 <div className="swaps-empty card">
@@ -253,6 +403,15 @@ export default function IncomingSwapsPage() {
                         return (
                             <div key={swap.id} className="swap-item card">
                                 <div className="swap-item-channel">
+                                    {isSelectableSwap(swap) && (
+                                        <label className="swap-selectbox">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(swap.id)}
+                                                onChange={() => toggleSelected(swap.id)}
+                                            />
+                                        </label>
+                                    )}
                                     <img
                                         src={resolveChannelAvatar(swap.initiatorChannel?.channelAvatar, swap.initiatorChannel?.channelTitle)}
                                         data-fallback-src={buildFallbackAvatar(swap.initiatorChannel?.channelTitle)}
@@ -289,6 +448,16 @@ export default function IncomingSwapsPage() {
                                             <span>Завершено: {swap.partnerStats.completedExchanges}</span>
                                             <span>Рейтинг: {formatRating(swap.partnerStats.avgRating)} ({swap.partnerStats.reviewCount})</span>
                                         </div>
+                                    )}
+                                    {swap.responseDeadlineAt && (
+                                        <span className={`swap-sla ${swap.isOverdue ? 'overdue' : ''}`}>
+                                            Дедлайн відповіді: {formatDeadline(swap.responseDeadlineAt)}
+                                        </span>
+                                    )}
+                                    {swap.completionDeadlineAt && (
+                                        <span className={`swap-sla ${swap.isOverdue ? 'overdue' : ''}`}>
+                                            Дедлайн завершення: {formatDeadline(swap.completionDeadlineAt)}
+                                        </span>
                                     )}
                                     {swap.deferredByMe && <span className="swap-deferred-tag">Відкладено</span>}
                                     <span className="swap-item-time">{timeAgo(swap.createdAt)}</span>
@@ -349,7 +518,7 @@ export default function IncomingSwapsPage() {
                                             <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/support/chats?thread=match-${swap.id}`)}>
                                                 Повідомлення
                                             </button>
-                                            <button className="btn btn-primary btn-sm" onClick={() => handleComplete(swap.id)} disabled={processing === swap.id}>
+                                            <button className="btn btn-primary btn-sm" onClick={() => openCompleteChecklist(swap.id)} disabled={processing === swap.id}>
                                                 Обмін завершено
                                             </button>
                                         </>
@@ -364,7 +533,7 @@ export default function IncomingSwapsPage() {
                                                     Відгук залишено
                                                 </span>
                                             ) : (
-                                                <button className="btn btn-primary btn-sm" onClick={() => navigate('/exchanges')}>
+                                                <button className="btn btn-primary btn-sm" onClick={() => openReviewModal(swap.id)}>
                                                     Залишити відгук
                                                 </button>
                                             )}
@@ -424,8 +593,131 @@ export default function IncomingSwapsPage() {
                     </div>
                 </div>
             )}
+
+            {completeState.swapId && (
+                <div className="auth-required-modal" role="dialog" aria-modal="true">
+                    <div className="auth-required-card">
+                        <h3>Чек-лист завершення обміну</h3>
+                        <p>Підтвердьте, що обидві сторони виконали умови, перед фінальним завершенням.</p>
+                        <label className="modal-checkline">
+                            <input
+                                type="checkbox"
+                                checked={completeState.checks.checkPublished}
+                                onChange={(event) =>
+                                    setCompleteState((prev) => ({
+                                        ...prev,
+                                        checks: { ...prev.checks, checkPublished: event.target.checked },
+                                    }))
+                                }
+                            />
+                            <span>Публікація/дія за обміном виконана</span>
+                        </label>
+                        <label className="modal-checkline">
+                            <input
+                                type="checkbox"
+                                checked={completeState.checks.checkEvidence}
+                                onChange={(event) =>
+                                    setCompleteState((prev) => ({
+                                        ...prev,
+                                        checks: { ...prev.checks, checkEvidence: event.target.checked },
+                                    }))
+                                }
+                            />
+                            <span>Підтвердження (скріни/посилання) підготовлені у чаті</span>
+                        </label>
+                        <label className="modal-checkline">
+                            <input
+                                type="checkbox"
+                                checked={completeState.checks.checkAgreement}
+                                onChange={(event) =>
+                                    setCompleteState((prev) => ({
+                                        ...prev,
+                                        checks: { ...prev.checks, checkAgreement: event.target.checked },
+                                    }))
+                                }
+                            />
+                            <span>Партнер погодив завершення обміну</span>
+                        </label>
+                        <div className="auth-required-actions">
+                            <button
+                                type="button"
+                                onClick={() => setCompleteState({ swapId: '', checks: { ...completionChecklistDefaults }, submitting: false })}
+                                disabled={completeState.submitting}
+                            >
+                                Скасувати
+                            </button>
+                            <button type="button" className="primary" onClick={handleCompleteSubmit} disabled={completeState.submitting}>
+                                Підтвердити завершення
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {reviewState.swapId && (
+                <div className="auth-required-modal" role="dialog" aria-modal="true">
+                    <div className="auth-required-card">
+                        <h3>Залишити відгук</h3>
+                        <p>Це допоможе іншим користувачам оцінювати надійність партнерів.</p>
+                        <label className="review-label" htmlFor="review-rating">Оцінка</label>
+                        <select
+                            id="review-rating"
+                            className="filter-select"
+                            value={reviewState.rating}
+                            onChange={(event) => setReviewState((prev) => ({ ...prev, rating: Number(event.target.value) }))}
+                            disabled={reviewState.submitting}
+                        >
+                            <option value={5}>5 — Відмінно</option>
+                            <option value={4}>4 — Добре</option>
+                            <option value={3}>3 — Нормально</option>
+                            <option value={2}>2 — Слабо</option>
+                            <option value={1}>1 — Погано</option>
+                        </select>
+                        <textarea
+                            className="decline-comment"
+                            rows={3}
+                            placeholder="Коментар (необов'язково)"
+                            value={reviewState.comment}
+                            onChange={(event) => setReviewState((prev) => ({ ...prev, comment: event.target.value }))}
+                            disabled={reviewState.submitting}
+                        />
+                        <div className="auth-required-actions">
+                            <button
+                                type="button"
+                                onClick={() => setReviewState({ swapId: '', rating: 5, comment: '', submitting: false })}
+                                disabled={reviewState.submitting}
+                            >
+                                Скасувати
+                            </button>
+                            <button type="button" className="primary" onClick={submitReview} disabled={reviewState.submitting}>
+                                Зберегти відгук
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

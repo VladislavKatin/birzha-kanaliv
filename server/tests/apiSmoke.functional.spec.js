@@ -43,6 +43,16 @@ async function runApiSmokeFunctionalTests() {
         await smokeIncomingSwapsFilters(baseUrl);
         await smokeSwapDefer(baseUrl, declineFlow.matchId, OFFER_OWNER_UID);
         await smokeSwapDecline(baseUrl, declineFlow.matchId, RESPONDER_UID);
+
+        const bulkFlow = await createAndProgressMatchFlow(baseUrl, {
+            offerOwnerUid: OFFER_OWNER_UID,
+            offerOwnerChannelId: OFFER_OWNER_CHANNEL_ID,
+            responderUid: RESPONDER_UID,
+            responderChannelId: RESPONDER_CHANNEL_ID,
+            label: 'bulk',
+            accept: false,
+        });
+        await smokeBulkSwapActions(baseUrl, bulkFlow.matchId, OFFER_OWNER_UID);
     } finally {
         await new Promise((resolve) => server.close(resolve));
     }
@@ -233,6 +243,35 @@ async function smokeSwapDecline(baseUrl, matchId, uid) {
     const relevant = logs.find((entry) => entry.details?.matchId === matchId);
     assert.equal(!!relevant, true);
     assert.equal(String(relevant.details?.reason || '').includes('smoke test reason'), true);
+}
+
+async function smokeBulkSwapActions(baseUrl, matchId, uid) {
+    const deferRes = await request(baseUrl, {
+        method: 'POST',
+        path: '/api/swaps/bulk-action',
+        uid,
+        body: {
+            action: 'defer',
+            matchIds: [matchId],
+            reason: 'bulk defer smoke',
+        },
+    });
+    assert.equal(deferRes.status, 200);
+    assert.equal(Array.isArray(deferRes.body.processed), true);
+    assert.equal(deferRes.body.processed.some((item) => item.matchId === matchId), true);
+
+    const declineRes = await request(baseUrl, {
+        method: 'POST',
+        path: '/api/swaps/bulk-action',
+        uid,
+        body: {
+            action: 'decline',
+            matchIds: [matchId],
+            reason: 'bulk decline smoke',
+        },
+    });
+    assert.equal(declineRes.status, 200);
+    assert.equal(declineRes.body.processed.some((item) => item.matchId === matchId), true);
 }
 
 async function smokeChatSend(baseUrl, matchId, uid) {
