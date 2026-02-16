@@ -12,5 +12,11 @@ export default defineConfig({
             'admin.birzha-kanaliv.biz.ua',
             'api.birzha-kanaliv.biz.ua',
         ],
+        proxy: {
+            '/api': {
+                target: 'http://localhost:3001',
+                changeOrigin: true,
+            },
+        },
     },
 });

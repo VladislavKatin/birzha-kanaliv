@@ -6,7 +6,7 @@ import ChannelCard from './ChannelCard';
 import './ChannelsPage.css';
 
 export default function MyChannelsPage() {
-    const { connectYouTube } = useAuthStore();
+    const { connectYouTube, error } = useAuthStore();
     const navigate = useNavigate();
     const [channels, setChannels] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -59,6 +59,7 @@ export default function MyChannelsPage() {
                 <div>
                     <h1>Мої канали</h1>
                     <p className="channels-subtitle">Управління підключеними YouTube-каналами</p>
+                    {error ? <p className="error-text">{error}</p> : null}
                 </div>
                 <button className="btn btn-primary" onClick={connectYouTube}>
                     Підключити канал

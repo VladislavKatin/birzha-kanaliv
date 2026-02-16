@@ -1,4 +1,4 @@
-const admin = require('../config/firebase');
+﻿const admin = require('../config/firebase');
 const { User } = require('../models');
 
 async function ensureNotSuspended(firebaseUid) {
@@ -42,7 +42,7 @@ const auth = async (req, res, next) => {
 
     try {
         if (!admin.apps.length) {
-            console.warn('Firebase Admin not initialized — skipping token verification');
+            console.warn('Firebase Admin not initialized - skipping token verification');
             return res.status(503).json({ error: 'Сервіс авторизації не налаштований' });
         }
         const decodedToken = await admin.auth().verifyIdToken(token);

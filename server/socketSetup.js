@@ -1,6 +1,7 @@
 const admin = require('./config/firebase');
 const { sequelize, ChatRoom, Message, User, YouTubeAccount, TrafficMatch, ActionLog } = require('./models');
 const { normalizeIncomingMessagePayload, formatMessageForClient } = require('./services/chatMessagePayload');
+const { getAllowedClientOrigins } = require('./config/clientOrigins');
 
 /** @type {Map<string, Set<string>>} userId → Set of socket IDs */
 const onlineUsers = new Map();
@@ -12,10 +13,7 @@ const onlineUsers = new Map();
  */
 function setupSocket(server) {
     const { Server } = require('socket.io');
-    const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:5173,http://localhost:5174')
-        .split(',')
-        .map((origin) => origin.trim())
-        .filter(Boolean);
+    const allowedOrigins = getAllowedClientOrigins();
 
     const io = new Server(server, {
         cors: {

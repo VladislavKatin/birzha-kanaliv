@@ -1,9 +1,28 @@
-const router = require('express').Router();
+﻿const router = require('express').Router();
 const { sequelize, User, YouTubeAccount, TrafficOffer, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
 const youtubeService = require('../services/youtubeService');
 const { logInfo, logWarn, logError } = require('../services/logger');
 const { ensureAutoOffersForChannels } = require('../services/autoOfferService');
+const { resolveClientRedirectUrl } = require('../config/clientOrigins');
+
+function serializeState(payload) {
+    return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+}
+
+function deserializeState(rawState) {
+    if (!rawState) return { firebaseUid: null, redirectOrigin: null };
+
+    try {
+        const parsed = JSON.parse(Buffer.from(rawState, 'base64url').toString('utf8'));
+        return {
+            firebaseUid: parsed?.firebaseUid || null,
+            redirectOrigin: parsed?.redirectOrigin || null,
+        };
+    } catch {
+        return { firebaseUid: rawState, redirectOrigin: null };
+    }
+}
 
 /**
  * @route GET /api/youtube/connect
@@ -13,12 +32,13 @@ const { ensureAutoOffersForChannels } = require('../services/autoOfferService');
  */
 router.get('/connect', auth, async (req, res) => {
     try {
-        const state = req.firebaseUser.uid;
+        const firebaseUid = req.firebaseUser.uid;
+        const redirectOrigin = req.headers.origin || null;
         const { email, name, picture } = req.firebaseUser;
 
         await sequelize.transaction(async (transaction) => {
             let user = await User.findOne({
-                where: { firebaseUid: state },
+                where: { firebaseUid },
                 transaction,
             });
 
@@ -28,7 +48,7 @@ router.get('/connect', auth, async (req, res) => {
                 }
 
                 user = await User.create({
-                    firebaseUid: state,
+                    firebaseUid,
                     email,
                     displayName: name || email.split('@')[0],
                     photoURL: picture || null,
@@ -37,7 +57,7 @@ router.get('/connect', auth, async (req, res) => {
                 await ActionLog.create({
                     userId: user.id,
                     action: 'user_auto_created_for_youtube_connect',
-                    details: { firebaseUid: state },
+                    details: { firebaseUid },
                     ip: req.ip,
                 }, { transaction });
             }
@@ -45,13 +65,14 @@ router.get('/connect', auth, async (req, res) => {
             await ActionLog.create({
                 userId: user.id,
                 action: 'youtube_connect_started',
-                details: { firebaseUid: state },
+                details: { firebaseUid },
                 ip: req.ip,
             }, { transaction });
         });
 
+        const state = serializeState({ firebaseUid, redirectOrigin });
         const authUrl = youtubeService.getAuthUrl(state);
-        logInfo('youtube.connect.url.generated', { firebaseUid: state });
+        logInfo('youtube.connect.url.generated', { firebaseUid, redirectOrigin });
         res.json({ authUrl });
     } catch (error) {
         logError('youtube.connect.url.failed', { firebaseUid: req.firebaseUser?.uid || null, error });
@@ -61,7 +82,7 @@ router.get('/connect', auth, async (req, res) => {
 
 /**
  * @route GET /api/youtube/callback
- * @description Handle Google OAuth callback — exchange code for tokens, save channel
+ * @description Handle Google OAuth callback - exchange code for tokens, save channel
  * @access Public (state param carries firebase UID)
  * @param {string} code - OAuth authorization code
  * @param {string} state - Firebase UID for user association
@@ -70,10 +91,16 @@ router.get('/connect', auth, async (req, res) => {
 router.get('/callback', async (req, res) => {
     try {
         const { code, state } = req.query;
-        logInfo('youtube.callback.request', { firebaseUid: state || null });
+        const decodedState = deserializeState(state);
+        const firebaseUid = decodedState.firebaseUid;
+        const clientUrl = resolveClientRedirectUrl(decodedState.redirectOrigin);
+        logInfo('youtube.callback.request', {
+            firebaseUid: firebaseUid || null,
+            redirectOrigin: decodedState.redirectOrigin || null,
+        });
 
-        if (!code || !state) {
-            return res.status(400).json({ error: 'Missing code or state' });
+        if (!code || !firebaseUid) {
+            return res.redirect(`${clientUrl}/dashboard?youtube=error`);
         }
 
         // Exchange code for tokens
@@ -86,9 +113,9 @@ router.get('/callback', async (req, res) => {
         }
 
         // Find user by firebase UID (state = firebase uid)
-        const user = await User.findOne({ where: { firebaseUid: state } });
+        const user = await User.findOne({ where: { firebaseUid } });
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.redirect(`${clientUrl}/dashboard?youtube=error`);
         }
 
         // Check if channel already connected by another user
@@ -106,7 +133,7 @@ router.get('/callback', async (req, res) => {
             analytics = await youtubeService.getChannelAnalytics(tokens.accessToken, channelInfo.channelId);
         } catch (e) {
             logWarn('youtube.callback.analytics.partial_failure', {
-                firebaseUid: state,
+                firebaseUid,
                 channelId: channelInfo.channelId,
                 error: e,
             });
@@ -118,7 +145,7 @@ router.get('/callback', async (req, res) => {
             recentVideos = await youtubeService.getRecentVideos(tokens.accessToken, channelInfo.channelId, 10);
         } catch (e) {
             logWarn('youtube.callback.videos.partial_failure', {
-                firebaseUid: state,
+                firebaseUid,
                 channelId: channelInfo.channelId,
                 error: e,
             });
@@ -172,20 +199,20 @@ router.get('/callback', async (req, res) => {
         });
 
         // Redirect to client dashboard
-        const clientUrl = process.env.CLIENT_URL || 'https://birzha-kanaliv.biz.ua';
         logInfo('youtube.callback.success', {
-            firebaseUid: state,
+            firebaseUid,
             userId: user.id,
             channelId: channelInfo.channelId,
             reusedExistingAccount: !!existingAccount,
         });
         res.redirect(`${clientUrl}/dashboard?youtube=connected`);
     } catch (error) {
+        const decodedState = deserializeState(req.query?.state);
         logError('youtube.callback.failed', {
-            firebaseUid: req.query?.state || null,
+            firebaseUid: decodedState.firebaseUid || null,
             error,
         });
-        const clientUrl = process.env.CLIENT_URL || 'https://birzha-kanaliv.biz.ua';
+        const clientUrl = resolveClientRedirectUrl(decodedState.redirectOrigin);
         res.redirect(`${clientUrl}/dashboard?youtube=error`);
     }
 });
@@ -339,3 +366,4 @@ router.put('/profile', auth, async (req, res) => {
 });
 
 module.exports = router;
+

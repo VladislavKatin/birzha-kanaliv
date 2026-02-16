@@ -147,7 +147,9 @@ const useAuthStore = create((set, get) => ({
             window.location.href = response.data.authUrl;
         } catch (err) {
             console.error('YouTube connect error:', err);
-            set({ error: 'Не вдалося підключити YouTube' });
+            const backendError = err?.response?.data?.error;
+            const message = backendError || 'Не вдалося підключити YouTube. Перевірте авторизацію та налаштування Google OAuth.';
+            set({ error: message });
         }
     },
 

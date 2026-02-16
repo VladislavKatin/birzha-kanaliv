@@ -4,15 +4,13 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
+const { getAllowedClientOrigins } = require('./config/clientOrigins');
 
 const path = require('path');
 
 const app = express();
 
-const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:5173,http://localhost:5174')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+const allowedOrigins = getAllowedClientOrigins();
 
 function corsOriginValidator(origin, callback) {
     if (!origin) {
