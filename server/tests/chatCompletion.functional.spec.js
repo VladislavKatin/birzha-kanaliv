@@ -22,7 +22,6 @@ async function runChatCompletionFunctionalTests() {
 async function testCompletesMatchAndOfferWhenBothConfirmed() {
     const tx = createFakeTransaction();
     const calls = {
-        offerUpdate: 0,
         actionLogCreate: 0,
     };
 
@@ -38,23 +37,9 @@ async function testCompletesMatchAndOfferWhenBothConfirmed() {
         async reload() {},
     };
 
-    const offer = {
-        async update(values) {
-            calls.offerUpdate += 1;
-            assert.equal(values.status, 'completed');
-        },
-    };
-
     const sequelize = {
         async transaction() {
             return tx;
-        },
-    };
-
-    const TrafficOffer = {
-        async findByPk(id) {
-            assert.equal(id, 'offer-1');
-            return offer;
         },
     };
 
@@ -72,7 +57,6 @@ async function testCompletesMatchAndOfferWhenBothConfirmed() {
         actorUserId: 'user-1',
         ip: '127.0.0.1',
         sequelize,
-        TrafficOffer,
         ActionLog,
         now: () => new Date('2026-02-13T12:00:00.000Z'),
     });
@@ -81,7 +65,6 @@ async function testCompletesMatchAndOfferWhenBothConfirmed() {
     assert.equal(match.targetConfirmed, true);
     assert.equal(tx.committed, true);
     assert.equal(tx.rolledBack, false);
-    assert.equal(calls.offerUpdate, 1);
     assert.equal(calls.actionLogCreate, 1);
 }
 
@@ -107,12 +90,6 @@ async function testRollsBackAndWritesFailureAuditOnError() {
         },
     };
 
-    const TrafficOffer = {
-        async findByPk() {
-            return null;
-        },
-    };
-
     const ActionLog = {
         async create(payload) {
             auditActions.push(payload.action);
@@ -127,7 +104,6 @@ async function testRollsBackAndWritesFailureAuditOnError() {
             actorUserId: 'user-2',
             ip: '127.0.0.1',
             sequelize,
-            TrafficOffer,
             ActionLog,
         });
     }, /DB_WRITE_FAILED/);

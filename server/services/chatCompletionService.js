@@ -10,7 +10,6 @@ async function completeMatchInTransaction({
     actorUserId,
     ip,
     sequelize,
-    TrafficOffer,
     ActionLog,
     extraAuditAction = null,
     extraAuditDetails = null,
@@ -30,11 +29,6 @@ async function completeMatchInTransaction({
 
         if (match.initiatorConfirmed && match.targetConfirmed) {
             await match.update({ status: 'completed', completedAt: now() }, { transaction });
-
-            const offer = await TrafficOffer.findByPk(match.offerId, { transaction });
-            if (offer) {
-                await offer.update({ status: 'completed' }, { transaction });
-            }
         }
 
         await ActionLog.create({

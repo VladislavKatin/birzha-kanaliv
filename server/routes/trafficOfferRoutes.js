@@ -166,8 +166,6 @@ router.get('/', async (req, res) => {
 
         if (status) {
             where.status = status;
-        } else if (!includeAllEnabled) {
-            where.status = 'open';
         }
 
         if (includeAllEnabled) {
@@ -393,10 +391,6 @@ router.post('/:id/respond', auth, async (req, res) => {
             if (!offer) {
                 return { error: { status: 404, body: { error: 'Offer not found' } } };
             }
-            if (offer.status !== 'open') {
-                return { error: { status: 400, body: { error: 'Offer is no longer active' } } };
-            }
-
             if (offer.channelId === selected.channelId) {
                 return { error: { status: 400, body: { error: 'Cannot respond to your own offer' } } };
             }
@@ -462,8 +456,6 @@ router.post('/:id/respond', auth, async (req, res) => {
                 targetChannelId: offer.channelId,
                 status: 'pending',
             }, { transaction });
-
-            await offer.update({ status: 'matched' }, { transaction });
 
             await ActionLog.create({
                 userId: result.user.id,

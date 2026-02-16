@@ -17,16 +17,16 @@ import { applyPageSeo } from '../../services/seo';
 import './OfferDetailsPage.css';
 
 function isOfferAvailableForResponse(offer) {
-    return offer?.status === 'open';
+    return !!offer;
 }
 
 function getOfferStatusLabel(status) {
     const map = {
         open: 'Активна',
-        matched: 'В роботі',
-        closed: 'Закрита',
+        matched: 'Активна',
+        completed: 'Активна',
     };
-    return map[status] || 'Недоступна';
+    return map[status] || 'Активна';
 }
 
 export default function OfferDetailsPage() {
@@ -194,11 +194,9 @@ export default function OfferDetailsPage() {
                                 <span>{getOfferTypeLabel(offer.type)}</span>
                             </header>
 
-                            {!isOfferAvailableForResponse(offer) && (
-                                <div className="offer-status-warning">
-                                    Статус пропозиції: <strong>{getOfferStatusLabel(offer.status)}</strong>. Перегляд доступний, але надіслати запит зараз не можна.
-                                </div>
-                            )}
+                            <div className="offer-status-warning">
+                                Статус пропозиції: <strong>{getOfferStatusLabel(offer.status)}</strong>. Можна надсилати нові запити на обмін.
+                            </div>
 
                             <div className="offer-details-grid">
                                 <div>
@@ -231,11 +229,9 @@ export default function OfferDetailsPage() {
                                 <button
                                     className="primary"
                                     onClick={handleRespond}
-                                    disabled={responding || !isOfferAvailableForResponse(offer)}
+                                    disabled={responding}
                                 >
-                                    {isOfferAvailableForResponse(offer)
-                                        ? (user ? 'Запропонувати обмін' : 'Увійти, щоб запропонувати обмін')
-                                        : 'Пропозиція недоступна'}
+                                    {user ? 'Запропонувати обмін' : 'Увійти, щоб запропонувати обмін'}
                                 </button>
                                 {user && (
                                     <button

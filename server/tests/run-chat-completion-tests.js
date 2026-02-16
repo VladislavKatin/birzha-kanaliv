@@ -30,6 +30,7 @@ const { runAdminOpsFunctionalTests } = require('./adminOps.functional.spec');
 const { runTelegramTokenUnitTests } = require('./telegramToken.unit.spec');
 const { runUserMenuBadgesUnitTests } = require('./userMenuBadges.unit.spec');
 const { runUserMenuBadgesFunctionalTests } = require('./userMenuBadges.functional.spec');
+const { runOfferMultiMatchFunctionalTests } = require('./offerMultiMatch.functional.spec');
 
 async function run() {
     const tests = [
@@ -65,6 +66,7 @@ async function run() {
         { name: 'unit: telegram link token signing', fn: runTelegramTokenUnitTests },
         { name: 'unit: user menu badges endpoint manifest', fn: runUserMenuBadgesUnitTests },
         { name: 'functional: user menu badges flow', fn: runUserMenuBadgesFunctionalTests },
+        { name: 'functional: offer multi-match flow', fn: runOfferMultiMatchFunctionalTests },
     ];
 
     let failed = 0;
