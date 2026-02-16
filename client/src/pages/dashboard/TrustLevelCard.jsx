@@ -1,4 +1,4 @@
-import './DashboardPage.css';
+﻿import './DashboardPage.css';
 
 const LEVELS = [
     { name: 'Новачок', minPoints: 0, color: '#94a3b8', bgColor: 'rgba(148, 163, 184, 0.18)' },
