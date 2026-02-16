@@ -17,6 +17,7 @@ import { runAdminCenterFunctionalTests } from './adminCenter.functional.spec.js'
 import { runMenuBadgesUnitTests } from './menuBadges.unit.spec.js';
 import { runMenuBadgesFunctionalTests } from './menuBadges.functional.spec.js';
 import { runEncodingGuardUnitTests } from './encodingGuard.unit.spec.js';
+import { runSitemapUnitTests } from './sitemap.unit.spec.js';
 
 async function run() {
     const tests = [
@@ -39,6 +40,7 @@ async function run() {
         { name: 'unit: dashboard menu badge counters', fn: runMenuBadgesUnitTests },
         { name: 'functional: dashboard menu badge read flow', fn: runMenuBadgesFunctionalTests },
         { name: 'unit: source encoding guard', fn: runEncodingGuardUnitTests },
+        { name: 'unit: sitemap excludes private routes', fn: runSitemapUnitTests },
     ];
 
     let failed = 0;

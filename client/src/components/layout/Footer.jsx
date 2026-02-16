@@ -23,6 +23,7 @@ export default function Footer() {
                     ))}
                     <Link to="/offers">Пропозиції</Link>
                     <Link to="/faq">FAQ</Link>
+                    <Link to="/help">Help Center</Link>
                     <Link to="/privacy-policy">Privacy Policy</Link>
                     <Link to="/terms">Terms</Link>
                     <Link to="/auth">Увійти</Link>

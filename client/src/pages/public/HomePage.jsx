@@ -18,7 +18,13 @@ import {
 import PublicLayout from '../../components/layout/PublicLayout';
 import { getLandingCtaPaths, getLandingMetricsSummary } from '../../services/homeLanding';
 import { getBlogArticlesPreview } from '../../services/blogArticles';
-import { applyPageSeo, applyJsonLd, buildBlogCollectionJsonLd } from '../../services/seo';
+import {
+    applyPageSeo,
+    applyJsonLd,
+    buildBlogCollectionJsonLd,
+    buildOrganizationJsonLd,
+    buildWebsiteJsonLd,
+} from '../../services/seo';
 import './HomePage.css';
 
 const steps = [
@@ -163,6 +169,8 @@ export default function HomePage() {
         });
 
         applyJsonLd('home-blog-schema', buildBlogCollectionJsonLd(articles));
+        applyJsonLd('home-organization-schema', buildOrganizationJsonLd());
+        applyJsonLd('home-website-schema', buildWebsiteJsonLd());
     }, [articles]);
 
     useEffect(() => {

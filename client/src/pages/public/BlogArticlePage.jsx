@@ -4,7 +4,13 @@ import { ArrowLeft } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import PublicLayout from '../../components/layout/PublicLayout';
 import { getBlogArticleBySlug, getRelatedBlogArticles } from '../../services/blogArticles';
-import { applyJsonLd, applyPageSeo, buildBlogArticleFaqJsonLd, buildBlogArticleJsonLd } from '../../services/seo';
+import {
+    applyJsonLd,
+    applyPageSeo,
+    buildBlogArticleFaqJsonLd,
+    buildBlogArticleJsonLd,
+    buildBreadcrumbJsonLd,
+} from '../../services/seo';
 import './BlogArticlePage.css';
 
 function ChartBlock({ chart }) {
@@ -98,6 +104,11 @@ export default function BlogArticlePage() {
 
         applyJsonLd('blog-article-schema', buildBlogArticleJsonLd(article));
         applyJsonLd('blog-article-faq-schema', buildBlogArticleFaqJsonLd(article));
+        applyJsonLd('blog-article-breadcrumb-schema', buildBreadcrumbJsonLd([
+            { name: 'Головна', path: '/' },
+            { name: 'Блог', path: '/blog' },
+            { name: article.title, path: `/blog/${article.slug}` },
+        ]));
     }, [article, slug]);
 
     return (

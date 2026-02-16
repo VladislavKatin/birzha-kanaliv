@@ -11,6 +11,7 @@ const HomePage = lazy(() => import('./pages/public/HomePage'));
 const BlogListPage = lazy(() => import('./pages/public/BlogListPage'));
 const BlogArticlePage = lazy(() => import('./pages/public/BlogArticlePage'));
 const FaqPage = lazy(() => import('./pages/public/FaqPage'));
+const HelpPage = lazy(() => import('./pages/public/HelpPage'));
 const PrivacyPolicyPage = lazy(() => import('./pages/public/PrivacyPolicyPage'));
 const TermsPage = lazy(() => import('./pages/public/TermsPage'));
 const OffersCatalogPage = lazy(() => import('./pages/public/OffersCatalogPage'));
@@ -108,6 +109,7 @@ export default function App() {
                         <Route path="/blog" element={<BlogListPage />} />
                         <Route path="/blog/:slug" element={<BlogArticlePage />} />
                         <Route path="/faq" element={<FaqPage />} />
+                        <Route path="/help" element={<HelpPage />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                         <Route path="/terms" element={<TermsPage />} />
                         <Route path="/auth" element={<AuthPage />} />

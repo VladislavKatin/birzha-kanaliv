@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import PublicLayout from '../../components/layout/PublicLayout';
 import { filterBlogArticlesByTag, getAllBlogTags, getBlogArticlesPreview } from '../../services/blogArticles';
-import { applyJsonLd, applyPageSeo, buildBlogCollectionJsonLd } from '../../services/seo';
+import {
+    applyJsonLd,
+    applyPageSeo,
+    buildBlogCollectionJsonLd,
+    buildBreadcrumbJsonLd,
+} from '../../services/seo';
 import './BlogListPage.css';
 
 export default function BlogListPage() {
@@ -24,6 +29,10 @@ export default function BlogListPage() {
         });
 
         applyJsonLd('blog-list-schema', buildBlogCollectionJsonLd(allArticles));
+        applyJsonLd('blog-list-breadcrumb-schema', buildBreadcrumbJsonLd([
+            { name: 'Головна', path: '/' },
+            { name: 'Блог', path: '/blog' },
+        ]));
     }, [allArticles]);
 
     return (

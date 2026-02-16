@@ -1,5 +1,13 @@
 ﻿import assert from 'node:assert/strict';
-import { buildBlogArticleFaqJsonLd, buildBlogArticleJsonLd, buildBlogCollectionJsonLd, buildSeoPayload } from './seo.js';
+import {
+    buildBlogArticleFaqJsonLd,
+    buildBlogArticleJsonLd,
+    buildBlogCollectionJsonLd,
+    buildBreadcrumbJsonLd,
+    buildOrganizationJsonLd,
+    buildSeoPayload,
+    buildWebsiteJsonLd,
+} from './seo.js';
 import { getBlogArticleBySlug, getBlogArticlesPreview } from './blogArticles.js';
 
 export function runSeoFunctionalTests() {
@@ -16,6 +24,7 @@ export function runSeoFunctionalTests() {
     assert.equal(payload.keywords, 'one, two');
     assert.equal(payload.url, 'https://birzha-kanaliv.biz.ua/blog/test');
     assert.equal(payload.image, 'https://birzha-kanaliv.biz.ua/images/test.svg');
+    assert.equal(payload.robots, 'index,follow,max-image-preview:large');
 
     const listSchema = buildBlogCollectionJsonLd(getBlogArticlesPreview());
     assert.equal(listSchema['@type'], 'Blog');
@@ -30,6 +39,21 @@ export function runSeoFunctionalTests() {
     assert.equal(faqSchema['@type'], 'FAQPage');
     assert.equal(Array.isArray(faqSchema.mainEntity), true);
     assert.equal(faqSchema.mainEntity.length > 0, true);
+
+    const organizationSchema = buildOrganizationJsonLd();
+    assert.equal(organizationSchema['@type'], 'Organization');
+    assert.equal(typeof organizationSchema.contactPoint.email, 'string');
+
+    const websiteSchema = buildWebsiteJsonLd();
+    assert.equal(websiteSchema['@type'], 'WebSite');
+    assert.equal(typeof websiteSchema.potentialAction.target, 'string');
+
+    const breadcrumbSchema = buildBreadcrumbJsonLd([
+        { name: 'Home', path: '/' },
+        { name: 'Blog', path: '/blog' },
+    ]);
+    assert.equal(breadcrumbSchema['@type'], 'BreadcrumbList');
+    assert.equal(breadcrumbSchema.itemListElement.length, 2);
 }
 
 

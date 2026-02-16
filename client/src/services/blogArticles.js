@@ -504,7 +504,24 @@ export function getAllBlogArticles() {
 }
 
 export function getRelatedBlogArticles(slug, limit = 3) {
-    return BLOG_ARTICLES.filter((article) => article.slug !== slug)
+    const source = BLOG_ARTICLES.find((article) => article.slug === slug);
+    const sourceTags = new Set(source?.tags || []);
+    const sourceDate = source?.publishedAtIso ? new Date(source.publishedAtIso).getTime() : 0;
+
+    return BLOG_ARTICLES
+        .filter((article) => article.slug !== slug)
+        .map((article) => {
+            const sharedTags = (article.tags || []).filter((tag) => sourceTags.has(tag)).length;
+            const dateScore = sourceDate && article.publishedAtIso
+                ? Math.max(0, 30 - Math.abs(new Date(article.publishedAtIso).getTime() - sourceDate) / (1000 * 60 * 60 * 24))
+                : 0;
+
+            return {
+                ...article,
+                _score: sharedTags * 10 + dateScore,
+            };
+        })
+        .sort((a, b) => b._score - a._score)
         .slice(0, limit)
         .map((article) => ({
             slug: article.slug,

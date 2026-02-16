@@ -19,5 +19,9 @@ Disallow: /chat
 Disallow: /chat/
 Disallow: /admin
 Disallow: /admin/
+Disallow: /*?*utm_
+Disallow: /*?*targetOfferId=
+Disallow: /*?*fbclid=
+Disallow: /*?*gclid=
 
 Sitemap: https://birzha-kanaliv.biz.ua/sitemap.xml

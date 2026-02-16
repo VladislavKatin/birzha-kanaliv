@@ -36,7 +36,7 @@ export function buildBlogCollectionJsonLd(articles = []) {
         '@type': 'Blog',
         name: 'Блог Біржа Каналів',
         description: 'Практичні матеріали для розвитку YouTube-каналу',
-        url: `${BASE_URL}/#blog`,
+        url: `${BASE_URL}/blog`,
         blogPost: articles.map(article => ({
             '@type': 'BlogPosting',
             headline: article.title,
@@ -58,15 +58,22 @@ export function buildBlogArticleJsonLd(article) {
         description: article.seoDescription,
         image: toAbsoluteUrl(article.coverImage),
         datePublished: article.publishedAtIso || article.publishedAt,
+        dateModified: article.updatedAtIso || article.publishedAtIso || article.publishedAt,
         author: {
             '@type': 'Organization',
             name: 'Біржа Каналів',
+            url: BASE_URL,
         },
         publisher: {
             '@type': 'Organization',
             name: 'Біржа Каналів',
+            logo: {
+                '@type': 'ImageObject',
+                url: toAbsoluteUrl('/icons/icon-512.png'),
+            },
         },
         mainEntityOfPage: `${BASE_URL}/blog/${article.slug}`,
+        inLanguage: 'uk-UA',
     };
 }
 
@@ -103,6 +110,51 @@ export function buildFaqPageJsonLd(items = [], pagePath = '/faq') {
                 '@type': 'Answer',
                 text: item.a,
             },
+        })),
+    };
+}
+
+export function buildOrganizationJsonLd() {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'Біржа Каналів',
+        url: BASE_URL,
+        logo: toAbsoluteUrl('/icons/icon-512.png'),
+        contactPoint: {
+            '@type': 'ContactPoint',
+            contactType: 'customer support',
+            email: 'vladkatintam@gmail.com',
+            availableLanguage: ['uk', 'ru', 'en'],
+        },
+    };
+}
+
+export function buildWebsiteJsonLd() {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Біржа Каналів',
+        url: BASE_URL,
+        inLanguage: 'uk-UA',
+        potentialAction: {
+            '@type': 'SearchAction',
+            target: `${BASE_URL}/offers`,
+            'query-input': 'required name=search_term_string',
+        },
+    };
+}
+
+export function buildBreadcrumbJsonLd(items = []) {
+    const list = Array.isArray(items) ? items : [];
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: list.map((item, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: item.name,
+            item: toAbsoluteUrl(item.path || '/'),
         })),
     };
 }
@@ -156,6 +208,21 @@ export function applyPageSeo(input = {}) {
 
     canonical.setAttribute('href', payload.url);
 
+    function upsertAlternate(hrefLang, href) {
+        const selector = `link[rel="alternate"][hreflang="${hrefLang}"]`;
+        let tag = document.querySelector(selector);
+        if (!tag) {
+            tag = document.createElement('link');
+            tag.setAttribute('rel', 'alternate');
+            tag.setAttribute('hreflang', hrefLang);
+            document.head.appendChild(tag);
+        }
+        tag.setAttribute('href', href);
+    }
+
+    upsertAlternate('uk-UA', payload.url);
+    upsertAlternate('x-default', payload.url);
+
     return payload;
 }
 
@@ -176,5 +243,3 @@ export function applyJsonLd(id, schemaObject) {
     script.textContent = JSON.stringify(schemaObject);
     document.head.appendChild(script);
 }
-
-
