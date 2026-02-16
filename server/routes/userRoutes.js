@@ -1,5 +1,5 @@
 ﻿const router = require('express').Router();
-const { User, YouTubeAccount, TrafficOffer, TrafficMatch, Review, Message, ChatRoom } = require('../models');
+const { User, YouTubeAccount, TrafficOffer, TrafficMatch, Review, Message, ChatRoom, ActionLog } = require('../models');
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 
@@ -365,6 +365,161 @@ router.get('/recommendations', auth, async (req, res) => {
     } catch (error) {
         console.error('Recommendations error:', error);
         res.status(500).json({ error: 'Failed to get recommendations' });
+    }
+});
+
+/**
+ * @route GET /api/user/menu-badges
+ * @description Aggregated payload for dashboard menu badges to avoid multiple concurrent requests
+ * @access Private
+ * @returns {Object} incoming, outgoing, messageThreads, myUserId
+ */
+router.get('/menu-badges', auth, async (req, res) => {
+    try {
+        const result = await getUserWithChannels(req.firebaseUser.uid);
+        if (!result) return res.status(404).json({ error: 'User not found' });
+
+        const { user, channels } = result;
+        const channelIds = channels.map((channel) => channel.id);
+
+        let incoming = 0;
+        let outgoing = 0;
+        let matchThreads = [];
+
+        if (channelIds.length > 0) {
+            const [incomingCount, outgoingCount, matches] = await Promise.all([
+                TrafficMatch.count({
+                    where: {
+                        targetChannelId: { [Op.in]: channelIds },
+                        status: 'pending',
+                    },
+                }),
+                TrafficMatch.count({
+                    where: {
+                        initiatorChannelId: { [Op.in]: channelIds },
+                        status: 'pending',
+                    },
+                }),
+                TrafficMatch.findAll({
+                    where: {
+                        [Op.or]: [
+                            { initiatorChannelId: { [Op.in]: channelIds } },
+                            { targetChannelId: { [Op.in]: channelIds } },
+                        ],
+                        status: { [Op.in]: ['pending', 'accepted', 'completed'] },
+                    },
+                    include: [
+                        {
+                            model: ChatRoom,
+                            as: 'chatRoom',
+                            attributes: ['id'],
+                            required: false,
+                        },
+                    ],
+                    attributes: ['id', 'initiatorChannelId', 'targetChannelId', 'updatedAt'],
+                    order: [['updatedAt', 'DESC']],
+                    limit: 100,
+                }),
+            ]);
+
+            incoming = incomingCount;
+            outgoing = outgoingCount;
+
+            const roomIds = matches
+                .map((match) => match.chatRoom?.id || null)
+                .filter(Boolean);
+            const uniqueRoomIds = Array.from(new Set(roomIds));
+
+            const lastMessagesByRoom = new Map();
+            if (uniqueRoomIds.length > 0) {
+                const messages = await Message.findAll({
+                    where: { chatRoomId: { [Op.in]: uniqueRoomIds } },
+                    include: [{ model: User, as: 'sender', attributes: ['id'] }],
+                    attributes: ['id', 'chatRoomId', 'createdAt'],
+                    order: [['createdAt', 'DESC']],
+                });
+
+                messages.forEach((message) => {
+                    if (!lastMessagesByRoom.has(message.chatRoomId)) {
+                        lastMessagesByRoom.set(message.chatRoomId, {
+                            id: message.id,
+                            createdAt: message.createdAt,
+                            sender: {
+                                id: message.sender?.id || null,
+                            },
+                        });
+                    }
+                });
+            }
+
+            matchThreads = matches.map((match) => {
+                const threadId = `match-${match.id}`;
+                const chatRoomId = match.chatRoom?.id || null;
+                const lastMessage = chatRoomId ? (lastMessagesByRoom.get(chatRoomId) || null) : null;
+                return {
+                    id: threadId,
+                    lastMessage,
+                    lastMessageAt: lastMessage?.createdAt || match.updatedAt,
+                };
+            });
+        }
+
+        const adminUsers = await User.findAll({
+            where: { role: 'admin' },
+            attributes: ['id'],
+        });
+        const adminIds = adminUsers.map((admin) => admin.id);
+
+        const supportLogs = await ActionLog.findAll({
+            where: {
+                action: 'support_chat_message',
+                userId: {
+                    [Op.in]: Array.from(new Set([user.id, ...adminIds])),
+                },
+            },
+            include: [{ model: User, as: 'user', attributes: ['id', 'role'] }],
+            order: [['createdAt', 'DESC']],
+            limit: 100,
+        });
+
+        const visibleSupportLog = supportLogs.find((log) => {
+            if (user.role === 'admin') return true;
+            if (log.userId === user.id) return true;
+
+            const senderIsAdmin = log.user?.role === 'admin';
+            if (!senderIsAdmin) return false;
+
+            const targetUserId = log.details?.targetUserId || null;
+            return !targetUserId || targetUserId === user.id;
+        }) || null;
+
+        const supportThread = visibleSupportLog
+            ? {
+                id: 'support',
+                lastMessage: {
+                    id: visibleSupportLog.id,
+                    createdAt: visibleSupportLog.createdAt,
+                    sender: {
+                        id: visibleSupportLog.user?.id || null,
+                    },
+                },
+                lastMessageAt: visibleSupportLog.createdAt,
+            }
+            : null;
+
+        const messageThreads = supportThread
+            ? [supportThread, ...matchThreads]
+            : matchThreads;
+
+        res.json({
+            incoming,
+            outgoing,
+            messageThreads,
+            myUserId: user.id,
+        });
+    } catch (error) {
+        console.error('Get menu badges error:', error);
+        res.status(500).json({ error: 'Failed to get menu badges' });
     }
 });
 

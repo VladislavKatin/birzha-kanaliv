@@ -56,4 +56,17 @@ export function runMenuBadgesUnitTests() {
         outgoing: 2,
         messages: 1,
     });
+
+    const fromCounts = computeMenuBadgeCounts({
+        incomingCount: 3,
+        outgoingCount: 4,
+        incomingSwaps: [{ status: 'pending' }],
+        outgoingSwaps: [{ status: 'pending' }],
+        messageThreads: [],
+    }, { myUserId: 'u1', storage });
+    assert.deepEqual(fromCounts, {
+        incoming: 3,
+        outgoing: 4,
+        messages: 0,
+    });
 }

@@ -28,6 +28,8 @@ const { runAdminSystemFunctionalTests } = require('./adminSystem.functional.spec
 const { runAdminOpsUnitTests } = require('./adminOps.unit.spec');
 const { runAdminOpsFunctionalTests } = require('./adminOps.functional.spec');
 const { runTelegramTokenUnitTests } = require('./telegramToken.unit.spec');
+const { runUserMenuBadgesUnitTests } = require('./userMenuBadges.unit.spec');
+const { runUserMenuBadgesFunctionalTests } = require('./userMenuBadges.functional.spec');
 
 async function run() {
     const tests = [
@@ -61,6 +63,8 @@ async function run() {
         { name: 'unit: admin operations endpoint manifest', fn: runAdminOpsUnitTests },
         { name: 'functional: admin operations flow', fn: runAdminOpsFunctionalTests },
         { name: 'unit: telegram link token signing', fn: runTelegramTokenUnitTests },
+        { name: 'unit: user menu badges endpoint manifest', fn: runUserMenuBadgesUnitTests },
+        { name: 'functional: user menu badges flow', fn: runUserMenuBadgesFunctionalTests },
     ];
 
     let failed = 0;

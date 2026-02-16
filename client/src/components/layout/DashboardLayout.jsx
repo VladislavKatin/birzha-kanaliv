@@ -7,7 +7,6 @@ import api from '../../services/api';
 import { buildNotificationKey, formatToastMessage } from '../../services/globalNotifications';
 import {
     computeMenuBadgeCounts,
-    getSupportLastMessage,
     markThreadsSeen,
 } from '../../services/menuBadges';
 import Icon from '../common/Icon';
@@ -89,29 +88,15 @@ export default function DashboardLayout() {
 
             try {
                 badgesRequestInFlightRef.current = true;
-                const [incomingResponse, outgoingResponse, threadsResponse, supportResponse] = await Promise.all([
-                    api.get('/swaps/incoming'),
-                    api.get('/swaps/outgoing'),
-                    api.get('/chat/threads'),
-                    api.get('/support/chat'),
-                ]);
-
-                const supportLastMessage = getSupportLastMessage(supportResponse.data?.messages || []);
-                const messageThreads = [
-                    ...(supportLastMessage ? [{ id: 'support', lastMessage: supportLastMessage, lastMessageAt: supportLastMessage.createdAt }] : []),
-                    ...((threadsResponse.data?.threads || []).map((thread) => ({
-                        id: thread.id,
-                        lastMessage: thread.lastMessage || null,
-                        lastMessageAt: thread.lastMessageAt,
-                    }))),
-                ];
+                const response = await api.get('/user/menu-badges');
+                const messageThreads = response.data?.messageThreads || [];
 
                 const counts = computeMenuBadgeCounts({
-                    incomingSwaps: incomingResponse.data?.swaps || [],
-                    outgoingSwaps: outgoingResponse.data?.swaps || [],
+                    incomingCount: response.data?.incoming,
+                    outgoingCount: response.data?.outgoing,
                     messageThreads,
                 }, {
-                    myUserId: supportResponse.data?.myUserId || dbUser.id || '',
+                    myUserId: response.data?.myUserId || dbUser.id || '',
                 });
 
                 if (!cancelled) {

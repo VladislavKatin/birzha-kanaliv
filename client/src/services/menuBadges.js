@@ -60,8 +60,12 @@ export function markThreadsSeen(threads = [], options = {}) {
 }
 
 export function computeMenuBadgeCounts(payload = {}, options = {}) {
-    const incoming = getPendingSwapsCount(payload.incomingSwaps || []);
-    const outgoing = getPendingSwapsCount(payload.outgoingSwaps || []);
+    const incoming = Number.isFinite(payload.incomingCount)
+        ? payload.incomingCount
+        : getPendingSwapsCount(payload.incomingSwaps || []);
+    const outgoing = Number.isFinite(payload.outgoingCount)
+        ? payload.outgoingCount
+        : getPendingSwapsCount(payload.outgoingSwaps || []);
     const unread = getUnreadThreadsCount(payload.messageThreads || [], options);
 
     return {
