@@ -41,6 +41,7 @@ async function runApiSmokeFunctionalTests() {
         });
 
         await smokeIncomingSwapsFilters(baseUrl);
+        await smokeSwapDefer(baseUrl, declineFlow.matchId, OFFER_OWNER_UID);
         await smokeSwapDecline(baseUrl, declineFlow.matchId, RESPONDER_UID);
     } finally {
         await new Promise((resolve) => server.close(resolve));
@@ -181,6 +182,34 @@ async function smokeIncomingSwapsFilters(baseUrl) {
         filtered.body.swaps.every((swap) => swap.status === 'pending'),
         true
     );
+    if (filtered.body.swaps.length > 0) {
+        const sample = filtered.body.swaps[0];
+        assert.equal(typeof sample.partnerStats?.influenceScore, 'number');
+        assert.equal(Array.isArray(sample.compatibility?.reasons), true);
+    }
+}
+
+async function smokeSwapDefer(baseUrl, matchId, uid) {
+    const response = await request(baseUrl, {
+        method: 'POST',
+        path: `/api/swaps/${matchId}/defer`,
+        uid,
+        body: { note: 'smoke defer note' },
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.ok, true);
+    assert.equal(typeof response.body.deferredUntil, 'string');
+
+    const incoming = await request(baseUrl, {
+        method: 'GET',
+        path: '/api/swaps/incoming?status=pending',
+        uid: OFFER_OWNER_UID,
+    });
+    assert.equal(incoming.status, 200);
+    const deferred = (incoming.body.swaps || []).find((swap) => swap.id === matchId);
+    assert.equal(!!deferred, true);
+    assert.equal(deferred.deferredByMe, true);
 }
 
 async function smokeSwapDecline(baseUrl, matchId, uid) {

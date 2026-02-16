@@ -82,9 +82,12 @@ export default function SupportChatsPage() {
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const prefill = params.get('prefill');
+        const requestedThread = params.get('thread');
         if (prefill) {
             setInputValue(prefill);
-            setActiveThreadId('support');
+            if (!requestedThread) {
+                setActiveThreadId('support');
+            }
         }
     }, [location.search]);
 

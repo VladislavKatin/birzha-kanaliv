@@ -1,6 +1,6 @@
 ﻿const router = require('express').Router();
 const { sequelize, TrafficMatch, TrafficOffer, YouTubeAccount, User, ChatRoom, ActionLog, Review } = require('../models');
-const { Op } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 const auth = require('../middleware/auth');
 const { emitSwapStatusChanged, emitNotification } = require('../socketSetup');
 const { normalizeOptionalString } = require('../utils/validators');
@@ -49,6 +49,140 @@ function getRelevanceScore(swap) {
     return score;
 }
 
+function getCompatibilityInsights(swap) {
+    const initiator = swap.initiatorChannel || {};
+    const target = swap.targetChannel || {};
+    const offer = swap.offer || {};
+    const reasons = [];
+    let score = 0;
+
+    const initiatorNiche = String(initiator.niche || '').trim().toLowerCase();
+    const targetNiche = String(target.niche || '').trim().toLowerCase();
+    if (initiatorNiche && targetNiche && initiatorNiche === targetNiche) {
+        score += 35;
+        reasons.push('Однакова ніша');
+    }
+
+    const initiatorLang = String(initiator.language || '').trim().toLowerCase();
+    const targetLang = String(target.language || '').trim().toLowerCase();
+    const offerLang = String(offer.language || '').trim().toLowerCase();
+    if (initiatorLang && targetLang && initiatorLang === targetLang) {
+        score += 25;
+        reasons.push('Спільна мова каналів');
+    } else if (offerLang && targetLang && offerLang === targetLang) {
+        score += 15;
+        reasons.push('Мова пропозиції збігається з вашим каналом');
+    }
+
+    const initiatorSubs = Number(initiator.subscribers || 0);
+    const targetSubs = Number(target.subscribers || 0);
+    const maxSubs = Math.max(initiatorSubs, targetSubs);
+    if (maxSubs > 0) {
+        const closeness = 1 - Math.min(Math.abs(initiatorSubs - targetSubs) / maxSubs, 1);
+        const closenessPoints = Math.round(closeness * 30);
+        score += closenessPoints;
+        if (closeness >= 0.7) {
+            reasons.push('Схожий масштаб аудиторії');
+        }
+    }
+
+    if (reasons.length === 0) {
+        reasons.push('Базова сумісність за метриками');
+    }
+
+    return { score: Math.max(0, Math.min(100, score)), reasons };
+}
+
+async function buildPartnerStatsMap(channelIds) {
+    const ids = Array.from(new Set(channelIds.filter(Boolean)));
+    const stats = new Map();
+    if (!ids.length) return stats;
+
+    const [initiatedAll, targetAll, initiatedCompleted, targetCompleted, reviewAgg] = await Promise.all([
+        TrafficMatch.findAll({
+            attributes: ['initiatorChannelId', [fn('COUNT', col('id')), 'count']],
+            where: { initiatorChannelId: { [Op.in]: ids } },
+            group: ['initiatorChannelId'],
+            raw: true,
+        }),
+        TrafficMatch.findAll({
+            attributes: ['targetChannelId', [fn('COUNT', col('id')), 'count']],
+            where: { targetChannelId: { [Op.in]: ids } },
+            group: ['targetChannelId'],
+            raw: true,
+        }),
+        TrafficMatch.findAll({
+            attributes: ['initiatorChannelId', [fn('COUNT', col('id')), 'count']],
+            where: { initiatorChannelId: { [Op.in]: ids }, status: 'completed' },
+            group: ['initiatorChannelId'],
+            raw: true,
+        }),
+        TrafficMatch.findAll({
+            attributes: ['targetChannelId', [fn('COUNT', col('id')), 'count']],
+            where: { targetChannelId: { [Op.in]: ids }, status: 'completed' },
+            group: ['targetChannelId'],
+            raw: true,
+        }),
+        Review.findAll({
+            attributes: ['toChannelId', [fn('COUNT', col('id')), 'reviewCount'], [fn('AVG', col('rating')), 'avgRating']],
+            where: { toChannelId: { [Op.in]: ids } },
+            group: ['toChannelId'],
+            raw: true,
+        }),
+    ]);
+
+    const totalByChannel = new Map();
+    const completedByChannel = new Map();
+    const reviewsByChannel = new Map();
+
+    initiatedAll.forEach((row) => {
+        totalByChannel.set(row.initiatorChannelId, Number(totalByChannel.get(row.initiatorChannelId) || 0) + Number(row.count || 0));
+    });
+    targetAll.forEach((row) => {
+        totalByChannel.set(row.targetChannelId, Number(totalByChannel.get(row.targetChannelId) || 0) + Number(row.count || 0));
+    });
+    initiatedCompleted.forEach((row) => {
+        completedByChannel.set(
+            row.initiatorChannelId,
+            Number(completedByChannel.get(row.initiatorChannelId) || 0) + Number(row.count || 0)
+        );
+    });
+    targetCompleted.forEach((row) => {
+        completedByChannel.set(
+            row.targetChannelId,
+            Number(completedByChannel.get(row.targetChannelId) || 0) + Number(row.count || 0)
+        );
+    });
+    reviewAgg.forEach((row) => {
+        reviewsByChannel.set(row.toChannelId, {
+            reviewCount: Number(row.reviewCount || 0),
+            avgRating: Number(Number(row.avgRating || 0).toFixed(2)),
+        });
+    });
+
+    ids.forEach((channelId) => {
+        const totalExchanges = Number(totalByChannel.get(channelId) || 0);
+        const completedExchanges = Number(completedByChannel.get(channelId) || 0);
+        const successRate = totalExchanges > 0 ? Math.round((completedExchanges / totalExchanges) * 100) : 0;
+        const reviewData = reviewsByChannel.get(channelId) || { reviewCount: 0, avgRating: 0 };
+        const influenceScore = Math.max(
+            0,
+            Math.min(100, Math.round(successRate * 0.55 + completedExchanges * 1.5 + reviewData.avgRating * 7))
+        );
+
+        stats.set(channelId, {
+            completedExchanges,
+            totalExchanges,
+            successRate,
+            reviewCount: reviewData.reviewCount,
+            avgRating: reviewData.avgRating,
+            influenceScore,
+        });
+    });
+
+    return stats;
+}
+
 /**
  * Get user and their channels by Firebase UID.
  * @param {string} firebaseUid
@@ -84,18 +218,18 @@ router.get('/incoming', auth, async (req, res) => {
                 {
                     model: YouTubeAccount,
                     as: 'initiatorChannel',
-                    attributes: ['id', 'channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'niche'],
+                    attributes: ['id', 'channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'niche', 'language'],
                     include: [{ model: User, as: 'owner', attributes: ['displayName', 'photoURL'] }],
                 },
                 {
                     model: YouTubeAccount,
                     as: 'targetChannel',
-                    attributes: ['id', 'channelTitle', 'subscribers', 'niche'],
+                    attributes: ['id', 'channelTitle', 'subscribers', 'niche', 'language'],
                 },
                 {
                     model: TrafficOffer,
                     as: 'offer',
-                    attributes: ['type', 'description', 'niche'],
+                    attributes: ['type', 'description', 'niche', 'language'],
                 },
                 {
                     model: Review,
@@ -107,7 +241,7 @@ router.get('/incoming', auth, async (req, res) => {
             order: [['createdAt', 'DESC']],
         });
 
-        const serialized = swaps.map((swap) => {
+        const baseSwaps = swaps.map((swap) => {
             const plain = swap.toJSON();
             const myChannelId = plain.targetChannelId;
             const hasReviewed = Array.isArray(plain.reviews)
@@ -117,7 +251,46 @@ router.get('/incoming', auth, async (req, res) => {
                 ...plain,
                 myChannelId,
                 hasReviewed,
-                relevanceScore: getRelevanceScore(plain),
+            };
+        });
+
+        const initiatorChannelIds = Array.from(new Set(baseSwaps.map((swap) => swap.initiatorChannelId).filter(Boolean)));
+        const partnerStatsMap = await buildPartnerStatsMap(initiatorChannelIds);
+
+        const matchIds = Array.from(new Set(baseSwaps.map((swap) => swap.id).filter(Boolean)));
+        const deferLogs = await ActionLog.findAll({
+            where: {
+                userId: result.user.id,
+                action: 'swap_deferred',
+            },
+            attributes: ['details', 'createdAt'],
+            order: [['createdAt', 'DESC']],
+            limit: 500,
+        });
+
+        const deferredMatchIds = new Set();
+        deferLogs.forEach((log) => {
+            const matchId = log?.details?.matchId;
+            if (matchId && matchIds.includes(matchId)) {
+                deferredMatchIds.add(matchId);
+            }
+        });
+
+        const serialized = baseSwaps.map((swap) => {
+            const compatibility = getCompatibilityInsights(swap);
+            return {
+                ...swap,
+                partnerStats: partnerStatsMap.get(swap.initiatorChannelId) || {
+                    completedExchanges: 0,
+                    totalExchanges: 0,
+                    successRate: 0,
+                    reviewCount: 0,
+                    avgRating: 0,
+                    influenceScore: 0,
+                },
+                compatibility,
+                deferredByMe: deferredMatchIds.has(swap.id),
+                relevanceScore: Math.max(getRelevanceScore(swap), compatibility.score),
             };
         });
 
@@ -391,6 +564,74 @@ router.post('/:id/decline', auth, async (req, res) => {
     } catch (error) {
         console.error('Decline swap error:', error);
         res.status(500).json({ error: 'Failed to decline swap' });
+    }
+});
+
+/**
+ * @route POST /api/swaps/:id/defer
+ * @description Mark incoming swap as deferred by current user (audit only, no status change)
+ * @access Private (swap participant)
+ */
+router.post('/:id/defer', auth, async (req, res) => {
+    try {
+        const result = await getUserChannels(req.firebaseUser.uid);
+        if (!result) return res.status(404).json({ error: 'User not found' });
+
+        const note = normalizeOptionalString(req.body?.note);
+        if (note && note.length > 240) {
+            return res.status(400).json({ error: 'Коментар занадто довгий (максимум 240 символів)' });
+        }
+
+        const payload = await sequelize.transaction(async (transaction) => {
+            const match = await TrafficMatch.findByPk(req.params.id, {
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+            });
+
+            if (!match) {
+                return { error: { status: 404, body: { error: 'Swap not found' } } };
+            }
+
+            const isParticipant = result.channelIds.includes(match.targetChannelId) || result.channelIds.includes(match.initiatorChannelId);
+            if (!isParticipant) {
+                return { error: { status: 403, body: { error: 'Не ваш обмін' } } };
+            }
+
+            if (!['pending', 'accepted'].includes(match.status)) {
+                return { error: { status: 400, body: { error: 'Відкласти можна лише активний обмін' } } };
+            }
+
+            const deferredUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+            await ActionLog.create({
+                userId: result.user.id,
+                action: 'swap_deferred',
+                details: {
+                    matchId: match.id,
+                    note: note || null,
+                    deferredUntil: deferredUntil.toISOString(),
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                matchId: match.id,
+                deferredUntil: deferredUntil.toISOString(),
+            };
+        });
+
+        if (payload.error) {
+            return res.status(payload.error.status).json(payload.error.body);
+        }
+
+        return res.json({
+            ok: true,
+            matchId: payload.matchId,
+            deferredUntil: payload.deferredUntil,
+        });
+    } catch (error) {
+        console.error('Defer swap error:', error);
+        return res.status(500).json({ error: 'Failed to defer swap' });
     }
 });
 

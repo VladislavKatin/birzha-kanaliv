@@ -148,6 +148,51 @@
     color: var(--text-muted);
 }
 
+.swap-compatibility {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    max-width: 260px;
+}
+
+.swap-compatibility strong {
+    font-size: 12px;
+    color: var(--text-primary);
+}
+
+.swap-compatibility small {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: right;
+}
+
+.swap-partner-stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+    max-width: 320px;
+}
+
+.swap-partner-stats span {
+    font-size: 11px;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 2px 8px;
+    background: var(--surface-1);
+}
+
+.swap-deferred-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: #0f766e;
+    background: rgba(20, 184, 166, 0.12);
+    border-radius: 999px;
+    padding: 2px 8px;
+}
+
 .swap-urgency {
     font-size: 11px;
     font-weight: 700;
@@ -180,8 +225,11 @@
 
 .swap-item-actions {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 8px;
     flex-shrink: 0;
+    max-width: 420px;
 }
 
 .swap-item .btn {

@@ -44,6 +44,15 @@ function getUrgencyLabel(swap) {
     return { className: 'swap-urgency low', text: 'Новий' };
 }
 
+function formatPercent(value) {
+    return `${Math.max(0, Number(value || 0))}%`;
+}
+
+function formatRating(value) {
+    const num = Number(value || 0);
+    return num > 0 ? num.toFixed(1) : '0.0';
+}
+
 export default function IncomingSwapsPage() {
     const navigate = useNavigate();
     const [swaps, setSwaps] = useState([]);
@@ -149,6 +158,27 @@ export default function IncomingSwapsPage() {
         }
     }
 
+    async function handleDefer(swapId) {
+        setProcessing(swapId);
+        try {
+            const response = await api.post(`/swaps/${swapId}/defer`, {
+                note: 'Відкладено користувачем з вхідних запитів',
+            });
+            const deferredUntil = response.data?.deferredUntil;
+            toast.success(deferredUntil ? `Відкладено до ${new Date(deferredUntil).toLocaleString('uk-UA')}` : 'Відкладено');
+            setSwaps((prev) => prev.map((item) => (item.id === swapId ? { ...item, deferredByMe: true } : item)));
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося відкласти обмін');
+        } finally {
+            setProcessing(null);
+        }
+    }
+
+    function openMatchChatWithPrefill(swapId, messageText) {
+        const prefill = encodeURIComponent(messageText);
+        navigate(`/support/chats?thread=match-${swapId}&prefill=${prefill}`);
+    }
+
     if (loading) {
         return (
             <div className="dashboard-loading">
@@ -246,6 +276,21 @@ export default function IncomingSwapsPage() {
                                         Тип: {swap.offer?.type === 'subs' ? 'Підписники' : 'Перегляди'}
                                     </span>
                                     {swap.offer?.description && <p className="swap-item-desc">{swap.offer.description}</p>}
+                                    {swap.compatibility && (
+                                        <div className="swap-compatibility">
+                                            <strong>Сумісність: {formatPercent(swap.compatibility.score)}</strong>
+                                            <small>{(swap.compatibility.reasons || []).join(' • ')}</small>
+                                        </div>
+                                    )}
+                                    {swap.partnerStats && (
+                                        <div className="swap-partner-stats">
+                                            <span>Influence: {swap.partnerStats.influenceScore}</span>
+                                            <span>Успішність: {formatPercent(swap.partnerStats.successRate)}</span>
+                                            <span>Завершено: {swap.partnerStats.completedExchanges}</span>
+                                            <span>Рейтинг: {formatRating(swap.partnerStats.avgRating)} ({swap.partnerStats.reviewCount})</span>
+                                        </div>
+                                    )}
+                                    {swap.deferredByMe && <span className="swap-deferred-tag">Відкладено</span>}
                                     <span className="swap-item-time">{timeAgo(swap.createdAt)}</span>
                                 </div>
 
@@ -259,6 +304,25 @@ export default function IncomingSwapsPage() {
                                     </button>
                                     {swap.status === 'pending' && (
                                         <>
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => openMatchChatWithPrefill(swap.id, 'Привіт! Давайте уточнимо умови обміну: формат, дедлайн та очікуваний результат.')}
+                                            >
+                                                Уточнити умови
+                                            </button>
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => openMatchChatWithPrefill(swap.id, 'Пропоную інший формат обміну: можемо змінити тип або обсяг взаємодії.')}
+                                            >
+                                                Інший формат
+                                            </button>
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => handleDefer(swap.id)}
+                                                disabled={processing === swap.id}
+                                            >
+                                                Відкласти
+                                            </button>
                                             <button className="btn btn-primary btn-sm" onClick={() => handleAccept(swap.id)} disabled={processing === swap.id}>
                                                 Прийняти
                                             </button>
@@ -269,6 +333,19 @@ export default function IncomingSwapsPage() {
                                     )}
                                     {swap.status === 'accepted' && (
                                         <>
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => openMatchChatWithPrefill(swap.id, 'Погоджуємо умови обміну. Підтвердіть, будь ласка, поточний статус виконання.')}
+                                            >
+                                                Уточнити умови
+                                            </button>
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => handleDefer(swap.id)}
+                                                disabled={processing === swap.id}
+                                            >
+                                                Відкласти
+                                            </button>
                                             <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/support/chats?thread=match-${swap.id}`)}>
                                                 Повідомлення
                                             </button>
