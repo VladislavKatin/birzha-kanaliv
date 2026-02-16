@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { auth } from './firebase';
+import { buildAuthRedirectPath } from './navigation';
 
 const defaultApiBaseUrl = import.meta.env.DEV ? '/api' : `${window.location.origin}/api`;
 
@@ -48,6 +49,17 @@ api.interceptors.request.use(async (config) => {
 // Handle response errors
 let isRedirecting = false;
 
+function dispatchUnauthorizedRedirect() {
+    const targetPath = `${window.location.pathname || '/'}${window.location.search || ''}`;
+    const authPath = buildAuthRedirectPath(targetPath);
+    window.dispatchEvent(new CustomEvent('app:unauthorized', {
+        detail: {
+            authPath,
+            targetPath,
+        },
+    }));
+}
+
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -75,7 +87,7 @@ api.interceptors.response.use(
                 isRedirecting = true;
                 setTimeout(() => {
                     isRedirecting = false;
-                    window.location.href = '/auth';
+                    dispatchUnauthorizedRedirect();
                 }, 100);
             }
         }

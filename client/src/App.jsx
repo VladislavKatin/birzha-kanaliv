@@ -1,10 +1,11 @@
-п»їimport { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './stores/authStore';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
+import { buildAuthRedirectPath } from './services/navigation';
 
 const HomePage = lazy(() => import('./pages/public/HomePage'));
 const BlogListPage = lazy(() => import('./pages/public/BlogListPage'));
@@ -44,7 +45,7 @@ function PageFallback() {
     return (
         <div className="dashboard-loading">
             <div className="loading-pulse" />
-            <p>Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ СЃС‚РѕСЂС–РЅРєРё...</p>
+            <p>Завантаження сторінки...</p>
         </div>
     );
 }
@@ -55,10 +56,38 @@ function LegacyChatRedirect() {
     return <Navigate to={`/support/chats?thread=${threadId}`} replace />;
 }
 
+function UnauthorizedRedirectBridge() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        function handleUnauthorizedRedirect(event) {
+            const details = event?.detail || {};
+            const targetPath = typeof details.targetPath === 'string'
+                ? details.targetPath
+                : `${window.location.pathname || '/'}${window.location.search || ''}`;
+            const authPath = typeof details.authPath === 'string'
+                ? details.authPath
+                : buildAuthRedirectPath(targetPath);
+
+            if ((window.location.pathname || '') === '/auth') {
+                return;
+            }
+
+            navigate(authPath, { replace: true });
+        }
+
+        window.addEventListener('app:unauthorized', handleUnauthorizedRedirect);
+        return () => window.removeEventListener('app:unauthorized', handleUnauthorizedRedirect);
+    }, [navigate]);
+
+    return null;
+}
+
 export default function App() {
     return (
         <BrowserRouter>
             <AuthInit>
+                <UnauthorizedRedirectBridge />
                 <Toaster
                     position="top-right"
                     toastOptions={{
