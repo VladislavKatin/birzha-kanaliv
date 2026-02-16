@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import { resolvePostAuthPath } from '../../services/navigation';
 import './AuthPage.css';
@@ -24,8 +25,10 @@ export default function AuthPage() {
             if (result?.method === 'popup') {
                 navigate(nextPath);
             }
-        } catch {
-            // Error text is already set in auth store
+        } catch (signInError) {
+            if (!error) {
+                toast.error(signInError?.response?.data?.error || 'Не вдалося увійти через Google');
+            }
         } finally {
             setIsLoading(false);
         }

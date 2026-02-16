@@ -100,7 +100,8 @@ export default function EditProfilePage() {
         try {
             const response = await api.get('/profile/network-info');
             setNetworkInfo(response.data || null);
-        } catch {
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося отримати мережеву інформацію');
             setNetworkInfo(null);
         } finally {
             setNetworkLoading(false);
@@ -125,8 +126,8 @@ export default function EditProfilePage() {
             try {
                 await api.post('/profile/avatar', { avatar: base64 });
                 toast.success('Аватар оновлено');
-            } catch {
-                toast.error('Не вдалося завантажити аватар');
+            } catch (error) {
+                toast.error(error?.response?.data?.error || 'Не вдалося завантажити аватар');
             }
         };
         reader.readAsDataURL(file);
@@ -187,8 +188,8 @@ export default function EditProfilePage() {
             anchor.click();
             URL.revokeObjectURL(url);
             toast.success('Дані завантажено');
-        } catch {
-            toast.error('Не вдалося експортувати дані');
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося експортувати дані');
         }
     }
 
@@ -199,8 +200,8 @@ export default function EditProfilePage() {
             await api.delete('/gdpr/account', { data: { confirmation: 'DELETE_MY_ACCOUNT' } });
             toast.success('Акаунт видалено');
             navigate('/auth');
-        } catch {
-            toast.error('Не вдалося видалити акаунт');
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося видалити акаунт');
         }
     }
 
