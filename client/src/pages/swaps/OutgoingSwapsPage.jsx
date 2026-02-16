@@ -5,6 +5,10 @@ import toast from 'react-hot-toast';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './SwapsPage.css';
 
+function getApiErrorMessage(error, fallbackMessage) {
+    return error?.response?.data?.error || fallbackMessage;
+}
+
 function formatNumber(num) {
     if (!num) return '0';
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
@@ -30,17 +34,22 @@ export default function OutgoingSwapsPage() {
     const navigate = useNavigate();
     const [swaps, setSwaps] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
 
     useEffect(() => {
         loadSwaps();
     }, []);
 
     async function loadSwaps() {
+        setLoadError('');
         try {
             const response = await api.get('/swaps/outgoing');
             setSwaps(response.data.swaps || []);
-        } catch (error) {
-            console.error('Failed to load outgoing swaps:', error);
+        } catch (loadSwapsError) {
+            console.error('Failed to load outgoing swaps:', loadSwapsError);
+            const message = getApiErrorMessage(loadSwapsError, 'Не вдалося завантажити вихідні запити.');
+            setLoadError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -51,8 +60,8 @@ export default function OutgoingSwapsPage() {
             await api.post(`/swaps/${swapId}/decline`);
             toast.success('Пропозицію скасовано');
             setSwaps((prev) => prev.filter((item) => item.id !== swapId));
-        } catch {
-            toast.error('Не вдалося скасувати пропозицію');
+        } catch (cancelError) {
+            toast.error(getApiErrorMessage(cancelError, 'Не вдалося скасувати пропозицію'));
         }
     }
 
@@ -72,6 +81,21 @@ export default function OutgoingSwapsPage() {
             <div className="dashboard-loading">
                 <div className="loading-pulse" />
                 <p>Завантаження...</p>
+            </div>
+        );
+    }
+
+    if (loadError && swaps.length === 0) {
+        return (
+            <div className="swaps-page">
+                <div className="swaps-empty card">
+                    <span className="swaps-empty-icon">!</span>
+                    <h3>Помилка завантаження</h3>
+                    <p>{loadError}</p>
+                    <button className="btn btn-secondary btn-sm" onClick={loadSwaps}>
+                        Спробувати ще раз
+                    </button>
+                </div>
             </div>
         );
     }

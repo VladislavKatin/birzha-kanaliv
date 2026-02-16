@@ -1,9 +1,14 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './ChannelsPage.css';
+
+function getApiErrorMessage(error, fallbackMessage) {
+    return error?.response?.data?.error || fallbackMessage;
+}
 
 function formatNumber(num) {
     if (!num) return '0';
@@ -30,13 +35,18 @@ export default function ChannelDetailPage() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [loadError, setLoadError] = useState('');
 
     const loadChannel = useCallback(async () => {
+        setLoadError('');
         try {
             const response = await api.get(`/channels/${id}`);
             setData(response.data);
-        } catch (error) {
-            console.error('Failed to load channel:', error);
+        } catch (loadChannelError) {
+            console.error('Failed to load channel:', loadChannelError);
+            const message = getApiErrorMessage(loadChannelError, 'Не вдалося завантажити канал.');
+            setLoadError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -51,8 +61,9 @@ export default function ChannelDetailPage() {
         try {
             await api.post('/youtube/refresh');
             await loadChannel();
-        } catch (error) {
-            console.error('Refresh failed:', error);
+        } catch (refreshError) {
+            console.error('Refresh failed:', refreshError);
+            toast.error(getApiErrorMessage(refreshError, 'Не вдалося оновити статистику каналу.'));
         } finally {
             setRefreshing(false);
         }
@@ -62,8 +73,9 @@ export default function ChannelDetailPage() {
         try {
             await api.put(`/channels/${id}`, { isActive });
             setData((prev) => ({ ...prev, channel: { ...prev.channel, isActive } }));
-        } catch (error) {
-            console.error('Toggle failed:', error);
+        } catch (toggleError) {
+            console.error('Toggle failed:', toggleError);
+            toast.error(getApiErrorMessage(toggleError, 'Не вдалося змінити статус каналу.'));
         }
     }
 
@@ -73,8 +85,9 @@ export default function ChannelDetailPage() {
         try {
             await api.delete(`/channels/${id}`);
             navigate('/my-channels');
-        } catch (error) {
-            console.error('Delete failed:', error);
+        } catch (deleteError) {
+            console.error('Delete failed:', deleteError);
+            toast.error(getApiErrorMessage(deleteError, 'Не вдалося видалити канал.'));
         }
     }
 
@@ -90,7 +103,7 @@ export default function ChannelDetailPage() {
     if (!data?.channel) {
         return (
             <div className="channels-empty card">
-                <h3>Канал не знайдено</h3>
+                <h3>{loadError || 'Канал не знайдено'}</h3>
                 <button className="btn btn-secondary" onClick={() => navigate('/my-channels')}>
                     ← Назад
                 </button>
@@ -251,5 +264,3 @@ export default function ChannelDetailPage() {
         </div>
     );
 }
-
-

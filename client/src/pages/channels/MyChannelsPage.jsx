@@ -1,26 +1,36 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import ChannelCard from './ChannelCard';
 import './ChannelsPage.css';
+
+function getApiErrorMessage(error, fallbackMessage) {
+    return error?.response?.data?.error || fallbackMessage;
+}
 
 export default function MyChannelsPage() {
     const { connectYouTube, error } = useAuthStore();
     const navigate = useNavigate();
     const [channels, setChannels] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
 
     useEffect(() => {
         loadChannels();
     }, []);
 
     async function loadChannels() {
+        setLoadError('');
         try {
             const response = await api.get('/channels/my');
             setChannels(response.data.channels || []);
-        } catch (error) {
-            console.error('Failed to load channels:', error);
+        } catch (loadChannelsError) {
+            console.error('Failed to load channels:', loadChannelsError);
+            const message = getApiErrorMessage(loadChannelsError, 'Не вдалося завантажити канали.');
+            setLoadError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -30,8 +40,9 @@ export default function MyChannelsPage() {
         try {
             await api.put(`/channels/${channelId}`, { isActive });
             setChannels((prev) => prev.map((channel) => (channel.id === channelId ? { ...channel, isActive } : channel)));
-        } catch (error) {
-            console.error('Toggle failed:', error);
+        } catch (toggleError) {
+            console.error('Toggle failed:', toggleError);
+            toast.error(getApiErrorMessage(toggleError, 'Не вдалося оновити статус каналу.'));
         }
     }
 
@@ -39,8 +50,9 @@ export default function MyChannelsPage() {
         try {
             await api.delete(`/channels/${channelId}`);
             setChannels((prev) => prev.filter((channel) => channel.id !== channelId));
-        } catch (error) {
-            console.error('Delete failed:', error);
+        } catch (deleteError) {
+            console.error('Delete failed:', deleteError);
+            toast.error(getApiErrorMessage(deleteError, 'Не вдалося видалити канал.'));
         }
     }
 
@@ -60,10 +72,18 @@ export default function MyChannelsPage() {
                     <h1>Мої канали</h1>
                     <p className="channels-subtitle">Управління підключеними YouTube-каналами</p>
                     {error ? <p className="error-text">{error}</p> : null}
+                    {loadError ? <p className="error-text">{loadError}</p> : null}
                 </div>
-                <button className="btn btn-primary" onClick={connectYouTube}>
-                    Підключити канал
-                </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    {loadError ? (
+                        <button className="btn btn-secondary" onClick={loadChannels}>
+                            Оновити
+                        </button>
+                    ) : null}
+                    <button className="btn btn-primary" onClick={connectYouTube}>
+                        Підключити канал
+                    </button>
+                </div>
             </div>
 
             {channels.length === 0 ? (
