@@ -7,6 +7,7 @@ const { ensureAutoOffersForChannels } = require('../services/autoOfferService');
 const { resolveClientRedirectUrl } = require('../config/clientOrigins');
 const { encodeState, decodeState } = require('../services/oauthStateService');
 const { encryptToken, decryptToken } = require('../services/tokenCryptoService');
+const { normalizeOptionalString } = require('../utils/validators');
 
 /**
  * @route GET /api/youtube/connect
@@ -352,7 +353,16 @@ router.post('/refresh', auth, async (req, res) => {
  */
 router.put('/profile', auth, async (req, res) => {
     try {
-        const { niche, language } = req.body;
+        const niche = normalizeOptionalString(req.body?.niche);
+        const language = normalizeOptionalString(req.body?.language);
+
+        if (niche !== null && niche.length > 80) {
+            return res.status(400).json({ error: 'Ніша занадто довга (максимум 80 символів)' });
+        }
+        if (language !== null && language.length > 16) {
+            return res.status(400).json({ error: 'Значення мови занадто довге (максимум 16 символів)' });
+        }
+
         const user = await User.findOne({ where: { firebaseUid: req.firebaseUser.uid } });
         if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -361,8 +371,8 @@ router.put('/profile', auth, async (req, res) => {
 
         await sequelize.transaction(async (transaction) => {
             await account.update({
-                niche: niche || account.niche,
-                language: language || account.language,
+                niche: niche ?? account.niche,
+                language: language ?? account.language,
             }, { transaction });
 
             await ActionLog.create({

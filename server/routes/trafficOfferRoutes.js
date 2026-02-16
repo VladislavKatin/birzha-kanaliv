@@ -6,6 +6,7 @@ const { getUserChannelsByFirebaseUid, resolveActionChannelId } = require('../ser
 const { getSystemLimits } = require('../services/systemLimitsService');
 const { ensureAutoOffersForChannels } = require('../services/autoOfferService');
 const { sendTelegramNotificationToUser } = require('../services/telegramService');
+const { normalizeOptionalString, parseInteger, isEnumValue } = require('../utils/validators');
 
 function handleChannelSelectionError(res, errorCode, noChannelMessage) {
     if (errorCode === 'NO_CHANNELS_CONNECTED') {
@@ -18,6 +19,46 @@ function handleChannelSelectionError(res, errorCode, noChannelMessage) {
         return res.status(400).json({ error: 'channelId is required when multiple channels are connected' });
     }
     return res.status(400).json({ error: 'Invalid channel selection' });
+}
+
+function validateOfferPayload(body) {
+    const type = body?.type;
+    const description = normalizeOptionalString(body?.description);
+    const niche = normalizeOptionalString(body?.niche);
+    const language = normalizeOptionalString(body?.language);
+    const minSubscribers = parseInteger(body?.minSubscribers, 0);
+    const maxSubscribers = parseInteger(body?.maxSubscribers, 0);
+
+    if (!isEnumValue(type, ['subs', 'views'])) {
+        return { error: 'Type must be "subs" or "views"' };
+    }
+
+    if (description && description.length > 4000) {
+        return { error: 'Опис занадто довгий (максимум 4000 символів)' };
+    }
+    if (niche && niche.length > 80) {
+        return { error: 'Ніша занадто довга (максимум 80 символів)' };
+    }
+    if (language && language.length > 24) {
+        return { error: 'Значення мови занадто довге (максимум 24 символи)' };
+    }
+    if (minSubscribers < 0 || maxSubscribers < 0) {
+        return { error: 'Кількість підписників не може бути від’ємною' };
+    }
+    if (maxSubscribers > 0 && minSubscribers > maxSubscribers) {
+        return { error: 'Мінімальна кількість підписників не може перевищувати максимальну' };
+    }
+
+    return {
+        value: {
+            type,
+            description,
+            niche,
+            language,
+            minSubscribers,
+            maxSubscribers,
+        },
+    };
 }
 
 router.post('/', auth, async (req, res) => {
@@ -78,11 +119,11 @@ router.post('/', auth, async (req, res) => {
             }
         }
 
-        const { type, description, niche, language, minSubscribers, maxSubscribers } = req.body;
-
-        if (!type || !['subs', 'views'].includes(type)) {
-            return res.status(400).json({ error: 'Type must be "subs" or "views"' });
+        const validated = validateOfferPayload(req.body || {});
+        if (validated.error) {
+            return res.status(400).json({ error: validated.error });
         }
+        const { type, description, niche, language, minSubscribers, maxSubscribers } = validated.value;
 
         const transaction = await sequelize.transaction();
 

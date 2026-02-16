@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { sequelize, User, YouTubeAccount, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
 const { logInfo, logError } = require('../services/logger');
+const { isNonEmptyString } = require('../utils/validators');
 
 /**
  * @route POST /api/auth/login
@@ -12,6 +13,9 @@ const { logInfo, logError } = require('../services/logger');
 router.post('/login', auth, async (req, res) => {
     try {
         const { uid, email, name, picture } = req.firebaseUser;
+        if (!isNonEmptyString(uid) || !isNonEmptyString(email)) {
+            return res.status(400).json({ error: 'Некоректні дані авторизації' });
+        }
         logInfo('auth.login.request', { firebaseUid: uid });
 
         let user;

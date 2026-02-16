@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 const { getAllowedClientOrigins } = require('./config/clientOrigins');
+const requestId = require('./middleware/requestId');
 
 const path = require('path');
 
@@ -30,6 +31,7 @@ function corsOriginValidator(origin, callback) {
 
 // Middleware
 app.use(helmet());
+app.use(requestId);
 app.use(cors({
     origin: corsOriginValidator,
     credentials: true
