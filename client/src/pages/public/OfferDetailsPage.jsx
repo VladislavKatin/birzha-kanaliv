@@ -33,6 +33,7 @@ export default function OfferDetailsPage() {
     const { user } = useAuthStore();
 
     const [offer, setOffer] = useState(null);
+    const [offerError, setOfferError] = useState('');
     const [loading, setLoading] = useState(true);
     const [responding, setResponding] = useState(false);
     const [myChannels, setMyChannels] = useState([]);
@@ -44,15 +45,17 @@ export default function OfferDetailsPage() {
 
         async function loadOffer() {
             setLoading(true);
+            setOfferError('');
             try {
                 const response = await api.get(`/offers/${offerId}`);
                 if (cancelled) {
                     return;
                 }
                 setOffer(response.data.offer || null);
-            } catch {
+            } catch (error) {
                 if (!cancelled) {
                     setOffer(null);
+                    setOfferError(error.response?.data?.error || 'Пропозицію не знайдено або її вже закрито.');
                 }
             } finally {
                 if (!cancelled) {
@@ -90,6 +93,7 @@ export default function OfferDetailsPage() {
             } catch {
                 if (!cancelled) {
                     setMyChannels([]);
+                    toast.error('Не вдалося завантажити ваші канали.');
                 }
             }
         }
@@ -140,7 +144,7 @@ export default function OfferDetailsPage() {
                     {loading ? (
                         <div className="offer-details-empty">Завантаження пропозиції...</div>
                     ) : !offer ? (
-                        <div className="offer-details-empty">Пропозицію не знайдено або її вже закрито.</div>
+                        <div className="offer-details-empty">{offerError || 'Пропозицію не знайдено або її вже закрито.'}</div>
                     ) : (
                         <article className="offer-details-card">
                             <header className="offer-details-head">
