@@ -22,6 +22,8 @@ export default function Footer() {
                         <a key={item.href} href={item.href}>{item.label}</a>
                     ))}
                     <Link to="/offers">Пропозиції</Link>
+                    <Link to="/faq">FAQ</Link>
+                    <Link to="/privacy-policy">Privacy Policy</Link>
                     <Link to="/auth">Увійти</Link>
                 </div>
                 <div className="footer-copy">
