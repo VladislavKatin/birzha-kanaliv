@@ -41,6 +41,7 @@ async function runApiSmokeFunctionalTests() {
         });
 
         await smokeIncomingSwapsFilters(baseUrl);
+        await smokeOutgoingSwapsFilters(baseUrl);
         await smokeSwapDefer(baseUrl, declineFlow.matchId, OFFER_OWNER_UID);
         await smokeSwapDecline(baseUrl, declineFlow.matchId, RESPONDER_UID);
 
@@ -184,6 +185,35 @@ async function smokeIncomingSwapsFilters(baseUrl) {
         method: 'GET',
         path: '/api/swaps/incoming?status=pending&sort=largest&search=smoke-offer-decline',
         uid: OFFER_OWNER_UID,
+    });
+
+    assert.equal(filtered.status, 200);
+    assert.equal(Array.isArray(filtered.body.swaps), true);
+    assert.equal(
+        filtered.body.swaps.every((swap) => swap.status === 'pending'),
+        true
+    );
+    if (filtered.body.swaps.length > 0) {
+        const sample = filtered.body.swaps[0];
+        assert.equal(typeof sample.partnerStats?.influenceScore, 'number');
+        assert.equal(Array.isArray(sample.compatibility?.reasons), true);
+    }
+}
+
+async function smokeOutgoingSwapsFilters(baseUrl) {
+    const allOutgoing = await request(baseUrl, {
+        method: 'GET',
+        path: '/api/swaps/outgoing',
+        uid: RESPONDER_UID,
+    });
+
+    assert.equal(allOutgoing.status, 200);
+    assert.equal(Array.isArray(allOutgoing.body.swaps), true);
+
+    const filtered = await request(baseUrl, {
+        method: 'GET',
+        path: '/api/swaps/outgoing?status=pending&sort=relevance&search=smoke-offer-decline',
+        uid: RESPONDER_UID,
     });
 
     assert.equal(filtered.status, 200);

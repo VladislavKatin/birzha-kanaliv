@@ -376,6 +376,9 @@ router.get('/outgoing', auth, async (req, res) => {
         const result = await getUserChannels(req.firebaseUser.uid);
         if (!result) return res.status(404).json({ error: 'User not found' });
         if (result.channelIds.length === 0) return res.json({ swaps: [] });
+        const statusFilter = parseIncomingStatus(req.query.status);
+        const sort = parseIncomingSort(req.query.sort);
+        const search = String(normalizeOptionalString(req.query.search) || '').toLowerCase();
 
         const swaps = await TrafficMatch.findAll({
             where: {
@@ -385,14 +388,20 @@ router.get('/outgoing', auth, async (req, res) => {
             include: [
                 {
                     model: YouTubeAccount,
+                    as: 'initiatorChannel',
+                    attributes: ['id', 'channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'niche', 'language'],
+                    include: [{ model: User, as: 'owner', attributes: ['displayName', 'photoURL'] }],
+                },
+                {
+                    model: YouTubeAccount,
                     as: 'targetChannel',
-                    attributes: ['id', 'channelTitle', 'channelAvatar', 'subscribers', 'niche'],
+                    attributes: ['id', 'channelId', 'channelTitle', 'channelAvatar', 'subscribers', 'niche', 'language'],
                     include: [{ model: User, as: 'owner', attributes: ['displayName', 'photoURL'] }],
                 },
                 {
                     model: TrafficOffer,
                     as: 'offer',
-                    attributes: ['type', 'description', 'niche'],
+                    attributes: ['type', 'description', 'niche', 'language'],
                 },
                 {
                     model: Review,
@@ -404,22 +413,96 @@ router.get('/outgoing', auth, async (req, res) => {
             order: [['createdAt', 'DESC']],
         });
 
-        const serialized = swaps.map((swap) => {
+        const baseSwaps = swaps.map((swap) => {
             const plain = swap.toJSON();
             const myChannelId = plain.initiatorChannelId;
             const hasReviewed = Array.isArray(plain.reviews)
                 ? plain.reviews.some((review) => review.fromChannelId === myChannelId)
                 : false;
-            const sla = getSlaInfo(plain);
             return {
                 ...plain,
                 myChannelId,
                 hasReviewed,
+            };
+        });
+
+        const targetChannelIds = Array.from(new Set(baseSwaps.map((swap) => swap.targetChannelId).filter(Boolean)));
+        const partnerStatsMap = await buildPartnerStatsMap(targetChannelIds);
+
+        const matchIds = Array.from(new Set(baseSwaps.map((swap) => swap.id).filter(Boolean)));
+        const deferLogs = await ActionLog.findAll({
+            where: {
+                userId: result.user.id,
+                action: 'swap_deferred',
+            },
+            attributes: ['details', 'createdAt'],
+            order: [['createdAt', 'DESC']],
+            limit: 500,
+        });
+
+        const deferredMatchIds = new Set();
+        deferLogs.forEach((log) => {
+            const matchId = log?.details?.matchId;
+            if (matchId && matchIds.includes(matchId)) {
+                deferredMatchIds.add(matchId);
+            }
+        });
+
+        const serialized = baseSwaps.map((swap) => {
+            const compatibility = getCompatibilityInsights(swap);
+            const sla = getSlaInfo(swap);
+            return {
+                ...swap,
+                partnerStats: partnerStatsMap.get(swap.targetChannelId) || {
+                    completedExchanges: 0,
+                    totalExchanges: 0,
+                    successRate: 0,
+                    reviewCount: 0,
+                    avgRating: 0,
+                    influenceScore: 0,
+                },
+                compatibility,
+                deferredByMe: deferredMatchIds.has(swap.id),
+                relevanceScore: Math.max(getRelevanceScore(swap), compatibility.score),
                 ...sla,
             };
         });
 
-        res.json({ swaps: serialized });
+        let filtered = serialized;
+
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter((swap) => swap.status === statusFilter);
+        }
+
+        if (search) {
+            filtered = filtered.filter((swap) => {
+                const haystack = [
+                    swap.targetChannel?.channelTitle || '',
+                    swap.targetChannel?.channelId || '',
+                    swap.offer?.description || '',
+                    swap.offer?.niche || '',
+                ]
+                    .join(' ')
+                    .toLowerCase();
+                return haystack.includes(search);
+            });
+        }
+
+        if (sort === 'largest') {
+            filtered = filtered.sort((a, b) => {
+                const diff = Number(b.targetChannel?.subscribers || 0) - Number(a.targetChannel?.subscribers || 0);
+                if (diff !== 0) return diff;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+        } else if (sort === 'relevance') {
+            filtered = filtered.sort((a, b) => {
+                const diff = Number(b.relevanceScore || 0) - Number(a.relevanceScore || 0);
+                if (diff !== 0) return diff;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+        }
+
+        res.json({ swaps: filtered });
     } catch (error) {
         console.error('Get outgoing swaps error:', error);
         res.status(500).json({ error: 'Failed to get outgoing swaps' });
