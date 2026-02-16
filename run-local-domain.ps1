@@ -21,12 +21,11 @@ function Resolve-CloudflaredPath {
         return $localPath
     }
 
-    throw "cloudflared не найден. Установите cloudflared или добавьте его в PATH."
+    throw "cloudflared was not found. Install cloudflared or add it to PATH."
 }
 
 function Start-WindowProcess {
     param(
-        [Parameter(Mandatory = $true)][string]$Name,
         [Parameter(Mandatory = $true)][string]$WorkDir,
         [Parameter(Mandatory = $true)][string]$Command
     )
@@ -40,37 +39,37 @@ $cloudflaredConfig = Join-Path $env:USERPROFILE ".cloudflared\config.yml"
 $domain = "birzha-kanaliv.biz.ua"
 
 Write-Host "========================================"
-Write-Host "  Birzha Kanaliv Local Domain Launcher  "
+Write-Host "   Birzha Kanaliv Local Domain Launcher "
 Write-Host "========================================"
 Write-Host ""
 
-Write-Step "Проверка окружения..."
+Write-Step "Checking environment..."
 if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
-    throw "npm не найден в PATH."
+    throw "npm was not found in PATH."
 }
 
 $cloudflaredExe = Resolve-CloudflaredPath
 if (-not (Test-Path $cloudflaredConfig)) {
-    throw "Не найден файл конфигурации cloudflared: $cloudflaredConfig"
+    throw "cloudflared config was not found: $cloudflaredConfig"
 }
 
-Write-Step "Запуск backend/frontend в отдельных окнах..."
+Write-Step "Starting backend/frontend in separate windows..."
 $processes = @()
-$processes += Start-WindowProcess -Name "API" -WorkDir (Join-Path $root "server") -Command "npm.cmd run dev"
-$processes += Start-WindowProcess -Name "Client" -WorkDir (Join-Path $root "client") -Command "npm.cmd run dev"
+$processes += Start-WindowProcess -WorkDir (Join-Path $root "server") -Command "npm.cmd run dev"
+$processes += Start-WindowProcess -WorkDir (Join-Path $root "client") -Command "npm.cmd run dev"
 
 if ($WithAdmin) {
-    $processes += Start-WindowProcess -Name "Admin" -WorkDir (Join-Path $root "admin-frontend") -Command "npm.cmd run dev"
+    $processes += Start-WindowProcess -WorkDir (Join-Path $root "admin-frontend") -Command "npm.cmd run dev"
 }
 
-Write-Step "Запуск cloudflared tunnel через config.yml..."
+Write-Step "Starting cloudflared tunnel via config.yml..."
 $cloudflaredCommand = "& '$cloudflaredExe' tunnel --config '$cloudflaredConfig' run"
-$processes += Start-WindowProcess -Name "Cloudflared" -WorkDir $root -Command $cloudflaredCommand
+$processes += Start-WindowProcess -WorkDir $root -Command $cloudflaredCommand
 
-Write-Step "Ожидание запуска сервисов..."
+Write-Step "Waiting for services to start..."
 Start-Sleep -Seconds 6
 
-Write-Step "Открытие сайта в браузере..."
+Write-Step "Opening site in browser..."
 Start-Process "https://$domain"
 
 Write-Host ""
@@ -81,10 +80,10 @@ if ($WithAdmin) {
 }
 Write-Host "Domain:       https://$domain"
 Write-Host ""
-Write-Host "Нажмите Enter, чтобы остановить все запущенные процессы..." -ForegroundColor Yellow
+Write-Host "Press Enter to stop all started processes..." -ForegroundColor Yellow
 [void](Read-Host)
 
-Write-Step "Остановка процессов..."
+Write-Step "Stopping processes..."
 foreach ($process in $processes) {
     try {
         if ($process -and -not $process.HasExited) {
@@ -95,4 +94,4 @@ foreach ($process in $processes) {
     }
 }
 
-Write-Host "Готово." -ForegroundColor Green
+Write-Host "Done." -ForegroundColor Green
