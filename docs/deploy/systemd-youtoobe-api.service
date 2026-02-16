@@ -1,0 +1,19 @@
+[Unit]
+Description=Birzha Kanaliv API (Node.js)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/youtoobe/server
+Environment=NODE_ENV=production
+EnvironmentFile=/var/www/youtoobe/server/.env
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
