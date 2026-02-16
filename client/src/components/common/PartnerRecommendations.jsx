@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
+import { normalizeDisplayText } from '../../services/publicOffers';
 import './PartnerRecommendations.css';
 
 function formatNumber(num) {
@@ -52,22 +53,27 @@ export default function PartnerRecommendations() {
         <div className="partner-recs card">
             <h3>Рекомендовані партнери</h3>
             <div className="recs-grid">
-                {visibleRecs.map((channel) => (
-                    <div key={channel.id} className="rec-card">
-                        <img src={resolveChannelAvatar(channel.channelAvatar, channel.channelTitle)} data-fallback-src={buildFallbackAvatar(channel.channelTitle)} onError={handleAvatarError} alt={channel.channelTitle || 'Канал'} className="rec-avatar" />
-                        <div className="rec-info">
-                            <span className="rec-name">
-                                {channel.verified && <span className="verified-dot">✓</span>}
-                                {channel.channelTitle}
-                            </span>
-                            <span className="rec-subs">{formatNumber(channel.subscribers)} підп.</span>
-                            {channel.niche && <span className="rec-niche">{channel.niche}</span>}
+                {visibleRecs.map((channel) => {
+                    const safeTitle = normalizeDisplayText(channel.channelTitle, 'Канал');
+                    const safeNiche = normalizeDisplayText(channel.niche, '');
+
+                    return (
+                        <div key={channel.id} className="rec-card">
+                            <img src={resolveChannelAvatar(channel.channelAvatar, safeTitle)} data-fallback-src={buildFallbackAvatar(safeTitle)} onError={handleAvatarError} alt={safeTitle} className="rec-avatar" />
+                            <div className="rec-info">
+                                <span className="rec-name">
+                                    {channel.verified && <span className="verified-dot">✓</span>}
+                                    {safeTitle}
+                                </span>
+                                <span className="rec-subs">{formatNumber(channel.subscribers)} підп.</span>
+                                {safeNiche && <span className="rec-niche">{safeNiche}</span>}
+                            </div>
+                            <button className="btn btn-primary btn-sm" onClick={() => navigate('/offers')}>
+                                Запропонувати
+                            </button>
                         </div>
-                        <button className="btn btn-primary btn-sm" onClick={() => navigate('/offers')}>
-                            Запропонувати
-                        </button>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

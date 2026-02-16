@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+п»їimport { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
@@ -26,24 +26,24 @@ function fileToDataUrl(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result || ''));
-        reader.onerror = () => reject(new Error('Не вдалося прочитати файл'));
+        reader.onerror = () => reject(new Error('РќРµ РІРґР°Р»РѕСЃСЏ РїСЂРѕС‡РёС‚Р°С‚Рё С„Р°Р№Р»'));
         reader.readAsDataURL(file);
     });
 }
 
 function getThreadTitle(thread) {
-    if (thread.type === 'support') return 'Адміністрація';
-    return thread.partner?.channelTitle || 'Чат користувача';
+    if (thread.type === 'support') return 'РђРґРјС–РЅС–СЃС‚СЂР°С†С–СЏ';
+    return thread.partner?.channelTitle || 'Р§Р°С‚ РєРѕСЂРёСЃС‚СѓРІР°С‡Р°';
 }
 
 function getThreadSubtitle(thread) {
-    if (thread.type === 'support') return 'Підтримка та повідомлення про помилки';
+    if (thread.type === 'support') return 'РџС–РґС‚СЂРёРјРєР° С‚Р° РїРѕРІС–РґРѕРјР»РµРЅРЅСЏ РїСЂРѕ РїРѕРјРёР»РєРё';
     const statusMap = {
-        pending: 'Очікує підтвердження',
-        accepted: 'Активний обмін',
-        completed: 'Завершений обмін',
+        pending: 'РћС‡С–РєСѓС” РїС–РґС‚РІРµСЂРґР¶РµРЅРЅСЏ',
+        accepted: 'РђРєС‚РёРІРЅРёР№ РѕР±РјС–РЅ',
+        completed: 'Р—Р°РІРµСЂС€РµРЅРёР№ РѕР±РјС–РЅ',
     };
-    return statusMap[thread.status] || 'Обмін';
+    return statusMap[thread.status] || 'РћР±РјС–РЅ';
 }
 
 function getThreadAvatar(thread) {
@@ -51,7 +51,7 @@ function getThreadAvatar(thread) {
         return { image: '', fallback: 'A' };
     }
 
-    const title = thread.partner?.channelTitle || 'Канал';
+    const title = thread.partner?.channelTitle || 'РљР°РЅР°Р»';
     const image = resolveChannelAvatar(thread.partner?.channelAvatar, title);
     const fallback = buildFallbackAvatar(title);
     return { image, fallback };
@@ -187,7 +187,7 @@ export default function SupportChatsPage() {
             }
         } catch (error) {
             console.error('Failed to load messages workspace:', error);
-            toast.error(getApiErrorMessage(error, 'Не вдалося завантажити повідомлення.'));
+            toast.error(getApiErrorMessage(error, 'РќРµ РІРґР°Р»РѕСЃСЏ Р·Р°РІР°РЅС‚Р°Р¶РёС‚Рё РїРѕРІС–РґРѕРјР»РµРЅРЅСЏ.'));
             setThreads([{ id: 'support', type: 'support', lastMessage: null, lastMessageAt: new Date(0).toISOString() }]);
             setActiveThreadId('support');
         } finally {
@@ -211,7 +211,7 @@ export default function SupportChatsPage() {
             }
         } catch (error) {
             console.error('Failed to load thread messages:', error);
-            toast.error(getApiErrorMessage(error, 'Не вдалося завантажити чат.'));
+            toast.error(getApiErrorMessage(error, 'РќРµ РІРґР°Р»РѕСЃСЏ Р·Р°РІР°РЅС‚Р°Р¶РёС‚Рё С‡Р°С‚.'));
             setMessages([]);
         } finally {
             setLoadingMessages(false);
@@ -224,18 +224,18 @@ export default function SupportChatsPage() {
 
         try {
             if (!file.type.startsWith('image/')) {
-                toast.error('Можна додавати лише зображення.');
+                toast.error('РњРѕР¶РЅР° РґРѕРґР°РІР°С‚Рё Р»РёС€Рµ Р·РѕР±СЂР°Р¶РµРЅРЅСЏ.');
                 return;
             }
             if (file.size > MAX_IMAGE_BYTES) {
-                toast.error('Максимальний розмір зображення: 3 MB.');
+                toast.error('РњР°РєСЃРёРјР°Р»СЊРЅРёР№ СЂРѕР·РјС–СЂ Р·РѕР±СЂР°Р¶РµРЅРЅСЏ: 3 MB.');
                 return;
             }
             const dataUrl = await fileToDataUrl(file);
             setSelectedImage(dataUrl);
         } catch (error) {
             console.error(error);
-            toast.error('Не вдалося обробити зображення.');
+            toast.error('РќРµ РІРґР°Р»РѕСЃСЏ РѕР±СЂРѕР±РёС‚Рё Р·РѕР±СЂР°Р¶РµРЅРЅСЏ.');
         } finally {
             event.target.value = '';
         }
@@ -281,7 +281,7 @@ export default function SupportChatsPage() {
             setSelectedImage('');
         } catch (error) {
             console.error('Failed to send message:', error);
-            toast.error(getApiErrorMessage(error, 'Не вдалося надіслати повідомлення.'));
+            toast.error(getApiErrorMessage(error, 'РќРµ РІРґР°Р»РѕСЃСЏ РЅР°РґС–СЃР»Р°С‚Рё РїРѕРІС–РґРѕРјР»РµРЅРЅСЏ.'));
         } finally {
             setSending(false);
         }
@@ -304,16 +304,16 @@ export default function SupportChatsPage() {
     return (
         <div className="support-page">
             <div className="support-header">
-                <h1>Повідомлення</h1>
-                <p>Усі переписки в одному місці. Обирайте чат ліворуч і швидко перемикайтеся між діалогами.</p>
+                <h1>РџРѕРІС–РґРѕРјР»РµРЅРЅСЏ</h1>
+                <p>РЈСЃС– РїРµСЂРµРїРёСЃРєРё РІ РѕРґРЅРѕРјСѓ РјС–СЃС†С–. РћР±РёСЂР°Р№С‚Рµ С‡Р°С‚ Р»С–РІРѕСЂСѓС‡ С– С€РІРёРґРєРѕ РїРµСЂРµРјРёРєР°Р№С‚РµСЃСЏ РјС–Р¶ РґС–Р°Р»РѕРіР°РјРё.</p>
             </div>
 
             <section className="card support-workspace">
                 {loading ? (
-                    <div className="support-chat-empty">Завантаження чатів...</div>
+                    <div className="support-chat-empty">Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ С‡Р°С‚С–РІ...</div>
                 ) : (
                     <>
-                        <aside className="support-thread-list" aria-label="Список чатів">
+                        <aside className="support-thread-list" aria-label="РЎРїРёСЃРѕРє С‡Р°С‚С–РІ">
                             {threads.map((thread) => {
                                 const active = thread.id === activeThreadId;
                                 const avatar = getThreadAvatar(thread);
@@ -332,7 +332,7 @@ export default function SupportChatsPage() {
                                         <span className="support-thread-meta">
                                             <strong>{getThreadTitle(thread)}</strong>
                                             <small>{getThreadSubtitle(thread)}</small>
-                                            <em>{thread.lastMessage?.content || (thread.type === 'support' ? 'Напишіть адміністрації' : 'Відкрийте чат')}</em>
+                                            <em>{thread.lastMessage?.content || (thread.type === 'support' ? 'РќР°РїРёС€С–С‚СЊ Р°РґРјС–РЅС–СЃС‚СЂР°С†С–С—' : 'Р’С–РґРєСЂРёР№С‚Рµ С‡Р°С‚')}</em>
                                         </span>
                                     </button>
                                 );
@@ -341,15 +341,15 @@ export default function SupportChatsPage() {
 
                         <div className="support-chat-panel">
                             <div className="support-chat-topbar">
-                                <h2>{activeThread ? getThreadTitle(activeThread) : 'Чат'}</h2>
+                                <h2>{activeThread ? getThreadTitle(activeThread) : 'Р§Р°С‚'}</h2>
                                 <span>{activeThread ? getThreadSubtitle(activeThread) : ''}</span>
                             </div>
 
                             <div className="support-chat-list">
                                 {loadingMessages ? (
-                                    <div className="support-chat-empty">Завантаження повідомлень...</div>
+                                    <div className="support-chat-empty">Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ РїРѕРІС–РґРѕРјР»РµРЅСЊ...</div>
                                 ) : groupedMessages.length === 0 ? (
-                                    <div className="support-chat-empty">Повідомлень поки немає.</div>
+                                    <div className="support-chat-empty">РџРѕРІС–РґРѕРјР»РµРЅСЊ РїРѕРєРё РЅРµРјР°С”.</div>
                                 ) : (
                                     groupedMessages.map((item) => {
                                         if (item.type === 'date') {
@@ -365,12 +365,12 @@ export default function SupportChatsPage() {
                                             <div key={item.id} className={`support-chat-message ${mine ? 'mine' : 'theirs'}`}>
                                                 <div className="support-chat-bubble">
                                                     <div className="support-chat-author">
-                                                        {mine ? 'Ви' : (item.isAdmin ? 'Адміністрація' : (item.sender?.displayName || 'Користувач'))}
+                                                        {mine ? 'Р’Рё' : (item.isAdmin ? 'РђРґРјС–РЅС–СЃС‚СЂР°С†С–СЏ' : (item.sender?.displayName || 'РљРѕСЂРёСЃС‚СѓРІР°С‡'))}
                                                         {item.isAdmin && <span className="support-chat-role">ADMIN</span>}
                                                     </div>
                                                     {item.imageData && (
                                                         <a href={item.imageData} target="_blank" rel="noreferrer" className="support-chat-image-link">
-                                                            <img src={item.imageData} alt="Вкладення" className="support-chat-image" />
+                                                            <img src={item.imageData} alt="Р’РєР»Р°РґРµРЅРЅСЏ" className="support-chat-image" />
                                                         </a>
                                                     )}
                                                     {item.content && <p>{item.content}</p>}
@@ -401,14 +401,14 @@ export default function SupportChatsPage() {
 
                                 <div className="support-chat-controls">
                                     <button type="button" className="btn btn-secondary" onClick={() => fileInputRef.current?.click()}>
-                                        Додати зображення
+                                        Р”РѕРґР°С‚Рё Р·РѕР±СЂР°Р¶РµРЅРЅСЏ
                                     </button>
                                     <textarea
                                         className="support-chat-input"
                                         rows={2}
                                         value={inputValue}
                                         onChange={(event) => setInputValue(event.target.value)}
-                                        placeholder={activeThread?.type === 'support' ? 'Напишіть повідомлення адміністрації...' : 'Напишіть повідомлення користувачу...'}
+                                        placeholder={activeThread?.type === 'support' ? 'РќР°РїРёС€С–С‚СЊ РїРѕРІС–РґРѕРјР»РµРЅРЅСЏ Р°РґРјС–РЅС–СЃС‚СЂР°С†С–С—...' : 'РќР°РїРёС€С–С‚СЊ РїРѕРІС–РґРѕРјР»РµРЅРЅСЏ РєРѕСЂРёСЃС‚СѓРІР°С‡Сѓ...'}
                                     />
                                     <button
                                         type="button"
@@ -416,7 +416,7 @@ export default function SupportChatsPage() {
                                         onClick={handleSend}
                                         disabled={sending || (!inputValue.trim() && !selectedImage)}
                                     >
-                                        Надіслати
+                                        РќР°РґС–СЃР»Р°С‚Рё
                                     </button>
                                 </div>
                             </div>
@@ -427,6 +427,7 @@ export default function SupportChatsPage() {
         </div>
     );
 }
+
 
 
 

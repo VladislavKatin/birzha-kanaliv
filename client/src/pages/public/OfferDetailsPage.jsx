@@ -10,6 +10,7 @@ import {
     formatPublicNumber,
     getOfferTypeLabel,
     isDemoChannel,
+    normalizeDisplayText,
     normalizeOfferDescription,
 } from '../../services/publicOffers';
 import './OfferDetailsPage.css';
@@ -39,6 +40,7 @@ export default function OfferDetailsPage() {
     const [myChannels, setMyChannels] = useState([]);
     const [selectedChannelId, setSelectedChannelId] = useState('');
     const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+    const safeChannelTitle = normalizeDisplayText(offer?.channel?.channelTitle, 'Канал');
 
     useEffect(() => {
         let cancelled = false;
@@ -148,10 +150,10 @@ export default function OfferDetailsPage() {
                     ) : (
                         <article className="offer-details-card">
                             <header className="offer-details-head">
-                                <img src={resolveChannelAvatar(offer.channel?.channelAvatar, offer.channel?.channelTitle)} data-fallback-src={buildFallbackAvatar(offer.channel?.channelTitle)} onError={handleAvatarError} alt={offer.channel?.channelTitle || 'Канал'} />
+                                <img src={resolveChannelAvatar(offer.channel?.channelAvatar, safeChannelTitle)} data-fallback-src={buildFallbackAvatar(safeChannelTitle)} onError={handleAvatarError} alt={safeChannelTitle} />
                                 <div>
                                     <h1>
-                                        {offer.channel?.channelTitle || 'Канал'}
+                                        {safeChannelTitle}
                                         {isDemoChannel(offer.channel) && (
                                             <span className="demo-badge" title="Демо-канал" aria-label="Демо-канал">
                                                 DEMO
@@ -172,14 +174,14 @@ export default function OfferDetailsPage() {
                             <div className="offer-details-grid">
                                 <div>
                                     <h3>Опис пропозиції</h3>
-                                    <p>{normalizeOfferDescription(offer.description, offer.channel?.channelTitle) || 'Опис не вказаний.'}</p>
+                                    <p>{normalizeOfferDescription(offer.description, safeChannelTitle) || 'Опис не вказаний.'}</p>
                                 </div>
                                 <div>
                                     <h3>Параметри обміну</h3>
                                     <ul>
-                                        <li>Ніша: {offer.niche || 'Не вказано'}</li>
-                                        <li>Мова: {offer.language || 'Не вказано'}</li>
-                                        <li>Країна: {offer.channel?.country || 'Не вказано'}</li>
+                                        <li>Ніша: {normalizeDisplayText(offer.niche, 'Не вказано')}</li>
+                                        <li>Мова: {normalizeDisplayText(offer.language, 'Не вказано')}</li>
+                                        <li>Країна: {normalizeDisplayText(offer.channel?.country, 'Не вказано')}</li>
                                         <li>Мін. підписники: {formatPublicNumber(offer.minSubscribers || 0)}</li>
                                         <li>Макс. підписники: {offer.maxSubscribers ? formatPublicNumber(offer.maxSubscribers) : 'Без обмежень'}</li>
                                     </ul>
@@ -208,8 +210,8 @@ export default function OfferDetailsPage() {
                                 </button>
                                 {user && (
                                     <button
-                                        onClick={() => {
-                                            const prefill = encodeURIComponent(`Скарга на пропозицію ${offer.id} від каналу ${offer.channel?.channelTitle || 'Канал'}: `);
+                                            onClick={() => {
+                                            const prefill = encodeURIComponent(`Скарга на пропозицію ${offer.id} від каналу ${safeChannelTitle}: `);
                                             navigate(`/support/chats?prefill=${prefill}`);
                                         }}
                                     >

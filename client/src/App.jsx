@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+п»їimport { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './stores/authStore';
@@ -45,7 +45,7 @@ function PageFallback() {
     return (
         <div className="dashboard-loading">
             <div className="loading-pulse" />
-            <p>Завантаження сторінки...</p>
+            <p>Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ СЃС‚РѕСЂС–РЅРєРё...</p>
         </div>
     );
 }
@@ -139,3 +139,4 @@ export default function App() {
         </BrowserRouter>
     );
 }
+

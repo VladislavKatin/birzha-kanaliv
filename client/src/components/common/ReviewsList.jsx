@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
+import { normalizeDisplayText } from '../../services/publicOffers';
 
 function renderStars(rating) {
     const safeRating = Math.max(0, Math.min(5, Number(rating) || 0));
@@ -72,19 +73,24 @@ export default function ReviewsList({ channelIds }) {
 
     return (
         <div className="reviews-list">
-            {reviews.map((review) => (
-                <div key={review.id} className="review-item">
-                    <div className="review-header">
-                        <img src={resolveChannelAvatar(review.fromChannel?.channelAvatar, review.fromChannel?.channelTitle)} data-fallback-src={buildFallbackAvatar(review.fromChannel?.channelTitle)} onError={handleAvatarError} alt={review.fromChannel?.channelTitle || 'Канал'} className="review-avatar" />
-                        <div className="review-meta">
-                            <span className="review-author">{review.fromChannel?.channelTitle || 'Канал'}</span>
-                            <span className="review-date">{new Date(review.createdAt).toLocaleDateString('uk-UA')}</span>
+            {reviews.map((review) => {
+                const safeAuthor = normalizeDisplayText(review.fromChannel?.channelTitle, 'Канал');
+                const safeComment = normalizeDisplayText(review.comment, '');
+
+                return (
+                    <div key={review.id} className="review-item">
+                        <div className="review-header">
+                            <img src={resolveChannelAvatar(review.fromChannel?.channelAvatar, safeAuthor)} data-fallback-src={buildFallbackAvatar(safeAuthor)} onError={handleAvatarError} alt={safeAuthor} className="review-avatar" />
+                            <div className="review-meta">
+                                <span className="review-author">{safeAuthor}</span>
+                                <span className="review-date">{new Date(review.createdAt).toLocaleDateString('uk-UA')}</span>
+                            </div>
+                            <div className="review-stars">{renderStars(review.rating)}</div>
                         </div>
-                        <div className="review-stars">{renderStars(review.rating)}</div>
+                        {safeComment && <p className="review-text">{safeComment}</p>}
                     </div>
-                    {review.comment && <p className="review-text">{review.comment}</p>}
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 }

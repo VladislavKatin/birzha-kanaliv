@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
+import { normalizeDisplayText } from '../../services/publicOffers';
 import './ChannelsPage.css';
 
 function formatNumber(num) {
@@ -24,6 +25,8 @@ function getInfluenceScore(channel) {
 export default function ChannelCard({ channel, onToggleActive, onDelete, onViewDetail }) {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const influence = getInfluenceScore(channel);
+    const safeTitle = normalizeDisplayText(channel.channelTitle, 'Канал');
+    const safeNiche = normalizeDisplayText(channel.niche, '');
 
     return (
         <>
@@ -31,10 +34,10 @@ export default function ChannelCard({ channel, onToggleActive, onDelete, onViewD
                 <div className="channel-card-top">
                     <div className="channel-card-avatar">
                         <img
-                            src={resolveChannelAvatar(channel.channelAvatar, channel.channelTitle)}
-                            data-fallback-src={buildFallbackAvatar(channel.channelTitle)}
+                            src={resolveChannelAvatar(channel.channelAvatar, safeTitle)}
+                            data-fallback-src={buildFallbackAvatar(safeTitle)}
                             onError={handleAvatarError}
-                            alt={channel.channelTitle}
+                            alt={safeTitle}
                         />
                         <div className="influence-badge" style={{ background: influence.color }}>
                             {influence.score}
@@ -43,7 +46,7 @@ export default function ChannelCard({ channel, onToggleActive, onDelete, onViewD
 
                     <div className="channel-card-info">
                         <div className="channel-card-name-row">
-                            <h3 className="channel-card-name">{channel.channelTitle}</h3>
+                            <h3 className="channel-card-name">{safeTitle}</h3>
                             {channel.verified ? (
                                 <span className="verified-badge" title="Верифікований">
                                     ✅
@@ -54,7 +57,7 @@ export default function ChannelCard({ channel, onToggleActive, onDelete, onViewD
                                 </span>
                             )}
                         </div>
-                        {channel.niche && <span className="channel-card-niche">{channel.niche}</span>}
+                        {safeNiche && <span className="channel-card-niche">{safeNiche}</span>}
                     </div>
                 </div>
 
@@ -100,7 +103,7 @@ export default function ChannelCard({ channel, onToggleActive, onDelete, onViewD
                     <div className="modal-content" onClick={(event) => event.stopPropagation()}>
                         <h3>Видалити канал?</h3>
                         <p>
-                            Ви впевнені, що хочете видалити <strong>{channel.channelTitle}</strong>? Цю дію неможливо скасувати.
+                            Ви впевнені, що хочете видалити <strong>{safeTitle}</strong>? Цю дію неможливо скасувати.
                         </p>
                         <div className="modal-actions">
                             <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
@@ -122,3 +125,5 @@ export default function ChannelCard({ channel, onToggleActive, onDelete, onViewD
         </>
     );
 }
+
+

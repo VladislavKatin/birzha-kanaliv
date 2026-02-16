@@ -3,6 +3,7 @@
     getLanguageLabel,
     getNicheLabel,
     getOfferTypeLabel,
+    normalizeDisplayText,
     normalizeOfferDescription,
 } from '../../services/publicOffers';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
@@ -14,6 +15,8 @@ export default function OfferPreviewModal({ offer, onClose, onPropose }) {
     }
 
     const channel = offer.channel || {};
+    const safeTitle = normalizeDisplayText(channel.channelTitle, 'Канал');
+    const safeCountry = normalizeDisplayText(channel.country, 'Не вказано');
 
     return (
         <div className="offer-preview-overlay" role="dialog" aria-modal="true">
@@ -23,9 +26,9 @@ export default function OfferPreviewModal({ offer, onClose, onPropose }) {
                 </button>
 
                 <header className="offer-preview-header">
-                    <img src={resolveChannelAvatar(channel.channelAvatar, channel.channelTitle)} data-fallback-src={buildFallbackAvatar(channel.channelTitle)} onError={handleAvatarError} alt={channel.channelTitle || 'Канал'} />
+                    <img src={resolveChannelAvatar(channel.channelAvatar, safeTitle)} data-fallback-src={buildFallbackAvatar(safeTitle)} onError={handleAvatarError} alt={safeTitle} />
                     <div>
-                        <h3>{channel.channelTitle || 'Канал'}</h3>
+                        <h3>{safeTitle}</h3>
                         <p>{getOfferTypeLabel(offer.type)}</p>
                     </div>
                 </header>
@@ -48,16 +51,16 @@ export default function OfferPreviewModal({ offer, onClose, onPropose }) {
                         <ul>
                             <li>Ніша: {getNicheLabel(offer.niche || channel.niche) || 'Не вказано'}</li>
                             <li>Мова: {getLanguageLabel(offer.language || channel.language) || 'Не вказано'}</li>
-                            <li>Країна: {channel.country || 'Не вказано'}</li>
+                            <li>Країна: {safeCountry}</li>
                         </ul>
                         <h4>Опис каналу</h4>
-                        <p>{channel.description || 'Опис каналу відсутній.'}</p>
+                        <p>{normalizeDisplayText(channel.description, 'Опис каналу відсутній.')}</p>
                     </div>
                 </div>
 
                 <div className="offer-preview-comment">
                     <h4>Коментар від автора пропозиції</h4>
-                    <p>{normalizeOfferDescription(offer.description, channel.channelTitle) || 'Коментар не додано.'}</p>
+                    <p>{normalizeOfferDescription(offer.description, safeTitle) || 'Коментар не додано.'}</p>
                 </div>
 
                 {typeof onPropose === 'function' && (
@@ -71,4 +74,5 @@ export default function OfferPreviewModal({ offer, onClose, onPropose }) {
         </div>
     );
 }
+
 

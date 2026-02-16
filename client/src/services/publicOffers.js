@@ -100,22 +100,12 @@ export function getOfferTypeLabel(type) {
 }
 
 export function normalizeOfferDescription(description, channelTitle = '') {
-    const raw = String(description || '').trim();
-    if (!raw) {
-        return '';
+    const normalized = normalizeDisplayText(description, '');
+    if (!normalized) return '';
+    if (hasBrokenEncodingArtifacts(normalized)) {
+        return `Автоматична пропозиція каналу ${normalizeDisplayText(channelTitle, 'без назви')}.`;
     }
-
-    // Guard against broken charset artifacts from old cached/legacy records.
-    const looksBroken =
-        /�{2,}/.test(raw) ||
-        /^\?{3,}/.test(raw) ||
-        /^(?:[^\p{L}\p{N}]{0,2}[�?]){4,}/u.test(raw);
-
-    if (looksBroken) {
-        return `Автоматична пропозиція каналу ${channelTitle || 'без назви'}.`;
-    }
-
-    return raw;
+    return normalized;
 }
 
 export function isDemoChannel(channel) {
@@ -177,7 +167,10 @@ export function splitOffersByChannelKind(offers = []) {
 
 export function prepareOffersForCatalog(offers = []) {
     const { realOffers, demoOffers } = splitOffersByChannelKind(offers);
-    const withFlag = (offer, isDemo) => ({ ...offer, __isDemo: isDemo });
+    const withFlag = (offer, isDemo) => ({
+        ...sanitizeOfferTextFields(offer),
+        __isDemo: isDemo,
+    });
     return [
         ...realOffers.map((offer) => withFlag(offer, false)),
         ...demoOffers.map((offer) => withFlag(offer, true)),
@@ -205,4 +198,44 @@ export function buildPublicOffersQuery(filter = {}) {
 
 export function buildOfferDetailsPath(offerId) {
     return `/offers/${offerId}`;
+}
+
+export function hasBrokenEncodingArtifacts(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return false;
+
+    return (
+        /\uFFFD{2,}/u.test(raw) ||
+        /^\?{3,}/.test(raw) ||
+        /^(?:[^\p{L}\p{N}]{0,2}[\uFFFD?]){4,}$/u.test(raw) ||
+        /(?:Ð|Ñ|Ã|Â|â€|â€”){2,}/u.test(raw)
+    );
+}
+
+export function normalizeDisplayText(value, fallback = '') {
+    const raw = String(value || '').trim();
+    if (!raw || hasBrokenEncodingArtifacts(raw)) {
+        return fallback;
+    }
+    return raw;
+}
+
+function sanitizeOfferTextFields(offer) {
+    if (!offer || typeof offer !== 'object') {
+        return offer;
+    }
+
+    return {
+        ...offer,
+        niche: normalizeDisplayText(offer.niche, ''),
+        language: normalizeDisplayText(offer.language, ''),
+        description: normalizeDisplayText(offer.description, ''),
+        channel: offer.channel
+            ? {
+                ...offer.channel,
+                channelTitle: normalizeDisplayText(offer.channel.channelTitle, 'Канал'),
+                description: normalizeDisplayText(offer.channel.description, ''),
+            }
+            : offer.channel,
+    };
 }

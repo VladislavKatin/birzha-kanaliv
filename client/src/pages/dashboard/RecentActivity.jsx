@@ -1,5 +1,6 @@
 ﻿import { useNavigate } from 'react-router-dom';
 import Icon from '../../components/common/Icon';
+import { normalizeDisplayText } from '../../services/publicOffers';
 import './DashboardPage.css';
 
 function timeAgo(dateStr) {
@@ -40,18 +41,23 @@ export default function RecentActivity({ events }) {
         <div className="activity-card card">
             <h3 className="activity-title">Останні події</h3>
             <div className="activity-list">
-                {events.map((event) => (
-                    <div key={event.id} className="activity-item" onClick={() => event.link && navigate(event.link)} role="button" tabIndex={0}>
-                        <div className="activity-item-avatar">
-                            {event.avatar ? <img src={event.avatar} alt="" /> : <Icon name={typeIcons[event.type] || 'info'} size={16} />}
+                {events.map((event) => {
+                    const safeTitle = normalizeDisplayText(event.title, 'Подія');
+                    const safePreview = normalizeDisplayText(event.preview, '');
+
+                    return (
+                        <div key={event.id} className="activity-item" onClick={() => event.link && navigate(event.link)} role="button" tabIndex={0}>
+                            <div className="activity-item-avatar">
+                                {event.avatar ? <img src={event.avatar} alt="" /> : <Icon name={typeIcons[event.type] || 'info'} size={16} />}
+                            </div>
+                            <div className="activity-item-content">
+                                <span className="activity-item-title">{safeTitle}</span>
+                                {safePreview && <span className="activity-item-preview">{safePreview}</span>}
+                            </div>
+                            <span className="activity-item-time">{timeAgo(event.date)}</span>
                         </div>
-                        <div className="activity-item-content">
-                            <span className="activity-item-title">{event.title}</span>
-                            {event.preview && <span className="activity-item-preview">{event.preview}</span>}
-                        </div>
-                        <span className="activity-item-time">{timeAgo(event.date)}</span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

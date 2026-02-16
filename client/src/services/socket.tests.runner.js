@@ -16,6 +16,7 @@ import { runAdminCenterUnitTests } from './adminCenter.unit.spec.js';
 import { runAdminCenterFunctionalTests } from './adminCenter.functional.spec.js';
 import { runMenuBadgesUnitTests } from './menuBadges.unit.spec.js';
 import { runMenuBadgesFunctionalTests } from './menuBadges.functional.spec.js';
+import { runEncodingGuardUnitTests } from './encodingGuard.unit.spec.js';
 
 async function run() {
     const tests = [
@@ -37,6 +38,7 @@ async function run() {
         { name: 'functional: admin center payload fallback', fn: runAdminCenterFunctionalTests },
         { name: 'unit: dashboard menu badge counters', fn: runMenuBadgesUnitTests },
         { name: 'functional: dashboard menu badge read flow', fn: runMenuBadgesFunctionalTests },
+        { name: 'unit: source encoding guard', fn: runEncodingGuardUnitTests },
     ];
 
     let failed = 0;

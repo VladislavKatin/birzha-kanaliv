@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+п»їimport { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
@@ -63,7 +63,7 @@ export default function OffersPage() {
             setOffers(response.data.offers || response.data || []);
         } catch (loadError) {
             console.error('Failed to load offers:', loadError);
-            const message = getApiErrorMessage(loadError, 'Не вдалося завантажити пропозиції. Спробуйте ще раз.');
+            const message = getApiErrorMessage(loadError, 'РќРµ РІРґР°Р»РѕСЃСЏ Р·Р°РІР°РЅС‚Р°Р¶РёС‚Рё РїСЂРѕРїРѕР·РёС†С–С—. РЎРїСЂРѕР±СѓР№С‚Рµ С‰Рµ СЂР°Р·.');
             setError(message);
             toast.error(message);
         } finally {
@@ -91,7 +91,7 @@ export default function OffersPage() {
         return (
             <div className="dashboard-loading">
                 <div className="loading-pulse" />
-                <p>Завантаження пропозицій...</p>
+                <p>Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ РїСЂРѕРїРѕР·РёС†С–Р№...</p>
             </div>
         );
     }
@@ -102,8 +102,8 @@ export default function OffersPage() {
         <div className="offers-page">
             <div className="offers-header">
                 <div>
-                    <h1>Каталог пропозицій</h1>
-                    <p className="offers-subtitle">Переглядайте доступні канали та надсилайте пропозиції для обміну.</p>
+                    <h1>РљР°С‚Р°Р»РѕРі РїСЂРѕРїРѕР·РёС†С–Р№</h1>
+                    <p className="offers-subtitle">РџРµСЂРµРіР»СЏРґР°Р№С‚Рµ РґРѕСЃС‚СѓРїРЅС– РєР°РЅР°Р»Рё С‚Р° РЅР°РґСЃРёР»Р°Р№С‚Рµ РїСЂРѕРїРѕР·РёС†С–С— РґР»СЏ РѕР±РјС–РЅСѓ.</p>
                 </div>
             </div>
 
@@ -115,7 +115,7 @@ export default function OffersPage() {
                         setFilter((prev) => ({ ...prev, niche: event.target.value }));
                     }}
                 >
-                    <option value="">Ніша каналу</option>
+                    <option value="">РќС–С€Р° РєР°РЅР°Р»Сѓ</option>
                     {nicheOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                             {option.label}
@@ -126,7 +126,7 @@ export default function OffersPage() {
                     type="text"
                     className="filter-input"
                     list="dashboard-offers-language-options"
-                    placeholder="Мова каналу"
+                    placeholder="РњРѕРІР° РєР°РЅР°Р»Сѓ"
                     value={filter.language}
                     onChange={(event) => {
                         setFilter((prev) => ({ ...prev, language: event.target.value }));
@@ -142,17 +142,17 @@ export default function OffersPage() {
             {error ? (
                 <div className="swaps-empty card">
                     <span className="swaps-empty-icon">!</span>
-                    <h3>Помилка завантаження</h3>
+                    <h3>РџРѕРјРёР»РєР° Р·Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ</h3>
                     <p>{error}</p>
                     <button className="btn btn-secondary btn-sm" onClick={() => loadOffers()}>
-                        Спробувати ще раз
+                        РЎРїСЂРѕР±СѓРІР°С‚Рё С‰Рµ СЂР°Р·
                     </button>
                 </div>
             ) : visibleOffers.length === 0 ? (
                 <div className="swaps-empty card">
                     <span className="swaps-empty-icon">!</span>
-                    <h3>Пропозицій поки немає</h3>
-                    <p>Активуйте канал у розділі «Мої канали», щоб він з'явився тут.</p>
+                    <h3>РџСЂРѕРїРѕР·РёС†С–Р№ РїРѕРєРё РЅРµРјР°С”</h3>
+                    <p>РђРєС‚РёРІСѓР№С‚Рµ РєР°РЅР°Р» Сѓ СЂРѕР·РґС–Р»С– В«РњРѕС— РєР°РЅР°Р»РёВ», С‰РѕР± РІС–РЅ Р·'СЏРІРёРІСЃСЏ С‚СѓС‚.</p>
                 </div>
             ) : (
                 <div className="offers-grid">
@@ -163,17 +163,17 @@ export default function OffersPage() {
                                     src={resolveChannelAvatar(offer.channel?.channelAvatar, offer.channel?.channelTitle)}
                                     data-fallback-src={buildFallbackAvatar(offer.channel?.channelTitle)}
                                     onError={handleAvatarError}
-                                    alt={offer.channel?.channelTitle || 'Канал'}
+                                    alt={offer.channel?.channelTitle || 'РљР°РЅР°Р»'}
                                     className="offer-card-avatar"
                                 />
                                 <div className="offer-card-channel">
                                     <span className="offer-card-name">
-                                        {offer.channel?.channelTitle || 'Канал'}
+                                        {offer.channel?.channelTitle || 'РљР°РЅР°Р»'}
                                         {offer.__isDemo && <span className="offer-demo-badge">DEMO</span>}
                                     </span>
-                                    <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} підписників</span>
+                                    <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} РїС–РґРїРёСЃРЅРёРєС–РІ</span>
                                 </div>
-                                <span className={`offer-type-badge ${offer.type}`}>{offer.type === 'subs' ? 'Підписники' : 'Перегляди'}</span>
+                                <span className={`offer-type-badge ${offer.type}`}>{offer.type === 'subs' ? 'РџС–РґРїРёСЃРЅРёРєРё' : 'РџРµСЂРµРіР»СЏРґРё'}</span>
                             </div>
 
                             {offer.description && (
@@ -183,19 +183,19 @@ export default function OffersPage() {
                             <div className="offer-card-tags">
                                 {offer.niche && <span className="meta-tag">{getNicheLabel(offer.niche)}</span>}
                                 {offer.language && <span className="meta-tag">{getLanguageLabel(offer.language)}</span>}
-                                {offer.minSubscribers > 0 && <span className="meta-tag">від {formatNumber(offer.minSubscribers)} підпис.</span>}
-                                {offer.channel?.totalViews > 0 && <span className="meta-tag">{formatNumber(offer.channel.totalViews)} переглядів</span>}
+                                {offer.minSubscribers > 0 && <span className="meta-tag">РІС–Рґ {formatNumber(offer.minSubscribers)} РїС–РґРїРёСЃ.</span>}
+                                {offer.channel?.totalViews > 0 && <span className="meta-tag">{formatNumber(offer.channel.totalViews)} РїРµСЂРµРіР»СЏРґС–РІ</span>}
                             </div>
 
                             <div className="offer-card-actions">
                                 <button className="btn btn-secondary btn-sm" onClick={() => setSelectedOffer(offer)}>
-                                    Переглянути
+                                    РџРµСЂРµРіР»СЏРЅСѓС‚Рё
                                 </button>
                                 <button
                                     className="btn btn-primary btn-sm"
                                     onClick={() => navigate(user ? buildOfferDetailsPath(offer.id) : buildAuthRedirectPath(buildOfferDetailsPath(offer.id)))}
                                 >
-                                    Запропонувати обмін
+                                    Р—Р°РїСЂРѕРїРѕРЅСѓРІР°С‚Рё РѕР±РјС–РЅ
                                 </button>
                             </div>
                         </div>
@@ -216,3 +216,4 @@ export default function OffersPage() {
         </div>
     );
 }
+
