@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './ExchangesPage.css';
 
 function formatNumber(num) {
@@ -75,7 +76,7 @@ export default function ExchangesPage() {
                     {exchanges.map((exchange) => (
                         <div key={exchange.id} className="exchange-item card">
                             <div className="exchange-partner">
-                                <img src={exchange.partner?.channelAvatar || ''} alt="" className="exchange-partner-avatar" />
+                                <img src={resolveChannelAvatar(exchange.partner?.channelAvatar, exchange.partner?.channelTitle)} data-fallback-src={buildFallbackAvatar(exchange.partner?.channelTitle)} onError={handleAvatarError} alt={exchange.partner?.channelTitle || 'Канал'} className="exchange-partner-avatar" />
                                 <div className="exchange-partner-info">
                                     <span className="exchange-partner-name">{exchange.partner?.channelTitle || 'Канал'}</span>
                                     <span className="exchange-partner-subs">{formatNumber(exchange.partner?.subscribers)} підписників</span>
@@ -158,3 +159,4 @@ export default function ExchangesPage() {
         </div>
     );
 }
+

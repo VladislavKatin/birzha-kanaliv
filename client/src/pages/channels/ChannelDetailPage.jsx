@@ -2,6 +2,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../../services/api';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './ChannelsPage.css';
 
 function formatNumber(num) {
@@ -116,7 +117,7 @@ export default function ChannelDetailPage() {
 
             <div className="channel-detail-header card">
                 <img
-                    src={channel.channelAvatar || `https://ui-avatars.com/api/?name=${channel.channelTitle}&background=4f46e5&color=fff`}
+                    src={resolveChannelAvatar(channel.channelAvatar, channel.channelTitle)} data-fallback-src={buildFallbackAvatar(channel.channelTitle)} onError={handleAvatarError}
                     alt={channel.channelTitle}
                     className="channel-detail-avatar"
                 />
@@ -211,7 +212,7 @@ export default function ChannelDetailPage() {
                             const partner = swap.initiatorChannelId === channel.id ? swap.targetChannel : swap.initiatorChannel;
                             return (
                                 <div key={swap.id} className="swap-history-item">
-                                    <img src={partner?.channelAvatar || ''} alt="" className="swap-partner-avatar" />
+                                    <img src={resolveChannelAvatar(partner?.channelAvatar, partner?.channelTitle)} data-fallback-src={buildFallbackAvatar(partner?.channelTitle)} onError={handleAvatarError} alt={partner?.channelTitle || 'Канал'} className="swap-partner-avatar" />
                                     <div className="swap-partner-info">
                                         <span className="swap-partner-name">{partner?.channelTitle || 'Канал'}</span>
                                         <span className="swap-partner-subs">{formatNumber(partner?.subscribers || 0)} підписників</span>
@@ -250,4 +251,5 @@ export default function ChannelDetailPage() {
         </div>
     );
 }
+
 

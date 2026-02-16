@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import PublicLayout from '../../components/layout/PublicLayout';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import { buildAuthRedirectPath } from '../../services/navigation';
 import {
     formatPublicNumber,
@@ -143,7 +144,7 @@ export default function OfferDetailsPage() {
                     ) : (
                         <article className="offer-details-card">
                             <header className="offer-details-head">
-                                <img src={offer.channel?.channelAvatar || ''} alt="" />
+                                <img src={resolveChannelAvatar(offer.channel?.channelAvatar, offer.channel?.channelTitle)} data-fallback-src={buildFallbackAvatar(offer.channel?.channelTitle)} onError={handleAvatarError} alt={offer.channel?.channelTitle || 'Канал'} />
                                 <div>
                                     <h1>
                                         {offer.channel?.channelTitle || 'Канал'}
@@ -239,3 +240,4 @@ export default function OfferDetailsPage() {
         </PublicLayout>
     );
 }
+

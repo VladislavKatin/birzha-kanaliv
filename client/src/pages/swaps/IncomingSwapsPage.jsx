@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './SwapsPage.css';
 
 function formatNumber(num) {
@@ -108,7 +109,13 @@ export default function IncomingSwapsPage() {
                     {swaps.map((swap) => (
                         <div key={swap.id} className="swap-item card">
                             <div className="swap-item-channel">
-                                <img src={swap.initiatorChannel?.channelAvatar || ''} alt="" className="swap-item-avatar" />
+                                <img
+                                    src={resolveChannelAvatar(swap.initiatorChannel?.channelAvatar, swap.initiatorChannel?.channelTitle)}
+                                    data-fallback-src={buildFallbackAvatar(swap.initiatorChannel?.channelTitle)}
+                                    onError={handleAvatarError}
+                                    alt={swap.initiatorChannel?.channelTitle || 'Канал'}
+                                    className="swap-item-avatar"
+                                />
                                 <div className="swap-item-info">
                                     <span className="swap-item-name">{swap.initiatorChannel?.channelTitle || 'Канал'}</span>
                                     <span className="swap-item-subs">{formatNumber(swap.initiatorChannel?.subscribers)} підписників</span>

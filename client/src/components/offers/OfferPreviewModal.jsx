@@ -5,6 +5,7 @@
     getOfferTypeLabel,
     normalizeOfferDescription,
 } from '../../services/publicOffers';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './OfferPreviewModal.css';
 
 export default function OfferPreviewModal({ offer, onClose, onPropose }) {
@@ -22,7 +23,7 @@ export default function OfferPreviewModal({ offer, onClose, onPropose }) {
                 </button>
 
                 <header className="offer-preview-header">
-                    <img src={channel.channelAvatar || ''} alt={channel.channelTitle || 'Канал'} />
+                    <img src={resolveChannelAvatar(channel.channelAvatar, channel.channelTitle)} data-fallback-src={buildFallbackAvatar(channel.channelTitle)} onError={handleAvatarError} alt={channel.channelTitle || 'Канал'} />
                     <div>
                         <h3>{channel.channelTitle || 'Канал'}</h3>
                         <p>{getOfferTypeLabel(offer.type)}</p>
@@ -70,3 +71,4 @@ export default function OfferPreviewModal({ offer, onClose, onPropose }) {
         </div>
     );
 }
+

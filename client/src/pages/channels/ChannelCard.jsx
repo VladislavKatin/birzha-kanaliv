@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './ChannelsPage.css';
 
 function formatNumber(num) {
@@ -30,7 +31,9 @@ export default function ChannelCard({ channel, onToggleActive, onDelete, onViewD
                 <div className="channel-card-top">
                     <div className="channel-card-avatar">
                         <img
-                            src={channel.channelAvatar || `https://ui-avatars.com/api/?name=${channel.channelTitle}&background=4f46e5&color=fff`}
+                            src={resolveChannelAvatar(channel.channelAvatar, channel.channelTitle)}
+                            data-fallback-src={buildFallbackAvatar(channel.channelTitle)}
+                            onError={handleAvatarError}
                             alt={channel.channelTitle}
                         />
                         <div className="influence-badge" style={{ background: influence.color }}>

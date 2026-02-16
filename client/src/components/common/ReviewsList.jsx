@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 
 function renderStars(rating) {
     const safeRating = Math.max(0, Math.min(5, Number(rating) || 0));
@@ -69,7 +70,7 @@ export default function ReviewsList({ channelIds }) {
             {reviews.map((review) => (
                 <div key={review.id} className="review-item">
                     <div className="review-header">
-                        <img src={review.fromChannel?.channelAvatar || ''} alt="" className="review-avatar" />
+                        <img src={resolveChannelAvatar(review.fromChannel?.channelAvatar, review.fromChannel?.channelTitle)} data-fallback-src={buildFallbackAvatar(review.fromChannel?.channelTitle)} onError={handleAvatarError} alt={review.fromChannel?.channelTitle || 'Канал'} className="review-avatar" />
                         <div className="review-meta">
                             <span className="review-author">{review.fromChannel?.channelTitle || 'Канал'}</span>
                             <span className="review-date">{new Date(review.createdAt).toLocaleDateString('uk-UA')}</span>
@@ -82,3 +83,4 @@ export default function ReviewsList({ channelIds }) {
         </div>
     );
 }
+

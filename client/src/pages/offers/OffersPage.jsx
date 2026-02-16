@@ -14,6 +14,7 @@ import {
     normalizeOfferDescription,
     resolveLanguageCode,
 } from '../../services/publicOffers';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './OffersPage.css';
 
 function formatNumber(num) {
@@ -150,7 +151,13 @@ export default function OffersPage() {
                     {visibleOffers.map((offer) => (
                         <div key={offer.id} className="offer-card card">
                             <div className="offer-card-top">
-                                <img src={offer.channel?.channelAvatar || ''} alt={offer.channel?.channelTitle || 'Канал'} className="offer-card-avatar" />
+                                <img
+                                    src={resolveChannelAvatar(offer.channel?.channelAvatar, offer.channel?.channelTitle)}
+                                    data-fallback-src={buildFallbackAvatar(offer.channel?.channelTitle)}
+                                    onError={handleAvatarError}
+                                    alt={offer.channel?.channelTitle || 'Канал'}
+                                    className="offer-card-avatar"
+                                />
                                 <div className="offer-card-channel">
                                     <span className="offer-card-name">{offer.channel?.channelTitle || 'Канал'}</span>
                                     <span className="offer-card-subs">{formatNumber(offer.channel?.subscribers)} підписників</span>

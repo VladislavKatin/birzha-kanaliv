@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './PartnerRecommendations.css';
 
 function formatNumber(num) {
@@ -41,7 +42,7 @@ export default function PartnerRecommendations() {
             <div className="recs-grid">
                 {visibleRecs.map((channel) => (
                     <div key={channel.id} className="rec-card">
-                        <img src={channel.channelAvatar || ''} alt="" className="rec-avatar" />
+                        <img src={resolveChannelAvatar(channel.channelAvatar, channel.channelTitle)} data-fallback-src={buildFallbackAvatar(channel.channelTitle)} onError={handleAvatarError} alt={channel.channelTitle || 'Канал'} className="rec-avatar" />
                         <div className="rec-info">
                             <span className="rec-name">
                                 {channel.verified && <span className="verified-dot">✓</span>}
@@ -59,3 +60,4 @@ export default function PartnerRecommendations() {
         </div>
     );
 }
+

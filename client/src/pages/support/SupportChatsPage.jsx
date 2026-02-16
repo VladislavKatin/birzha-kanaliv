@@ -2,6 +2,7 @@
 import { useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import { markThreadSeen } from '../../services/menuBadges';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './SupportChatsPage.css';
 
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
@@ -45,8 +46,9 @@ function getThreadAvatar(thread) {
         return { image: '', fallback: 'A' };
     }
 
-    const image = thread.partner?.channelAvatar || '';
-    const fallback = (thread.partner?.channelTitle || 'U').slice(0, 1).toUpperCase();
+    const title = thread.partner?.channelTitle || 'Канал';
+    const image = resolveChannelAvatar(thread.partner?.channelAvatar, title);
+    const fallback = buildFallbackAvatar(title);
     return { image, fallback };
 }
 
@@ -308,7 +310,7 @@ export default function SupportChatsPage() {
                                         onClick={() => setActiveThreadId(thread.id)}
                                     >
                                         {avatar.image ? (
-                                            <img src={avatar.image} alt={getThreadTitle(thread)} className="support-thread-avatar" />
+                                            <img src={avatar.image} data-fallback-src={avatar.fallback} onError={handleAvatarError} alt={getThreadTitle(thread)} className="support-thread-avatar" />
                                         ) : (
                                             <span className="support-thread-avatar support-thread-avatar-fallback">{avatar.fallback}</span>
                                         )}
@@ -410,6 +412,7 @@ export default function SupportChatsPage() {
         </div>
     );
 }
+
 
 
 

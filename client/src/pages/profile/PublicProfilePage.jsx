@@ -2,6 +2,7 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import RatingBadge from '../../components/common/RatingBadge';
 import ReviewsList from '../../components/common/ReviewsList';
 import './ProfilePage.css';
@@ -167,7 +168,7 @@ export default function PublicProfilePage() {
                     <div className="profile-channels-grid">
                         {profile.channels.map((channel) => (
                             <div key={channel.id} className="profile-channel-item">
-                                <img src={channel.channelAvatar || ''} alt="" className="profile-ch-avatar" />
+                                <img src={resolveChannelAvatar(channel.channelAvatar, channel.channelTitle)} data-fallback-src={buildFallbackAvatar(channel.channelTitle)} onError={handleAvatarError} alt={channel.channelTitle || 'Канал'} className="profile-ch-avatar" />
                                 <div className="profile-ch-info">
                                     <span className="profile-ch-name">
                                         {channel.verified && <span className="verified-dot">✓</span>}
@@ -191,3 +192,4 @@ export default function PublicProfilePage() {
         </div>
     );
 }
+

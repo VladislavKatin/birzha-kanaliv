@@ -4,6 +4,7 @@ import PublicLayout from '../../components/layout/PublicLayout';
 import OfferPreviewModal from '../../components/offers/OfferPreviewModal';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
+import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import { buildAuthRedirectPath } from '../../services/navigation';
 import {
     buildOfferDetailsPath,
@@ -142,7 +143,7 @@ export default function OffersCatalogPage() {
                             {visibleOffers.map((offer) => (
                                 <article key={offer.id} className="public-offer-card">
                                     <div className="public-offer-head">
-                                        <img src={offer.channel?.channelAvatar || ''} alt={offer.channel?.channelTitle || 'Канал'} />
+                                        <img src={resolveChannelAvatar(offer.channel?.channelAvatar, offer.channel?.channelTitle)} data-fallback-src={buildFallbackAvatar(offer.channel?.channelTitle)} onError={handleAvatarError} alt={offer.channel?.channelTitle || 'Канал'} />
                                         <div>
                                             <h3>{offer.channel?.channelTitle || 'Канал'}</h3>
                                             <p>{formatPublicNumber(offer.channel?.subscribers)} підписників</p>
