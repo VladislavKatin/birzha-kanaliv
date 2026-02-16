@@ -26,6 +26,7 @@ export default function Navbar() {
                     ))}
                     <Link to="/offers" className="navbar-link">Пропозиції</Link>
                     <Link to="/privacy-policy" className="navbar-link">Privacy Policy</Link>
+                    <Link to="/terms" className="navbar-link">Terms</Link>
                 </div>
 
                 <div className="navbar-actions">

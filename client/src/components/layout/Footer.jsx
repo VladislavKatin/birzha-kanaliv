@@ -24,6 +24,7 @@ export default function Footer() {
                     <Link to="/offers">Пропозиції</Link>
                     <Link to="/faq">FAQ</Link>
                     <Link to="/privacy-policy">Privacy Policy</Link>
+                    <Link to="/terms">Terms</Link>
                     <Link to="/auth">Увійти</Link>
                 </div>
                 <div className="footer-copy">
