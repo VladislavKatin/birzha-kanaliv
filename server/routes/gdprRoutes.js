@@ -1,5 +1,5 @@
-const router = require('express').Router();
-const { User, YouTubeAccount, TrafficMatch, TrafficOffer, Review, ActionLog, ChatRoom, Message } = require('../models');
+﻿const router = require('express').Router();
+const { User, YouTubeAccount, TrafficMatch, TrafficOffer, Review, ActionLog, Message } = require('../models');
 const auth = require('../middleware/auth');
 
 /**
@@ -22,12 +22,11 @@ router.get('/export', auth, async (req, res) => {
         const user = await getUser(req.firebaseUser.uid);
         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        // Gather all user data
         const channels = await YouTubeAccount.findAll({
             where: { userId: user.id },
             attributes: { exclude: ['accessToken', 'refreshToken'] },
         });
-        const channelIds = channels.map(c => c.id);
+        const channelIds = channels.map((channel) => channel.id);
 
         const offers = channelIds.length > 0
             ? await TrafficOffer.findAll({ where: { channelId: channelIds } })
@@ -84,20 +83,20 @@ router.get('/export', auth, async (req, res) => {
                 notificationPrefs: user.notificationPrefs,
                 createdAt: user.createdAt,
             },
-            channels: channels.map(c => c.toJSON()),
-            offers: offers.map(o => o.toJSON()),
-            matches: matches.map(m => m.toJSON()),
-            reviews: reviews.map(r => r.toJSON()),
-            messages: messages.map(m => ({ id: m.id, content: m.content, createdAt: m.createdAt })),
-            actionLogs: logs.map(l => l.toJSON()),
+            channels: channels.map((channel) => channel.toJSON()),
+            offers: offers.map((offer) => offer.toJSON()),
+            matches: matches.map((match) => match.toJSON()),
+            reviews: reviews.map((review) => review.toJSON()),
+            messages: messages.map((message) => ({ id: message.id, content: message.content, createdAt: message.createdAt })),
+            actionLogs: logs.map((log) => log.toJSON()),
         };
 
         res.setHeader('Content-Disposition', 'attachment; filename="my-data-export.json"');
         res.setHeader('Content-Type', 'application/json');
-        res.json(exportData);
+        return res.json(exportData);
     } catch (error) {
         console.error('GDPR export error:', error);
-        res.status(500).json({ error: 'Failed to export data' });
+        return res.status(500).json({ error: 'Failed to export data' });
     }
 });
 
@@ -118,7 +117,6 @@ router.delete('/account', auth, async (req, res) => {
             return res.status(400).json({ error: 'Для підтвердження надішліть { confirmation: "DELETE_MY_ACCOUNT" }' });
         }
 
-        // Anonymize user data
         await user.update({
             displayName: 'Видалений користувач',
             email: `deleted_${user.id}@deleted.local`,
@@ -137,10 +135,8 @@ router.delete('/account', auth, async (req, res) => {
             notificationPrefs: {},
         });
 
-        // Delete channels (cascade removes offers, matches are preserved with anonymized references)
         await YouTubeAccount.destroy({ where: { userId: user.id } });
 
-        // Log the action
         await ActionLog.create({
             userId: user.id,
             action: 'account_deleted',
@@ -148,10 +144,10 @@ router.delete('/account', auth, async (req, res) => {
             ip: req.ip,
         });
 
-        res.json({ message: 'Акаунт видалено. Ваші дані анонімізовані.' });
+        return res.json({ message: 'Акаунт видалено. Ваші дані анонімізовані.' });
     } catch (error) {
         console.error('GDPR delete error:', error);
-        res.status(500).json({ error: 'Failed to delete account' });
+        return res.status(500).json({ error: 'Failed to delete account' });
     }
 });
 

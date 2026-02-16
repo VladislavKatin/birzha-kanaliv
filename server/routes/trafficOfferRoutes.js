@@ -1,4 +1,4 @@
-const router = require('express').Router();
+﻿const router = require('express').Router();
 const { sequelize, TrafficOffer, YouTubeAccount, User, TrafficMatch, ActionLog } = require('../models');
 const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
@@ -466,3 +466,4 @@ router.post('/:id/respond', auth, async (req, res) => {
 });
 
 module.exports = router;
+
