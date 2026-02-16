@@ -172,7 +172,7 @@ router.get('/callback', async (req, res) => {
         });
 
         // Redirect to client dashboard
-        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const clientUrl = process.env.CLIENT_URL || 'https://birzha-kanaliv.biz.ua';
         logInfo('youtube.callback.success', {
             firebaseUid: state,
             userId: user.id,
@@ -185,7 +185,7 @@ router.get('/callback', async (req, res) => {
             firebaseUid: req.query?.state || null,
             error,
         });
-        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const clientUrl = process.env.CLIENT_URL || 'https://birzha-kanaliv.biz.ua';
         res.redirect(`${clientUrl}/dashboard?youtube=error`);
     }
 });

@@ -14,8 +14,8 @@ export function runSeoFunctionalTests() {
 
     assert.equal(payload.title, 'Test title');
     assert.equal(payload.keywords, 'one, two');
-    assert.equal(payload.url, 'https://youtoobe.app/blog/test');
-    assert.equal(payload.image, 'https://youtoobe.app/images/test.svg');
+    assert.equal(payload.url, 'https://birzha-kanaliv.biz.ua/blog/test');
+    assert.equal(payload.image, 'https://birzha-kanaliv.biz.ua/images/test.svg');
 
     const listSchema = buildBlogCollectionJsonLd(getBlogArticlesPreview());
     assert.equal(listSchema['@type'], 'Blog');
@@ -24,11 +24,12 @@ export function runSeoFunctionalTests() {
     const article = getBlogArticleBySlug('youtube-collab-strategy-2026');
     const articleSchema = buildBlogArticleJsonLd(article);
     assert.equal(articleSchema['@type'], 'BlogPosting');
-    assert.equal(articleSchema.mainEntityOfPage, 'https://youtoobe.app/blog/youtube-collab-strategy-2026');
+    assert.equal(articleSchema.mainEntityOfPage, 'https://birzha-kanaliv.biz.ua/blog/youtube-collab-strategy-2026');
 
     const faqSchema = buildBlogArticleFaqJsonLd(article);
     assert.equal(faqSchema['@type'], 'FAQPage');
     assert.equal(Array.isArray(faqSchema.mainEntity), true);
     assert.equal(faqSchema.mainEntity.length > 0, true);
 }
+
 

@@ -1,4 +1,4 @@
-﻿const BASE_URL = 'https://youtoobe.app';
+﻿const BASE_URL = 'https://birzha-kanaliv.biz.ua';
 
 function toAbsoluteUrl(path) {
     if (!path) {
@@ -154,4 +154,5 @@ export function applyJsonLd(id, schemaObject) {
     script.textContent = JSON.stringify(schemaObject);
     document.head.appendChild(script);
 }
+
 
