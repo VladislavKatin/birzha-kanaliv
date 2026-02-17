@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
-const { User, YouTubeAccount, TrafficOffer } = require('../models');
+const { User, YouTubeAccount, TrafficOffer, TrafficMatch } = require('../models');
 
 const OFFER_OWNER_UID = 'seed-firebase-uid-1';
 const OFFER_OWNER_CHANNEL_ID = '33333333-3333-4333-8333-333333333333';
@@ -18,6 +18,7 @@ async function runOfferMultiMatchFunctionalTests() {
     const extraUserId = randomUUID();
     const extraChannelId = randomUUID();
     const extraChannelPublicId = `UC_EXTRA_${randomUUID().replace(/-/g, '').toUpperCase().slice(0, 20)}`;
+    let openOfferId = null;
 
     try {
         await User.create({
@@ -85,7 +86,7 @@ async function runOfferMultiMatchFunctionalTests() {
         });
 
         assert.equal(createOpenOffer.status, 201);
-        const openOfferId = createOpenOffer.body.offer.id;
+        openOfferId = createOpenOffer.body.offer.id;
 
         const respondOpenOffer = await request(baseUrl, {
             method: 'POST',
@@ -100,6 +101,24 @@ async function runOfferMultiMatchFunctionalTests() {
         assert.ok(openOffer);
         assert.equal(openOffer.status, 'open');
     } finally {
+        await TrafficMatch.destroy({
+            where: { initiatorChannelId: extraChannelId },
+        });
+
+        if (openOfferId) {
+            await TrafficOffer.destroy({
+                where: { id: openOfferId },
+            });
+        }
+
+        await YouTubeAccount.destroy({
+            where: { id: extraChannelId },
+        });
+
+        await User.destroy({
+            where: { id: extraUserId },
+        });
+
         await new Promise((resolve) => server.close(resolve));
     }
 }
