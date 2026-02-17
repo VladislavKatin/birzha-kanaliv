@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
             title: 'Privacy Policy — Біржа Каналів',
             description: 'Політика конфіденційності Біржа Каналів: які дані ми збираємо, як їх обробляємо, захищаємо та які права має користувач.',
             keywords: ['privacy policy', 'політика конфіденційності', 'біржа каналів', 'персональні дані'],
-            path: '/privacy-policy',
+            path: '/privacy',
             type: 'website',
         });
     }, []);

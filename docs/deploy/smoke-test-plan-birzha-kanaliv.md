@@ -12,7 +12,7 @@
 - `https://birzha-kanaliv.biz.ua/offers`
 - `https://birzha-kanaliv.biz.ua/blog`
 - `https://birzha-kanaliv.biz.ua/faq`
-- `https://birzha-kanaliv.biz.ua/privacy-policy`
+- `https://birzha-kanaliv.biz.ua/privacy`
 - `https://birzha-kanaliv.biz.ua/terms`
 
 SEO файли:
@@ -90,4 +90,3 @@ SEO файли:
 - Усі розділи 1-9 пройдені без blocker/critical помилок
 - Немає 500 на ключових user flows
 - OAuth, YouTube connect, offers, chat, admin підтверджені вручну
-

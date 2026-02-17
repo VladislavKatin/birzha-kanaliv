@@ -110,7 +110,8 @@ export default function App() {
                         <Route path="/blog/:slug" element={<BlogArticlePage />} />
                         <Route path="/faq" element={<FaqPage />} />
                         <Route path="/help" element={<HelpPage />} />
-                        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                        <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
                         <Route path="/terms" element={<TermsPage />} />
                         <Route path="/auth" element={<AuthPage />} />
 
