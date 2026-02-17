@@ -72,8 +72,33 @@ export default function SupportChatsPage() {
     const [selectedImage, setSelectedImage] = useState('');
     const [sending, setSending] = useState(false);
     const [loadingMessages, setLoadingMessages] = useState(false);
+    const [threadSearch, setThreadSearch] = useState('');
+    const [unreadOnly, setUnreadOnly] = useState(false);
 
     const activeThread = useMemo(() => threads.find((thread) => thread.id === activeThreadId) || null, [threads, activeThreadId]);
+    const filteredThreads = useMemo(() => {
+        const query = threadSearch.trim().toLowerCase();
+        return threads.filter((thread) => {
+            const unread = isThreadUnread(thread, { myUserId });
+            if (unreadOnly && !unread) {
+                return false;
+            }
+
+            if (!query) {
+                return true;
+            }
+
+            const haystack = [
+                getThreadTitle(thread),
+                getThreadSubtitle(thread),
+                thread.lastMessage?.content || '',
+            ]
+                .join(' ')
+                .toLowerCase();
+
+            return haystack.includes(query);
+        });
+    }, [threads, threadSearch, unreadOnly, myUserId]);
 
     useEffect(() => {
         loadInitialData();
@@ -317,7 +342,25 @@ export default function SupportChatsPage() {
                 ) : (
                     <>
                         <aside className="support-thread-list" aria-label="Список чатів">
-                            {threads.map((thread) => {
+                            <div className="support-thread-tools">
+                                <input
+                                    type="text"
+                                    className="support-thread-search"
+                                    placeholder="Пошук чату..."
+                                    value={threadSearch}
+                                    onChange={(event) => setThreadSearch(event.target.value)}
+                                />
+                                <label className="support-unread-toggle">
+                                    <input
+                                        type="checkbox"
+                                        checked={unreadOnly}
+                                        onChange={(event) => setUnreadOnly(event.target.checked)}
+                                    />
+                                    <span>Тільки непрочитані</span>
+                                </label>
+                            </div>
+
+                            {filteredThreads.map((thread) => {
                                 const active = thread.id === activeThreadId;
                                 const unread = !active && isThreadUnread(thread, { myUserId });
                                 const avatar = getThreadAvatar(thread);
@@ -344,6 +387,11 @@ export default function SupportChatsPage() {
                                     </button>
                                 );
                             })}
+                            {filteredThreads.length === 0 && (
+                                <div className="support-threads-empty">
+                                    Нічого не знайдено за цими умовами.
+                                </div>
+                            )}
                         </aside>
 
                         <div className="support-chat-panel">
