@@ -1,1 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Кейс бізнес-каналу: обміни і якість лідів"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#003f88"/><stop offset="100%" stop-color="#ffb703"/></linearGradient></defs><rect width="1200" height="630" fill="url(#g)"/><rect x="70" y="70" width="1060" height="490" rx="28" fill="rgba(5,15,35,.32)" stroke="rgba(255,255,255,.28)"/><text x="120" y="200" fill="#fff" font-size="44" font-weight="800" font-family="Inter,Arial,sans-serif">Біржа Каналів</text><text x="120" y="280" fill="#fff" font-size="32" font-weight="700" font-family="Inter,Arial,sans-serif">Кейс бізнес-каналу: обміни і якість лідів</text><text x="120" y="340" fill="rgba(255,255,255,.92)" font-size="24" font-family="Inter,Arial,sans-serif">Практичні стратегії росту YouTube-каналів</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Кейс бізнес-каналу: обміни і якість лідів">
+  <defs>
+    <linearGradient id="bg-15" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0369a1"/>
+      <stop offset="100%" stop-color="#facc15"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg-15)"/>
+  <path d="M70 150 L140 70 H1080 L1130 120 V520 L1080 560 H120 L70 510 Z" fill="rgba(7,12,30,.36)" stroke="rgba(255,255,255,.22)"/>
+  
+    <circle cx="772" cy="102" r="84" fill="#e6f0ff" opacity="0.37"/>
+    <circle cx="912" cy="152" r="64" fill="#e6f0ff" opacity="0.47"/>
+    <path d="M700 430 C820 372, 970 448, 1080 380" stroke="#e6f0ff" stroke-width="8" fill="none" opacity="0.8"/>
+    <rect x="760" y="448" width="38" height="72" rx="8" fill="#e6f0ff" opacity="0.82"/><rect x="822" y="417" width="38" height="103" rx="8" fill="#e6f0ff" opacity="0.82"/><rect x="884" y="386" width="38" height="134" rx="8" fill="#e6f0ff" opacity="0.82"/><rect x="946" y="355" width="38" height="165" rx="8" fill="#e6f0ff" opacity="0.82"/><rect x="1008" y="324" width="38" height="196" rx="8" fill="#e6f0ff" opacity="0.82"/>
+  
+  <text x="100" y="126" fill="#dbeafe" font-size="26" font-weight="700" font-family="Segoe UI, Arial, sans-serif">Біржа Каналів • Блог</text>
+  <text x="100" y="210" fill="#ffffff" font-size="38" font-weight="800" font-family="Segoe UI, Arial, sans-serif">Кейс бізнес-каналу: обміни і якість</text><text x="100" y="256" fill="#ffffff" font-size="38" font-weight="800" font-family="Segoe UI, Arial, sans-serif">лідів</text>
+  <text x="100" y="326" fill="#f8fafc" font-size="24" font-weight="500" font-family="Segoe UI, Arial, sans-serif">Практичний гайд для обміну YouTube-аудиторією</text>
+</svg>

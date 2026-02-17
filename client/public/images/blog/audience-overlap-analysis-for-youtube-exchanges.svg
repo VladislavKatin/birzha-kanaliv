@@ -1,1 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Аналіз перетину аудиторій для YouTube-обмінів"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0f4c81"/><stop offset="100%" stop-color="#f2c14e"/></linearGradient></defs><rect width="1200" height="630" fill="url(#g)"/><rect x="70" y="70" width="1060" height="490" rx="28" fill="rgba(5,15,35,.32)" stroke="rgba(255,255,255,.28)"/><text x="120" y="200" fill="#fff" font-size="44" font-weight="800" font-family="Inter,Arial,sans-serif">Біржа Каналів</text><text x="120" y="280" fill="#fff" font-size="32" font-weight="700" font-family="Inter,Arial,sans-serif">Аналіз перетину аудиторій для YouTube-обмінів</text><text x="120" y="340" fill="rgba(255,255,255,.92)" font-size="24" font-family="Inter,Arial,sans-serif">Практичні стратегії росту YouTube-каналів</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Аналіз перетину аудиторій для YouTube-обмінів">
+  <defs>
+    <linearGradient id="bg-2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a4f9f"/>
+      <stop offset="100%" stop-color="#ffcf33"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg-2)"/>
+  <rect x="84" y="84" width="1032" height="462" rx="20" fill="rgba(7,12,30,.38)" stroke="rgba(255,255,255,.22)"/><rect x="96" y="96" width="1008" height="438" rx="14" fill="none" stroke="rgba(255,255,255,.10)"/>
+  
+    <circle cx="745" cy="125" r="83" fill="#ffffff" opacity="0.30"/>
+    <circle cx="885" cy="175" r="63" fill="#ffffff" opacity="0.40"/>
+    <path d="M700 430 C820 385, 970 435, 1080 380" stroke="#ffffff" stroke-width="8" fill="none" opacity="0.8"/>
+    <rect x="760" y="335" width="38" height="185" rx="8" fill="#ffffff" opacity="0.82"/><rect x="822" y="304" width="38" height="216" rx="8" fill="#ffffff" opacity="0.82"/><rect x="884" y="453" width="38" height="67" rx="8" fill="#ffffff" opacity="0.82"/><rect x="946" y="422" width="38" height="98" rx="8" fill="#ffffff" opacity="0.82"/><rect x="1008" y="391" width="38" height="129" rx="8" fill="#ffffff" opacity="0.82"/>
+  
+  <text x="100" y="126" fill="#dbeafe" font-size="26" font-weight="700" font-family="Segoe UI, Arial, sans-serif">Біржа Каналів • Блог</text>
+  <text x="100" y="210" fill="#ffffff" font-size="38" font-weight="800" font-family="Segoe UI, Arial, sans-serif">Аналіз перетину аудиторій для</text><text x="100" y="256" fill="#ffffff" font-size="38" font-weight="800" font-family="Segoe UI, Arial, sans-serif">YouTube-обмінів</text>
+  <text x="100" y="326" fill="#f8fafc" font-size="24" font-weight="500" font-family="Segoe UI, Arial, sans-serif">Практичний гайд для обміну YouTube-аудиторією</text>
+</svg>
