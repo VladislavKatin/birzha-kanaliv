@@ -39,6 +39,10 @@ export default function OffersPage() {
     const [error, setError] = useState('');
     const [filter, setFilter] = useState({ niche: '', language: '' });
     const [selectedOffer, setSelectedOffer] = useState(null);
+    const [responseOffer, setResponseOffer] = useState(null);
+    const [myChannels, setMyChannels] = useState([]);
+    const [selectedResponseChannelId, setSelectedResponseChannelId] = useState('');
+    const [responding, setResponding] = useState(false);
 
     const nicheOptions = getNicheOptions();
     const languageOptions = getLanguageOptions();
@@ -76,6 +80,38 @@ export default function OffersPage() {
     }, [loadOffers]);
 
     useEffect(() => {
+        if (!user) {
+            return;
+        }
+
+        let cancelled = false;
+
+        async function loadMyChannels() {
+            try {
+                const response = await api.get('/channels/my');
+                if (cancelled) {
+                    return;
+                }
+                const channels = response.data.channels || [];
+                setMyChannels(channels);
+                setSelectedResponseChannelId((current) => current || channels[0]?.id || '');
+            } catch {
+                if (!cancelled) {
+                    setMyChannels([]);
+                    setSelectedResponseChannelId('');
+                    toast.error('Не вдалося завантажити ваші канали.');
+                }
+            }
+        }
+
+        loadMyChannels();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [user]);
+
+    useEffect(() => {
         if (!offers.length) return;
         const params = new URLSearchParams(location.search);
         const targetOfferId = params.get('targetOfferId');
@@ -86,6 +122,44 @@ export default function OffersPage() {
             setSelectedOffer(targetOffer);
         }
     }, [offers, location.search]);
+
+    const openResponseModal = useCallback((offer) => {
+        if (!user) {
+            navigate(buildAuthRedirectPath(buildOfferDetailsPath(offer.id)));
+            return;
+        }
+
+        if (!myChannels.length) {
+            toast.error('Підключіть канал у розділі «Мої канали», щоб запропонувати обмін.');
+            navigate('/my-channels');
+            return;
+        }
+
+        setSelectedResponseChannelId((current) => current || myChannels[0].id);
+        setResponseOffer(offer);
+    }, [myChannels, navigate, user]);
+
+    async function submitResponse() {
+        if (!responseOffer?.id) {
+            return;
+        }
+
+        if (!selectedResponseChannelId) {
+            toast.error('Оберіть канал для обміну.');
+            return;
+        }
+
+        setResponding(true);
+        try {
+            await api.post(`/offers/${responseOffer.id}/respond`, { channelId: selectedResponseChannelId });
+            toast.success('Запит на обмін надіслано.');
+            setResponseOffer(null);
+        } catch (requestError) {
+            toast.error(getApiErrorMessage(requestError, 'Не вдалося надіслати запит на обмін.'));
+        } finally {
+            setResponding(false);
+        }
+    }
 
     if (loading) {
         return (
@@ -206,7 +280,7 @@ export default function OffersPage() {
                                 </button>
                                 <button
                                     className="btn btn-primary btn-sm"
-                                    onClick={() => navigate(user ? buildOfferDetailsPath(offer.id) : buildAuthRedirectPath(buildOfferDetailsPath(offer.id)))}
+                                    onClick={() => openResponseModal(offer)}
                                 >
                                     Запропонувати обмін
                                 </button>
@@ -222,9 +296,40 @@ export default function OffersPage() {
                     onClose={() => setSelectedOffer(null)}
                     onPropose={(offer) => {
                         setSelectedOffer(null);
-                        navigate(buildOfferDetailsPath(offer.id));
+                        openResponseModal(offer);
                     }}
                 />
+            )}
+            {responseOffer && (
+                <div className="offer-response-overlay" role="dialog" aria-modal="true">
+                    <div className="offer-response-modal card">
+                        <h3>Запропонувати обмін</h3>
+                        <p>
+                            Канал: <strong>{responseOffer.channel?.channelTitle || 'Канал'}</strong>
+                        </p>
+                        <label htmlFor="responseChannelSelect" className="form-label">Ваш канал</label>
+                        <select
+                            id="responseChannelSelect"
+                            className="filter-select full-width"
+                            value={selectedResponseChannelId}
+                            onChange={(event) => setSelectedResponseChannelId(event.target.value)}
+                        >
+                            {myChannels.map((channel) => (
+                                <option key={channel.id} value={channel.id}>
+                                    {channel.channelTitle}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="offer-response-actions">
+                            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setResponseOffer(null)} disabled={responding}>
+                                Скасувати
+                            </button>
+                            <button type="button" className="btn btn-primary btn-sm" onClick={submitResponse} disabled={responding}>
+                                {responding ? 'Надсилаємо...' : 'Надіслати запит'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

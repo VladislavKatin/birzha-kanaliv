@@ -62,6 +62,40 @@
     width: 100%;
 }
 
+.offer-response-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 20, 43, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 2100;
+}
+
+.offer-response-modal {
+    width: min(460px, 100%);
+    display: grid;
+    gap: 10px;
+}
+
+.offer-response-modal h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.offer-response-modal p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.offer-response-actions {
+    margin-top: 6px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
 /* Offers Grid */
 .offers-grid {
     display: grid;
