@@ -60,6 +60,11 @@
     background: #f1f7ff;
 }
 
+.support-thread-item.unread {
+    border-color: #90b8ea;
+    background: #f7fbff;
+}
+
 .support-thread-avatar {
     width: 44px;
     height: 44px;
@@ -86,6 +91,9 @@
 .support-thread-meta strong {
     color: #0f172a;
     font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .support-thread-meta small {
@@ -100,6 +108,19 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.support-thread-item.unread .support-thread-meta em {
+    color: #0f3f7a;
+    font-weight: 600;
+}
+
+.support-thread-unread-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #ef4444;
+    display: inline-block;
 }
 
 .support-chat-panel {

@@ -15,7 +15,7 @@ import './DashboardLayout.css';
 const navItems = [
     { path: '/dashboard', label: 'Дашборд', description: 'Загальна статистика акаунта', icon: 'dashboard' },
     { path: '/my-channels', label: 'Мої канали', description: 'Керування та синхронізація каналів', icon: 'youtube' },
-    { path: '/dashboard/offers', label: 'Пропозиції', description: 'Каталог і створення обмінів', icon: 'search' },
+    { path: '/dashboard/offers', label: 'Пропозиції', description: 'Каталог активних каналів для обміну', icon: 'search' },
     { path: '/swaps/incoming', label: 'Вхідні запити', description: 'Нові запити від інших каналів', icon: 'messages' },
     { path: '/swaps/outgoing', label: 'Вихідні запити', description: 'Ваші надіслані пропозиції', icon: 'message' },
     { path: '/exchanges', label: 'Обміни', description: 'Активні угоди та їх статус', icon: 'handshake' },

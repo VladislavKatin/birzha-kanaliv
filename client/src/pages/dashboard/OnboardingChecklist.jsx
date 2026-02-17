@@ -18,7 +18,7 @@ export default function OnboardingChecklist({ stats }) {
             },
             {
                 key: 'offer',
-                title: 'Створити першу пропозицію',
+                title: 'Активувати канал у каталозі',
                 done: Number(stats?.outgoingSwaps || 0) > 0 || Number(stats?.incomingSwaps || 0) > 0,
                 action: () => navigate('/dashboard/offers'),
                 actionLabel: 'До пропозицій',

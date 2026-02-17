@@ -10,6 +10,25 @@ function getApiErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.error || fallbackMessage;
 }
 
+function getCatalogVisibilityStatus(channel) {
+    const reasons = [];
+
+    if (!channel?.isActive) {
+        reasons.push('канал вимкнено (перемикач «Активний»)');
+    }
+    if (channel?.isFlagged) {
+        reasons.push('канал тимчасово обмежено модерацією');
+    }
+    if (!String(channel?.channelId || '').trim()) {
+        reasons.push('не вдалося отримати ID каналу з YouTube');
+    }
+
+    return {
+        visible: reasons.length === 0,
+        reasons,
+    };
+}
+
 export default function MyChannelsPage() {
     const { connectYouTube, error } = useAuthStore();
     const navigate = useNavigate();
@@ -85,6 +104,30 @@ export default function MyChannelsPage() {
                     </button>
                 </div>
             </div>
+
+            {channels.length > 0 ? (
+                <div className="card channels-visibility-card">
+                    <h3>Видимість у каталозі</h3>
+                    <p>
+                        Канал автоматично з&apos;являється у каталозі, якщо він активний, не обмежений модерацією та має коректний YouTube ID.
+                    </p>
+                    <div className="channels-visibility-list">
+                        {channels.map((channel) => {
+                            const status = getCatalogVisibilityStatus(channel);
+                            return (
+                                <div key={channel.id} className={`channels-visibility-item ${status.visible ? 'ok' : 'warn'}`}>
+                                    <strong>{channel.channelTitle || 'Канал без назви'}</strong>
+                                    {status.visible ? (
+                                        <span>Показується в каталозі</span>
+                                    ) : (
+                                        <span>Не показується: {status.reasons.join('; ')}</span>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            ) : null}
 
             {channels.length === 0 ? (
                 <div className="channels-empty card">

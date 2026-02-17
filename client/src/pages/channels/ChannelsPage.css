@@ -30,6 +30,57 @@
     gap: 20px;
 }
 
+.channels-visibility-card {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+}
+
+.channels-visibility-card h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.channels-visibility-card p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #46658d;
+}
+
+.channels-visibility-list {
+    display: grid;
+    gap: 8px;
+}
+
+.channels-visibility-item {
+    border: 1px solid #d8e5f5;
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.channels-visibility-item.ok {
+    background: #f3fbf7;
+    border-color: #bce7cd;
+}
+
+.channels-visibility-item.warn {
+    background: #fff8f6;
+    border-color: #f3d0c8;
+}
+
+.channels-visibility-item strong {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.channels-visibility-item span {
+    font-size: 12px;
+    color: #395a85;
+}
+
 .channels-empty {
     text-align: center;
     padding: 60px 24px;

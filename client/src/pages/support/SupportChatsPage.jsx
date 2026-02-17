@@ -2,7 +2,7 @@
 import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
-import { markThreadSeen } from '../../services/menuBadges';
+import { isThreadUnread, markThreadSeen } from '../../services/menuBadges';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './SupportChatsPage.css';
 
@@ -319,12 +319,13 @@ export default function SupportChatsPage() {
                         <aside className="support-thread-list" aria-label="Список чатів">
                             {threads.map((thread) => {
                                 const active = thread.id === activeThreadId;
+                                const unread = !active && isThreadUnread(thread, { myUserId });
                                 const avatar = getThreadAvatar(thread);
                                 return (
                                     <button
                                         key={thread.id}
                                         type="button"
-                                        className={`support-thread-item ${active ? 'active' : ''}`}
+                                        className={`support-thread-item ${active ? 'active' : ''} ${unread ? 'unread' : ''}`}
                                         onClick={() => setActiveThreadId(thread.id)}
                                     >
                                         {avatar.image ? (
@@ -333,7 +334,10 @@ export default function SupportChatsPage() {
                                             <span className="support-thread-avatar support-thread-avatar-fallback">{avatar.fallback}</span>
                                         )}
                                         <span className="support-thread-meta">
-                                            <strong>{getThreadTitle(thread)}</strong>
+                                            <strong>
+                                                {getThreadTitle(thread)}
+                                                {unread && <span className="support-thread-unread-dot" aria-label="Непрочитано" />}
+                                            </strong>
                                             <small>{getThreadSubtitle(thread)}</small>
                                             <em>{thread.lastMessage?.content || (thread.type === 'support' ? 'Напишіть адміністрації' : 'Відкрийте чат')}</em>
                                         </span>

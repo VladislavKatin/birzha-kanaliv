@@ -70,6 +70,16 @@ export default function NotificationSettingsPage() {
         setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
     }
 
+    const canToggleTelegram = telegramInfo.configured === true && telegramInfo.connected;
+
+    function handleToggleTelegram() {
+        if (!canToggleTelegram) {
+            toast.error('Спочатку підключіть Telegram-бота');
+            return;
+        }
+        toggle('telegram');
+    }
+
     async function handleSave() {
         setSaving(true);
         try {
@@ -200,7 +210,12 @@ export default function NotificationSettingsPage() {
                 <p className="section-desc">Отримуйте миттєві сповіщення через Telegram-бота</p>
                 <div className="toggle-row">
                     <span>Telegram-сповіщення</span>
-                    <button className={`toggle-switch ${prefs.telegram ? 'on' : ''}`} onClick={() => toggle('telegram')}>
+                    <button
+                        className={`toggle-switch ${prefs.telegram ? 'on' : ''}`}
+                        onClick={handleToggleTelegram}
+                        disabled={!canToggleTelegram}
+                        title={!canToggleTelegram ? 'Спочатку підключіть Telegram-бота' : ''}
+                    >
                         <span className="toggle-thumb" />
                     </button>
                 </div>
