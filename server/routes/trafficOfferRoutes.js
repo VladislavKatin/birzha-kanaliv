@@ -395,40 +395,8 @@ router.post('/:id/respond', auth, async (req, res) => {
                 return { error: { status: 400, body: { error: 'Cannot respond to your own offer' } } };
             }
 
-            if (process.env.NODE_ENV !== 'test') {
-                const limitsConfig = await getSystemLimits({ ActionLog, transaction });
-                const activeMatches = await TrafficMatch.count({
-                    where: {
-                        [Op.or]: [
-                            { initiatorChannelId: selected.channelId },
-                            { targetChannelId: selected.channelId },
-                        ],
-                        // Limit only truly active exchanges. Pending requests should not block new proposals.
-                        status: 'accepted',
-                    },
-                    transaction,
-                });
-
-                if (activeMatches >= limitsConfig.limits.activeExchangesPerChannel) {
-                    await ActionLog.create({
-                        userId: result.user.id,
-                        action: 'rate_limit_match_create_blocked',
-                        details: {
-                            channelId: selected.channelId,
-                            activeMatches,
-                            limit: limitsConfig.limits.activeExchangesPerChannel,
-                        },
-                        ip: req.ip,
-                    }, { transaction });
-
-                    return {
-                        error: {
-                            status: 429,
-                            body: { error: `Maximum ${limitsConfig.limits.activeExchangesPerChannel} accepted exchanges at the same time` },
-                        },
-                    };
-                }
-            }
+            // No hard cap for creating new offer responses.
+            // Users can negotiate multiple exchanges in parallel.
 
             const existing = await TrafficMatch.findOne({
                 where: {
