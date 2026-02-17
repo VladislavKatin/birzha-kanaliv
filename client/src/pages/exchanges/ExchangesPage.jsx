@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
@@ -66,7 +66,7 @@ export default function ExchangesPage() {
 
     const selectableIds = useMemo(
         () => exchanges.filter((item) => !item.hasReviewed).map((item) => item.id),
-        [exchanges]
+        [exchanges],
     );
     const selectedCount = selectedIds.length;
 
@@ -125,7 +125,7 @@ export default function ExchangesPage() {
 
     function toggleSelected(exchangeId) {
         setSelectedIds((prev) =>
-            prev.includes(exchangeId) ? prev.filter((id) => id !== exchangeId) : [...prev, exchangeId]
+            prev.includes(exchangeId) ? prev.filter((id) => id !== exchangeId) : [...prev, exchangeId],
         );
     }
 
