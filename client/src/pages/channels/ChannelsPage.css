@@ -81,6 +81,29 @@
     color: #395a85;
 }
 
+.channels-next-steps {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+}
+
+.channels-next-steps h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.channels-next-steps p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #46658d;
+}
+
+.channels-next-steps-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .channels-empty {
     text-align: center;
     padding: 60px 24px;

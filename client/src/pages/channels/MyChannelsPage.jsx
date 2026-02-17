@@ -106,27 +106,45 @@ export default function MyChannelsPage() {
             </div>
 
             {channels.length > 0 ? (
-                <div className="card channels-visibility-card">
-                    <h3>Видимість у каталозі</h3>
-                    <p>
-                        Канал автоматично з&apos;являється у каталозі, якщо він активний, не обмежений модерацією та має коректний YouTube ID.
-                    </p>
-                    <div className="channels-visibility-list">
-                        {channels.map((channel) => {
-                            const status = getCatalogVisibilityStatus(channel);
-                            return (
-                                <div key={channel.id} className={`channels-visibility-item ${status.visible ? 'ok' : 'warn'}`}>
-                                    <strong>{channel.channelTitle || 'Канал без назви'}</strong>
-                                    {status.visible ? (
-                                        <span>Показується в каталозі</span>
-                                    ) : (
-                                        <span>Не показується: {status.reasons.join('; ')}</span>
-                                    )}
-                                </div>
-                            );
-                        })}
+                <>
+                    <div className="card channels-visibility-card">
+                        <h3>Видимість у каталозі</h3>
+                        <p>
+                            Канал автоматично з&apos;являється у каталозі, якщо він активний, не обмежений модерацією та має коректний YouTube ID.
+                        </p>
+                        <div className="channels-visibility-list">
+                            {channels.map((channel) => {
+                                const status = getCatalogVisibilityStatus(channel);
+                                return (
+                                    <div key={channel.id} className={`channels-visibility-item ${status.visible ? 'ok' : 'warn'}`}>
+                                        <strong>{channel.channelTitle || 'Канал без назви'}</strong>
+                                        {status.visible ? (
+                                            <span>Показується в каталозі</span>
+                                        ) : (
+                                            <span>Не показується: {status.reasons.join('; ')}</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
+
+                    <div className="card channels-next-steps">
+                        <h3>Що робити далі</h3>
+                        <p>Після підключення каналу переходьте до пошуку партнерів і першого обміну.</p>
+                        <div className="channels-next-steps-actions">
+                            <button className="btn btn-primary btn-sm" onClick={() => navigate('/dashboard/offers')}>
+                                Відкрити каталог
+                            </button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/profile/edit')}>
+                                Доповнити профіль
+                            </button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/settings/notifications')}>
+                                Увімкнути сповіщення
+                            </button>
+                        </div>
+                    </div>
+                </>
             ) : null}
 
             {channels.length === 0 ? (

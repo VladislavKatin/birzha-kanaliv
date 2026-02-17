@@ -152,7 +152,20 @@ export default function OffersPage() {
                 <div className="swaps-empty card">
                     <span className="swaps-empty-icon">!</span>
                     <h3>Пропозицій поки немає</h3>
-                    <p>Активуйте канал у розділі «Мої канали», щоб він з'явився тут.</p>
+                    <p>Активуйте канал у розділі «Мої канали», щоб він з&apos;явився тут.</p>
+                    <ul className="offers-empty-list">
+                        <li>Підключіть і активуйте хоча б один YouTube-канал</li>
+                        <li>Додайте базову інформацію у профіль</li>
+                        <li>Увімкніть сповіщення, щоб не пропустити відповіді</li>
+                    </ul>
+                    <div className="offers-empty-actions">
+                        <button className="btn btn-primary btn-sm" onClick={() => navigate('/my-channels')}>
+                            До моїх каналів
+                        </button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => navigate('/profile/edit')}>
+                            Заповнити профіль
+                        </button>
+                    </div>
                 </div>
             ) : (
                 <div className="offers-grid">

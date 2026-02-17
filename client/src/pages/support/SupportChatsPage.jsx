@@ -7,6 +7,11 @@ import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '..
 import './SupportChatsPage.css';
 
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+const SUPPORT_QUICK_ACTIONS = [
+    'Не можу підключити YouTube-канал. Підкажіть, що перевірити?',
+    'Мій канал не видно у каталозі. Допоможіть знайти причину.',
+    'Хочу повідомити про помилку на сторінці.',
+];
 
 function getApiErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.error || fallbackMessage;
@@ -407,6 +412,20 @@ export default function SupportChatsPage() {
                             <div className="support-chat-topbar">
                                 <h2>{activeThread ? getThreadTitle(activeThread) : 'Чат'}</h2>
                                 <span>{activeThread ? getThreadSubtitle(activeThread) : ''}</span>
+                                {activeThread?.type === 'support' && (
+                                    <div className="support-quick-actions">
+                                        {SUPPORT_QUICK_ACTIONS.map((message) => (
+                                            <button
+                                                key={message}
+                                                type="button"
+                                                className="support-quick-action-btn"
+                                                onClick={() => setInputValue(message)}
+                                            >
+                                                {message}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="support-chat-list">

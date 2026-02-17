@@ -166,6 +166,24 @@
     width: auto;
 }
 
+.offers-empty-list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 4px;
+    text-align: left;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.offers-empty-actions {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
 /* Create Offer Modal */
 .create-offer-modal {
     max-width: 520px;

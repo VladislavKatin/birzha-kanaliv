@@ -508,3 +508,27 @@
 .onboarding-state.done {
     background: #22c55e;
 }
+
+.starter-guide-card {
+    display: grid;
+    gap: 10px;
+}
+
+.starter-guide-card h3 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.starter-guide-card p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.starter-guide-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}

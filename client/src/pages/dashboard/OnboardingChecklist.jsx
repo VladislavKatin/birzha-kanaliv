@@ -1,7 +1,7 @@
 ﻿import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function OnboardingChecklist({ stats }) {
+export default function OnboardingChecklist({ stats, notificationDone = false }) {
     const navigate = useNavigate();
 
     const items = useMemo(() => {
@@ -33,12 +33,12 @@ export default function OnboardingChecklist({ stats }) {
             {
                 key: 'notifications',
                 title: 'Налаштувати сповіщення',
-                done: false,
+                done: notificationDone,
                 action: () => navigate('/settings/notifications'),
                 actionLabel: 'Налаштувати',
             },
         ];
-    }, [navigate, stats]);
+    }, [navigate, notificationDone, stats]);
 
     const doneCount = items.filter((item) => item.done).length;
 

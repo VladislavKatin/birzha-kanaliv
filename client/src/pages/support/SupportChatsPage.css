@@ -187,6 +187,28 @@
     color: #64748b;
 }
 
+.support-quick-actions {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.support-quick-action-btn {
+    border: 1px solid #cfe0f4;
+    background: #ffffff;
+    color: #245183;
+    font-size: 12px;
+    line-height: 1.25;
+    border-radius: 999px;
+    padding: 6px 10px;
+}
+
+.support-quick-action-btn:hover {
+    border-color: #a8c6eb;
+    background: #f2f8ff;
+}
+
 .support-chat-list {
     overflow-y: auto;
     padding: 14px;

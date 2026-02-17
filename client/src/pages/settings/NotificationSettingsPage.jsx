@@ -70,6 +70,39 @@ export default function NotificationSettingsPage() {
         setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
     }
 
+    function applyPreset(type) {
+        if (type === 'recommended') {
+            setPrefs((prev) => ({
+                ...prev,
+                email_new_proposal: true,
+                email_message: true,
+                email_deal_complete: true,
+                telegram: Boolean(telegramInfo.connected),
+                webpush: false,
+            }));
+            return;
+        }
+        if (type === 'important') {
+            setPrefs((prev) => ({
+                ...prev,
+                email_new_proposal: true,
+                email_message: false,
+                email_deal_complete: true,
+                telegram: false,
+                webpush: false,
+            }));
+            return;
+        }
+        setPrefs((prev) => ({
+            ...prev,
+            email_new_proposal: true,
+            email_message: true,
+            email_deal_complete: true,
+            telegram: Boolean(telegramInfo.connected),
+            webpush: webPushSupported && webPushPermission === 'granted',
+        }));
+    }
+
     const canToggleTelegram = telegramInfo.configured === true && telegramInfo.connected;
 
     function handleToggleTelegram() {
@@ -203,6 +236,22 @@ export default function NotificationSettingsPage() {
                 <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
                     {saving ? 'Збереження...' : 'Зберегти'}
                 </button>
+            </div>
+
+            <div className="card settings-section settings-presets">
+                <h3>Швидкі пресети</h3>
+                <p className="section-desc">Оберіть готовий набір для швидкого старту.</p>
+                <div className="settings-presets-actions">
+                    <button className="btn btn-secondary btn-sm" onClick={() => applyPreset('recommended')}>
+                        Рекомендовано
+                    </button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => applyPreset('important')}>
+                        Тільки важливе
+                    </button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => applyPreset('all')}>
+                        Усе доступне
+                    </button>
+                </div>
             </div>
 
             <div className="card settings-section">
