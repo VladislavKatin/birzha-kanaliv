@@ -30,6 +30,17 @@ async function runApiSmokeFunctionalTests() {
         await smokeChatSend(baseUrl, primaryFlow.matchId, OFFER_OWNER_UID);
         await smokeMatchCompleteViaChat(baseUrl, primaryFlow.matchId, OFFER_OWNER_UID, RESPONDER_UID);
         await smokeReviewCreate(baseUrl, primaryFlow.matchId, OFFER_OWNER_UID);
+        await smokeExchangesFilters(baseUrl);
+
+        const unreviewedFlow = await createAndProgressMatchFlow(baseUrl, {
+            offerOwnerUid: OFFER_OWNER_UID,
+            offerOwnerChannelId: OFFER_OWNER_CHANNEL_ID,
+            responderUid: RESPONDER_UID,
+            responderChannelId: RESPONDER_CHANNEL_ID,
+            label: 'unreviewed-exchange',
+        });
+        await smokeMatchCompleteViaChat(baseUrl, unreviewedFlow.matchId, OFFER_OWNER_UID, RESPONDER_UID);
+        await smokeBulkExchangeReview(baseUrl, unreviewedFlow.matchId, OFFER_OWNER_UID);
 
         const declineFlow = await createAndProgressMatchFlow(baseUrl, {
             offerOwnerUid: OFFER_OWNER_UID,
@@ -365,6 +376,42 @@ async function smokeReviewCreate(baseUrl, matchId, uid) {
 
     assert.equal(response.status, 201);
     assert.equal(!!response.body.review, true);
+}
+
+async function smokeExchangesFilters(baseUrl) {
+    const all = await request(baseUrl, {
+        method: 'GET',
+        path: '/api/exchanges?sort=newest',
+        uid: OFFER_OWNER_UID,
+    });
+    assert.equal(all.status, 200);
+    assert.equal(Array.isArray(all.body.exchanges), true);
+    assert.equal(typeof all.body.pagination?.page, 'number');
+
+    const filtered = await request(baseUrl, {
+        method: 'GET',
+        path: '/api/exchanges?reviewed=reviewed&sort=largest&search=smoke',
+        uid: OFFER_OWNER_UID,
+    });
+    assert.equal(filtered.status, 200);
+    assert.equal(Array.isArray(filtered.body.exchanges), true);
+    assert.equal(typeof filtered.body.pagination?.totalPages, 'number');
+}
+
+async function smokeBulkExchangeReview(baseUrl, matchId, uid) {
+    const response = await request(baseUrl, {
+        method: 'POST',
+        path: '/api/exchanges/bulk-review',
+        uid,
+        body: {
+            matchIds: [matchId],
+            rating: 4,
+            comment: 'bulk exchange review smoke',
+        },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(Array.isArray(response.body.processed), true);
+    assert.equal(response.body.processed.some((item) => item.matchId === matchId), true);
 }
 
 async function request(baseUrl, {

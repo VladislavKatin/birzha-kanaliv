@@ -10,12 +10,14 @@ const smokeEndpoints = [
     { method: 'POST', path: '/api/swaps/:id/decline' },
     { method: 'POST', path: '/api/swaps/:id/defer' },
     { method: 'POST', path: '/api/swaps/bulk-action' },
+    { method: 'GET', path: '/api/exchanges' },
+    { method: 'POST', path: '/api/exchanges/bulk-review' },
     { method: 'POST', path: '/api/chat/:matchId/messages' },
     { method: 'POST', path: '/api/reviews' },
 ];
 
 function runApiSmokeUnitTests() {
-    assert.equal(smokeEndpoints.length >= 11, true);
+    assert.equal(smokeEndpoints.length >= 13, true);
 
     const required = new Set([
         'GET /api/auth/me',
@@ -27,6 +29,8 @@ function runApiSmokeUnitTests() {
         'POST /api/swaps/:id/decline',
         'POST /api/swaps/:id/defer',
         'POST /api/swaps/bulk-action',
+        'GET /api/exchanges',
+        'POST /api/exchanges/bulk-review',
         'POST /api/chat/:matchId/messages',
         'POST /api/reviews',
     ]);
