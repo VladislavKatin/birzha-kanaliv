@@ -1,5 +1,7 @@
-﻿.support-page {
+.support-page {
     max-width: 1280px;
+    width: 100%;
+    min-width: 0;
 }
 
 .support-header {
@@ -23,11 +25,13 @@
     padding: 0;
     overflow: hidden;
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
     height: clamp(560px, 74vh, 900px);
     border: 1px solid #dbe6f3;
     background: #ffffff;
     min-height: 0;
+    width: 100%;
+    align-items: stretch;
 }
 
 .support-thread-list {
@@ -39,6 +43,7 @@
     flex-direction: column;
     gap: 8px;
     min-height: 0;
+    min-width: 0;
 }
 
 .support-thread-tools {
@@ -80,6 +85,10 @@
     gap: 10px;
     text-align: left;
     cursor: pointer;
+    align-items: start;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .support-thread-item.active {
@@ -127,15 +136,21 @@
 .support-thread-meta small {
     color: #64748b;
     font-size: 11px;
+    line-height: 1.3;
 }
 
 .support-thread-meta em {
     color: #475569;
     font-size: 12px;
     font-style: normal;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
     overflow: hidden;
-    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .support-thread-item.unread .support-thread-meta em {
@@ -166,12 +181,15 @@
     min-width: 0;
     min-height: 0;
     background: #ffffff;
+    overflow: hidden;
 }
 
 .support-chat-topbar {
     border-bottom: 1px solid #dbe6f3;
     padding: 12px 14px;
     background: #f8fbff;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .support-chat-topbar h2 {
@@ -192,6 +210,8 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .support-quick-action-btn {
@@ -202,6 +222,11 @@
     line-height: 1.25;
     border-radius: 999px;
     padding: 6px 10px;
+    min-height: 0;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
 }
 
 .support-quick-action-btn:hover {
@@ -315,14 +340,17 @@
 
 .support-chat-controls {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 8px;
     align-items: end;
+    min-width: 0;
 }
 
 .support-chat-input {
     width: 100%;
     resize: vertical;
+    min-height: 44px;
+    max-height: 180px;
     border: 1px solid #dbe6f3;
     border-radius: 10px;
     padding: 10px;
@@ -367,11 +395,12 @@
 @media (max-width: 1020px) {
     .support-workspace {
         grid-template-columns: 1fr;
+        grid-template-rows: minmax(180px, 240px) minmax(0, 1fr);
         height: clamp(620px, 78vh, 960px);
     }
 
     .support-thread-list {
-        max-height: 220px;
+        max-height: none;
         border-right: none;
         border-bottom: 1px solid #dbe6f3;
     }
