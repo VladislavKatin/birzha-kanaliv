@@ -19,11 +19,17 @@ function getApiErrorMessage(error, fallbackMessage) {
 
 function formatTime(dateValue) {
     const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
     return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDate(dateValue) {
     const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) {
+        return 'Невідома дата';
+    }
     return date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' });
 }
 
@@ -121,10 +127,9 @@ export default function SupportChatsPage() {
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const prefill = params.get('prefill');
-        const requestedThread = params.get('thread');
         if (prefill) {
             setInputValue(prefill);
-            if (!requestedThread) {
+            if (!params.get('thread')) {
                 setActiveThreadId('support');
             }
         }

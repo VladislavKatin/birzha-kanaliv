@@ -32,6 +32,7 @@
     min-height: 0;
     width: 100%;
     align-items: stretch;
+    isolation: isolate;
 }
 
 .support-thread-list {
@@ -44,6 +45,7 @@
     gap: 8px;
     min-height: 0;
     min-width: 0;
+    overscroll-behavior: contain;
 }
 
 .support-thread-tools {
@@ -89,6 +91,7 @@
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
+    contain: layout paint;
 }
 
 .support-thread-item.active {
@@ -182,6 +185,7 @@
     min-height: 0;
     background: #ffffff;
     overflow: hidden;
+    position: relative;
 }
 
 .support-chat-topbar {
@@ -196,6 +200,10 @@
     margin: 0;
     font-size: 17px;
     color: #0f172a;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .support-chat-topbar span {
@@ -212,6 +220,7 @@
     gap: 6px;
     max-width: 100%;
     overflow: hidden;
+    align-items: flex-start;
 }
 
 .support-quick-action-btn {
@@ -242,6 +251,7 @@
     flex-direction: column;
     gap: 8px;
     min-height: 0;
+    overscroll-behavior: contain;
 }
 
 .support-chat-date {
@@ -277,6 +287,8 @@
     border: 1px solid #dbe6f3;
     background: #ffffff;
     color: #0f172a;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .support-chat-message.mine .support-chat-bubble {
@@ -309,6 +321,7 @@
     white-space: pre-wrap;
     line-height: 1.45;
     font-size: 14px;
+    overflow-wrap: anywhere;
 }
 
 .support-chat-time {
@@ -325,7 +338,7 @@
 
 .support-chat-image {
     display: block;
-    max-width: min(340px, 62vw);
+    max-width: min(340px, 100%);
     max-height: 260px;
     border-radius: 10px;
     border: 1px solid #dbe6f3;
@@ -336,6 +349,7 @@
     padding: 12px;
     border-top: 1px solid #dbe6f3;
     background: #ffffff;
+    min-width: 0;
 }
 
 .support-chat-controls {
@@ -344,6 +358,10 @@
     gap: 8px;
     align-items: end;
     min-width: 0;
+}
+
+.support-chat-controls .btn {
+    min-height: 40px;
 }
 
 .support-chat-input {
@@ -358,6 +376,7 @@
     font-family: inherit;
     color: #0f172a;
     background: #ffffff;
+    overflow-wrap: anywhere;
 }
 
 .support-chat-preview {
@@ -411,7 +430,40 @@
         grid-template-columns: 1fr;
     }
 
+    .support-thread-item {
+        grid-template-columns: 40px 1fr;
+        gap: 8px;
+    }
+
+    .support-thread-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
     .support-chat-bubble {
         width: min(620px, 96%);
+    }
+
+    .support-chat-input-wrap {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 560px) {
+    .support-workspace {
+        height: calc(100dvh - 190px);
+        min-height: 560px;
+    }
+
+    .support-chat-list {
+        padding: 10px;
+    }
+
+    .support-chat-topbar {
+        padding: 10px;
+    }
+
+    .support-thread-list {
+        padding: 8px;
     }
 }
