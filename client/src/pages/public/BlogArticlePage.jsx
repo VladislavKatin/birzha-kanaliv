@@ -13,6 +13,40 @@ import {
 } from '../../services/seo';
 import './BlogArticlePage.css';
 
+const VISUAL_ARTICLE_SLUGS = new Set([
+    'youtube-exchange-pricing-model-2026',
+    'how-to-write-offer-description-that-converts',
+    'audience-overlap-analysis-for-youtube-exchanges',
+    'negotiation-script-for-channel-exchange',
+    'channel-brand-safety-checklist-for-collabs',
+    'retention-metrics-after-collaboration',
+    'subscriber-quality-vs-volume-in-exchanges',
+    'youtube-analytics-checklist-before-deal',
+    'red-flags-in-channel-exchange-deals',
+    'local-ukrainian-youtube-niches-2026',
+    'launch-playbook-for-new-channel-on-exchange',
+    'how-to-scale-to-10-exchanges-per-month',
+    'conversion-optimization-for-offer-page',
+    'case-study-education-channel-growth-exchange',
+    'case-study-gaming-channel-growth-exchange',
+    'case-study-business-channel-growth-exchange',
+    'communication-sla-for-youtube-collab-teams',
+    'multi-channel-portfolio-strategy-for-creators',
+    'monthly-report-template-for-channel-exchanges',
+    'ai-assisted-workflow-for-youtube-collaboration',
+]);
+
+function getSectionVisual(article, sectionIndex, heading) {
+    if (!article || !VISUAL_ARTICLE_SLUGS.has(article.slug)) {
+        return null;
+    }
+
+    const src = `/images/blog/content/${article.slug}-section-${sectionIndex + 1}.svg`;
+    const alt = `${article.title}: ${heading}`;
+    const caption = `Ілюстрація до розділу: ${heading}`;
+    return { src, alt, caption };
+}
+
 function ChartBlock({ chart }) {
     if (!chart || !Array.isArray(chart.data) || chart.data.length === 0) {
         return null;
@@ -143,14 +177,24 @@ export default function BlogArticlePage() {
                             </header>
 
                             <section className="blog-article-content">
-                                {article.sections.map((section) => (
+                                {article.sections.map((section, sectionIndex) => {
+                                    const visual = getSectionVisual(article, sectionIndex, section.heading);
+
+                                    return (
                                     <section key={section.heading}>
                                         <h2>{section.heading}</h2>
+                                        {visual ? (
+                                            <figure className="blog-section-figure">
+                                                <img src={visual.src} alt={visual.alt} loading="lazy" />
+                                                <figcaption>{visual.caption}</figcaption>
+                                            </figure>
+                                        ) : null}
                                         {section.paragraphs.map((paragraph) => (
                                             <p key={paragraph}>{paragraph}</p>
                                         ))}
                                     </section>
-                                ))}
+                                    );
+                                })}
                             </section>
 
                             <ChartBlock chart={article.chart} />

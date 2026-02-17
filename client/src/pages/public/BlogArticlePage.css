@@ -113,6 +113,27 @@
     line-height: 1.78;
 }
 
+.blog-section-figure {
+    margin: 0 0 14px;
+    border: 1px solid #d9e8f8;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #f8fbff;
+}
+
+.blog-section-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.blog-section-figure figcaption {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #475569;
+    border-top: 1px solid #d9e8f8;
+}
+
 .blog-chart-card,
 .blog-faq-card,
 .blog-related-card {

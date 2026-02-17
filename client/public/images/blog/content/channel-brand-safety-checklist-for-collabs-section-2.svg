@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-label="Brand safety чеклист для колаборацій — 2. Фреймворк виконання у темі: brand safety чеклист для колаборацій">
+  <defs>
+    <linearGradient id="section-14" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="560" fill="url(#section-14)"/>
+  <rect x="46" y="46" width="1108" height="468" rx="24" fill="rgba(10,16,35,0.46)" stroke="rgba(255,255,255,0.20)"/>
+  <text x="90" y="140" fill="#dbeafe" font-size="22" font-weight="700" font-family="Segoe UI, Arial, sans-serif">Brand safety чеклист для колаборацій</text>
+  <text x="90" y="198" fill="#ffffff" font-size="34" font-weight="800" font-family="Segoe UI, Arial, sans-serif">2. Фреймворк виконання у темі: brand safety чеклист для колаборацій</text>
+  <text x="90" y="248" fill="#f1f5f9" font-size="22" font-weight="500" font-family="Segoe UI, Arial, sans-serif">Практичний блок аналітики, логіки та SEO-візуалу</text>
+  <rect x="560" y="144" width="30" height="146" rx="6" fill="#fecaca" opacity="0.4"/><rect x="612" y="247" width="30" height="43" rx="6" fill="#fecaca" opacity="0.48000000000000004"/><rect x="664" y="230" width="30" height="60" rx="6" fill="#fecaca" opacity="0.56"/><rect x="716" y="213" width="30" height="77" rx="6" fill="#fecaca" opacity="0.64"/><rect x="768" y="196" width="30" height="94" rx="6" fill="#fecaca" opacity="0.72"/><rect x="820" y="179" width="30" height="111" rx="6" fill="#fecaca" opacity="0.8"/>
+  <path d="M90 340 C300 300, 430 420, 610 380" stroke="#fecaca" stroke-width="8" fill="none" opacity="0.85"/>
+  <circle cx="625" cy="378" r="8" fill="#fecaca"/>
+  <text x="90" y="420" fill="#e2e8f0" font-size="19" font-weight="500" font-family="Segoe UI, Arial, sans-serif">Біржа Каналів • Розділ 2</text>
+</svg>

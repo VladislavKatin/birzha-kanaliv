@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-label="Оптимізація конверсії сторінки офера — 3. Аналітика та цикл ітерацій у темі: оптимізація конверсії сторінки офера">
+  <defs>
+    <linearGradient id="section-39" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b5ed7"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="560" fill="url(#section-39)"/>
+  <rect x="46" y="46" width="1108" height="468" rx="24" fill="rgba(10,16,35,0.46)" stroke="rgba(255,255,255,0.20)"/>
+  <text x="90" y="140" fill="#dbeafe" font-size="22" font-weight="700" font-family="Segoe UI, Arial, sans-serif">Оптимізація конверсії сторінки офера</text>
+  <text x="90" y="198" fill="#ffffff" font-size="34" font-weight="800" font-family="Segoe UI, Arial, sans-serif">3. Аналітика та цикл ітерацій у темі: оптимізація конверсії сторінки офера</text>
+  <text x="90" y="248" fill="#f1f5f9" font-size="22" font-weight="500" font-family="Segoe UI, Arial, sans-serif">Практичний блок аналітики, логіки та SEO-візуалу</text>
+  <rect x="560" y="202" width="30" height="88" rx="6" fill="#cffafe" opacity="0.4"/><rect x="612" y="185" width="30" height="105" rx="6" fill="#cffafe" opacity="0.48000000000000004"/><rect x="664" y="168" width="30" height="122" rx="6" fill="#cffafe" opacity="0.56"/><rect x="716" y="151" width="30" height="139" rx="6" fill="#cffafe" opacity="0.64"/><rect x="768" y="254" width="30" height="36" rx="6" fill="#cffafe" opacity="0.72"/><rect x="820" y="237" width="30" height="53" rx="6" fill="#cffafe" opacity="0.8"/>
+  <path d="M90 340 C300 300, 430 420, 610 380" stroke="#cffafe" stroke-width="8" fill="none" opacity="0.85"/>
+  <circle cx="625" cy="378" r="8" fill="#cffafe"/>
+  <text x="90" y="420" fill="#e2e8f0" font-size="19" font-weight="500" font-family="Segoe UI, Arial, sans-serif">Біржа Каналів • Розділ 3</text>
+</svg>
