@@ -128,7 +128,6 @@ router.get('/callback', async (req, res) => {
 
         // Upsert YouTube account
         const accountData = {
-            userId: user.id,
             channelId: channelInfo.channelId,
             channelTitle: channelInfo.channelTitle,
             channelAvatar: channelInfo.channelAvatar,
@@ -178,7 +177,10 @@ router.get('/callback', async (req, res) => {
                 account = existingAccount;
                 reusedExistingAccount = true;
             } else {
-                account = await YouTubeAccount.create(accountData, { transaction });
+                account = await YouTubeAccount.create({
+                    ...accountData,
+                    userId: user.id,
+                }, { transaction });
             }
 
             await ActionLog.create({
