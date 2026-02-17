@@ -479,6 +479,1676 @@ const BLOG_ARTICLES = [
         ],
         sections: makeLongSections('антиспам і фільтрація якості пропозицій'),
     },
+    {
+            slug: "youtube-exchange-pricing-model-2026",
+            title: "Модель оцінки вартості обміну YouTube-каналів у 2026",
+            excerpt: "Методика оцінки угоди за якістю аудиторії, retention та KPI.",
+            coverImage: "/images/blog/youtube-exchange-pricing-model-2026.svg",
+            coverAlt: "Ілюстрація статті: Модель оцінки вартості обміну YouTube-каналів у 2026",
+            publishedAt: "19 лютого 2026",
+            publishedAtIso: "2026-02-19",
+            readTime: "9 хв читання",
+            tags: [
+                    "YouTube",
+                    "Монетизація",
+                    "Обмін"
+            ],
+            seoTitle: "Модель оцінки вартості обміну YouTube-каналів у 2026: практичний гайд для Біржа Каналів",
+            seoDescription: "Методика оцінки угоди за якістю аудиторії, retention та KPI. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "youtube exchange pricing model 2026",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "how-to-write-offer-description-that-converts",
+                    "audience-overlap-analysis-for-youtube-exchanges",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Модель оцінки вартості обміну YouTube-каналів у 2026",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "line",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Ц1",
+                                    baseline: 39,
+                                    system: 44
+                            },
+                            {
+                                    stage: "Ц2",
+                                    baseline: 41,
+                                    system: 50
+                            },
+                            {
+                                    stage: "Ц3",
+                                    baseline: 40,
+                                    system: 56
+                            },
+                            {
+                                    stage: "Ц4",
+                                    baseline: 43,
+                                    system: 62
+                            },
+                            {
+                                    stage: "Ц5",
+                                    baseline: 42,
+                                    system: 67
+                            },
+                            {
+                                    stage: "Ц6",
+                                    baseline: 45,
+                                    system: 72
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "baseline",
+                                    name: "Базовий підхід",
+                                    color: "#94a3b8"
+                            },
+                            {
+                                    key: "system",
+                                    name: "Системний підхід",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Модель оцінки вартості обміну YouTube-каналів у 2026»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("модель оцінки вартості обміну youtube-каналів у 2026")
+    },
+    {
+            slug: "how-to-write-offer-description-that-converts",
+            title: "Як писати опис офера, що конвертує",
+            excerpt: "Шаблон опису пропозиції для більшої кількості релевантних відповідей.",
+            coverImage: "/images/blog/how-to-write-offer-description-that-converts.svg",
+            coverAlt: "Ілюстрація статті: Як писати опис офера, що конвертує",
+            publishedAt: "19 лютого 2026",
+            publishedAtIso: "2026-02-19",
+            readTime: "10 хв читання",
+            tags: [
+                    "YouTube",
+                    "Контент",
+                    "Обмін"
+            ],
+            seoTitle: "Як писати опис офера, що конвертує: практичний гайд для Біржа Каналів",
+            seoDescription: "Шаблон опису пропозиції для більшої кількості релевантних відповідей. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "how to write offer description that converts",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "audience-overlap-analysis-for-youtube-exchanges",
+                    "negotiation-script-for-channel-exchange",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Як писати опис офера, що конвертує",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Базовий",
+                                    score: 34
+                            },
+                            {
+                                    stage: "Покращений",
+                                    score: 49
+                            },
+                            {
+                                    stage: "Системний",
+                                    score: 63
+                            },
+                            {
+                                    stage: "Масштабований",
+                                    score: 74
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "score",
+                                    name: "Ключовий показник (%)",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Як писати опис офера, що конвертує»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("як писати опис офера, що конвертує")
+    },
+    {
+            slug: "audience-overlap-analysis-for-youtube-exchanges",
+            title: "Аналіз перетину аудиторій для YouTube-обмінів",
+            excerpt: "Практика оцінки audience overlap перед запуском угоди.",
+            coverImage: "/images/blog/audience-overlap-analysis-for-youtube-exchanges.svg",
+            coverAlt: "Ілюстрація статті: Аналіз перетину аудиторій для YouTube-обмінів",
+            publishedAt: "20 лютого 2026",
+            publishedAtIso: "2026-02-20",
+            readTime: "11 хв читання",
+            tags: [
+                    "YouTube",
+                    "Аналітика",
+                    "Обмін"
+            ],
+            seoTitle: "Аналіз перетину аудиторій для YouTube-обмінів: практичний гайд для Біржа Каналів",
+            seoDescription: "Практика оцінки audience overlap перед запуском угоди. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "audience overlap analysis for youtube exchanges",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "negotiation-script-for-channel-exchange",
+                    "channel-brand-safety-checklist-for-collabs",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Аналіз перетину аудиторій для YouTube-обмінів",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "line",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Ц1",
+                                    baseline: 39,
+                                    system: 44
+                            },
+                            {
+                                    stage: "Ц2",
+                                    baseline: 41,
+                                    system: 50
+                            },
+                            {
+                                    stage: "Ц3",
+                                    baseline: 40,
+                                    system: 56
+                            },
+                            {
+                                    stage: "Ц4",
+                                    baseline: 43,
+                                    system: 62
+                            },
+                            {
+                                    stage: "Ц5",
+                                    baseline: 42,
+                                    system: 67
+                            },
+                            {
+                                    stage: "Ц6",
+                                    baseline: 45,
+                                    system: 72
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "baseline",
+                                    name: "Базовий підхід",
+                                    color: "#94a3b8"
+                            },
+                            {
+                                    key: "system",
+                                    name: "Системний підхід",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Аналіз перетину аудиторій для YouTube-обмінів»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("аналіз перетину аудиторій для youtube-обмінів")
+    },
+    {
+            slug: "negotiation-script-for-channel-exchange",
+            title: "Скрипт переговорів для обміну каналами",
+            excerpt: "Структура переговорів від першого контакту до погодження KPI.",
+            coverImage: "/images/blog/negotiation-script-for-channel-exchange.svg",
+            coverAlt: "Ілюстрація статті: Скрипт переговорів для обміну каналами",
+            publishedAt: "20 лютого 2026",
+            publishedAtIso: "2026-02-20",
+            readTime: "12 хв читання",
+            tags: [
+                    "YouTube",
+                    "Комунікація",
+                    "Обмін"
+            ],
+            seoTitle: "Скрипт переговорів для обміну каналами: практичний гайд для Біржа Каналів",
+            seoDescription: "Структура переговорів від першого контакту до погодження KPI. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "negotiation script for channel exchange",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "channel-brand-safety-checklist-for-collabs",
+                    "retention-metrics-after-collaboration",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Скрипт переговорів для обміну каналами",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Базовий",
+                                    score: 34
+                            },
+                            {
+                                    stage: "Покращений",
+                                    score: 49
+                            },
+                            {
+                                    stage: "Системний",
+                                    score: 63
+                            },
+                            {
+                                    stage: "Масштабований",
+                                    score: 74
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "score",
+                                    name: "Ключовий показник (%)",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Скрипт переговорів для обміну каналами»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("скрипт переговорів для обміну каналами")
+    },
+    {
+            slug: "channel-brand-safety-checklist-for-collabs",
+            title: "Brand safety чеклист для колаборацій",
+            excerpt: "Правила перевірки партнера для захисту репутації каналу.",
+            coverImage: "/images/blog/channel-brand-safety-checklist-for-collabs.svg",
+            coverAlt: "Ілюстрація статті: Brand safety чеклист для колаборацій",
+            publishedAt: "21 лютого 2026",
+            publishedAtIso: "2026-02-21",
+            readTime: "9 хв читання",
+            tags: [
+                    "YouTube",
+                    "Репутація",
+                    "Обмін"
+            ],
+            seoTitle: "Brand safety чеклист для колаборацій: практичний гайд для Біржа Каналів",
+            seoDescription: "Правила перевірки партнера для захисту репутації каналу. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "channel brand safety checklist for collabs",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "retention-metrics-after-collaboration",
+                    "subscriber-quality-vs-volume-in-exchanges",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Brand safety чеклист для колаборацій",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "line",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Ц1",
+                                    baseline: 39,
+                                    system: 44
+                            },
+                            {
+                                    stage: "Ц2",
+                                    baseline: 41,
+                                    system: 50
+                            },
+                            {
+                                    stage: "Ц3",
+                                    baseline: 40,
+                                    system: 56
+                            },
+                            {
+                                    stage: "Ц4",
+                                    baseline: 43,
+                                    system: 62
+                            },
+                            {
+                                    stage: "Ц5",
+                                    baseline: 42,
+                                    system: 67
+                            },
+                            {
+                                    stage: "Ц6",
+                                    baseline: 45,
+                                    system: 72
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "baseline",
+                                    name: "Базовий підхід",
+                                    color: "#94a3b8"
+                            },
+                            {
+                                    key: "system",
+                                    name: "Системний підхід",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Brand safety чеклист для колаборацій»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("brand safety чеклист для колаборацій")
+    },
+    {
+            slug: "retention-metrics-after-collaboration",
+            title: "Retention-метрики після колаборації",
+            excerpt: "Як виміряти реальну якість обміну після публікацій.",
+            coverImage: "/images/blog/retention-metrics-after-collaboration.svg",
+            coverAlt: "Ілюстрація статті: Retention-метрики після колаборації",
+            publishedAt: "21 лютого 2026",
+            publishedAtIso: "2026-02-21",
+            readTime: "10 хв читання",
+            tags: [
+                    "YouTube",
+                    "Аналітика",
+                    "Обмін"
+            ],
+            seoTitle: "Retention-метрики після колаборації: практичний гайд для Біржа Каналів",
+            seoDescription: "Як виміряти реальну якість обміну після публікацій. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "retention metrics after collaboration",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "subscriber-quality-vs-volume-in-exchanges",
+                    "youtube-analytics-checklist-before-deal",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Retention-метрики після колаборації",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Базовий",
+                                    score: 34
+                            },
+                            {
+                                    stage: "Покращений",
+                                    score: 49
+                            },
+                            {
+                                    stage: "Системний",
+                                    score: 63
+                            },
+                            {
+                                    stage: "Масштабований",
+                                    score: 74
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "score",
+                                    name: "Ключовий показник (%)",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Retention-метрики після колаборації»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("retention-метрики після колаборації")
+    },
+    {
+            slug: "subscriber-quality-vs-volume-in-exchanges",
+            title: "Якість підписника проти обсягу в обмінах",
+            excerpt: "Чому quality-first підхід працює стабільніше за гонитву за цифрами.",
+            coverImage: "/images/blog/subscriber-quality-vs-volume-in-exchanges.svg",
+            coverAlt: "Ілюстрація статті: Якість підписника проти обсягу в обмінах",
+            publishedAt: "22 лютого 2026",
+            publishedAtIso: "2026-02-22",
+            readTime: "11 хв читання",
+            tags: [
+                    "YouTube",
+                    "Зростання",
+                    "Обмін"
+            ],
+            seoTitle: "Якість підписника проти обсягу в обмінах: практичний гайд для Біржа Каналів",
+            seoDescription: "Чому quality-first підхід працює стабільніше за гонитву за цифрами. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "subscriber quality vs volume in exchanges",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "youtube-analytics-checklist-before-deal",
+                    "red-flags-in-channel-exchange-deals",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Якість підписника проти обсягу в обмінах",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "line",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Ц1",
+                                    baseline: 39,
+                                    system: 44
+                            },
+                            {
+                                    stage: "Ц2",
+                                    baseline: 41,
+                                    system: 50
+                            },
+                            {
+                                    stage: "Ц3",
+                                    baseline: 40,
+                                    system: 56
+                            },
+                            {
+                                    stage: "Ц4",
+                                    baseline: 43,
+                                    system: 62
+                            },
+                            {
+                                    stage: "Ц5",
+                                    baseline: 42,
+                                    system: 67
+                            },
+                            {
+                                    stage: "Ц6",
+                                    baseline: 45,
+                                    system: 72
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "baseline",
+                                    name: "Базовий підхід",
+                                    color: "#94a3b8"
+                            },
+                            {
+                                    key: "system",
+                                    name: "Системний підхід",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Якість підписника проти обсягу в обмінах»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("якість підписника проти обсягу в обмінах")
+    },
+    {
+            slug: "youtube-analytics-checklist-before-deal",
+            title: "YouTube-аналітика перед угодою: чеклист",
+            excerpt: "Які метрики обовʼязково перевіряти до старту обміну.",
+            coverImage: "/images/blog/youtube-analytics-checklist-before-deal.svg",
+            coverAlt: "Ілюстрація статті: YouTube-аналітика перед угодою: чеклист",
+            publishedAt: "22 лютого 2026",
+            publishedAtIso: "2026-02-22",
+            readTime: "12 хв читання",
+            tags: [
+                    "YouTube",
+                    "Чеклист",
+                    "Обмін"
+            ],
+            seoTitle: "YouTube-аналітика перед угодою: чеклист: практичний гайд для Біржа Каналів",
+            seoDescription: "Які метрики обовʼязково перевіряти до старту обміну. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "youtube analytics checklist before deal",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "red-flags-in-channel-exchange-deals",
+                    "local-ukrainian-youtube-niches-2026",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: YouTube-аналітика перед угодою: чеклист",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Базовий",
+                                    score: 34
+                            },
+                            {
+                                    stage: "Покращений",
+                                    score: 49
+                            },
+                            {
+                                    stage: "Системний",
+                                    score: 63
+                            },
+                            {
+                                    stage: "Масштабований",
+                                    score: 74
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "score",
+                                    name: "Ключовий показник (%)",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «YouTube-аналітика перед угодою: чеклист»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("youtube-аналітика перед угодою: чеклист")
+    },
+    {
+            slug: "red-flags-in-channel-exchange-deals",
+            title: "Red flags в угодах обміну каналами",
+            excerpt: "Сигнали проблемних партнерів та правила відбору.",
+            coverImage: "/images/blog/red-flags-in-channel-exchange-deals.svg",
+            coverAlt: "Ілюстрація статті: Red flags в угодах обміну каналами",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "9 хв читання",
+            tags: [
+                    "YouTube",
+                    "Ризики",
+                    "Обмін"
+            ],
+            seoTitle: "Red flags в угодах обміну каналами: практичний гайд для Біржа Каналів",
+            seoDescription: "Сигнали проблемних партнерів та правила відбору. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "red flags in channel exchange deals",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "local-ukrainian-youtube-niches-2026",
+                    "launch-playbook-for-new-channel-on-exchange",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Red flags в угодах обміну каналами",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "line",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Ц1",
+                                    baseline: 39,
+                                    system: 44
+                            },
+                            {
+                                    stage: "Ц2",
+                                    baseline: 41,
+                                    system: 50
+                            },
+                            {
+                                    stage: "Ц3",
+                                    baseline: 40,
+                                    system: 56
+                            },
+                            {
+                                    stage: "Ц4",
+                                    baseline: 43,
+                                    system: 62
+                            },
+                            {
+                                    stage: "Ц5",
+                                    baseline: 42,
+                                    system: 67
+                            },
+                            {
+                                    stage: "Ц6",
+                                    baseline: 45,
+                                    system: 72
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "baseline",
+                                    name: "Базовий підхід",
+                                    color: "#94a3b8"
+                            },
+                            {
+                                    key: "system",
+                                    name: "Системний підхід",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Red flags в угодах обміну каналами»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("red flags в угодах обміну каналами")
+    },
+    {
+            slug: "local-ukrainian-youtube-niches-2026",
+            title: "Популярні українські YouTube-ніші у 2026",
+            excerpt: "Які ніші мають найкращу ефективність партнерських обмінів.",
+            coverImage: "/images/blog/local-ukrainian-youtube-niches-2026.svg",
+            coverAlt: "Ілюстрація статті: Популярні українські YouTube-ніші у 2026",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "10 хв читання",
+            tags: [
+                    "YouTube",
+                    "Україна",
+                    "Обмін"
+            ],
+            seoTitle: "Популярні українські YouTube-ніші у 2026: практичний гайд для Біржа Каналів",
+            seoDescription: "Які ніші мають найкращу ефективність партнерських обмінів. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "local ukrainian youtube niches 2026",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "launch-playbook-for-new-channel-on-exchange",
+                    "how-to-scale-to-10-exchanges-per-month",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Популярні українські YouTube-ніші у 2026",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Базовий",
+                                    score: 34
+                            },
+                            {
+                                    stage: "Покращений",
+                                    score: 49
+                            },
+                            {
+                                    stage: "Системний",
+                                    score: 63
+                            },
+                            {
+                                    stage: "Масштабований",
+                                    score: 74
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "score",
+                                    name: "Ключовий показник (%)",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Популярні українські YouTube-ніші у 2026»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("популярні українські youtube-ніші у 2026")
+    },
+    {
+            slug: "launch-playbook-for-new-channel-on-exchange",
+            title: "Launch playbook для нового каналу через обміни",
+            excerpt: "План першого циклу обмінів для нового каналу.",
+            coverImage: "/images/blog/launch-playbook-for-new-channel-on-exchange.svg",
+            coverAlt: "Ілюстрація статті: Launch playbook для нового каналу через обміни",
+            publishedAt: "24 лютого 2026",
+            publishedAtIso: "2026-02-24",
+            readTime: "11 хв читання",
+            tags: [
+                    "YouTube",
+                    "Старт",
+                    "Обмін"
+            ],
+            seoTitle: "Launch playbook для нового каналу через обміни: практичний гайд для Біржа Каналів",
+            seoDescription: "План першого циклу обмінів для нового каналу. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "launch playbook for new channel on exchange",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "how-to-scale-to-10-exchanges-per-month",
+                    "conversion-optimization-for-offer-page",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Launch playbook для нового каналу через обміни",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "line",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Ц1",
+                                    baseline: 39,
+                                    system: 44
+                            },
+                            {
+                                    stage: "Ц2",
+                                    baseline: 41,
+                                    system: 50
+                            },
+                            {
+                                    stage: "Ц3",
+                                    baseline: 40,
+                                    system: 56
+                            },
+                            {
+                                    stage: "Ц4",
+                                    baseline: 43,
+                                    system: 62
+                            },
+                            {
+                                    stage: "Ц5",
+                                    baseline: 42,
+                                    system: 67
+                            },
+                            {
+                                    stage: "Ц6",
+                                    baseline: 45,
+                                    system: 72
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "baseline",
+                                    name: "Базовий підхід",
+                                    color: "#94a3b8"
+                            },
+                            {
+                                    key: "system",
+                                    name: "Системний підхід",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Launch playbook для нового каналу через обміни»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("launch playbook для нового каналу через обміни")
+    },
+    {
+            slug: "how-to-scale-to-10-exchanges-per-month",
+            title: "Як масштабуватися до 10 обмінів на місяць",
+            excerpt: "Операційна модель для росту обсягів без втрати якості.",
+            coverImage: "/images/blog/how-to-scale-to-10-exchanges-per-month.svg",
+            coverAlt: "Ілюстрація статті: Як масштабуватися до 10 обмінів на місяць",
+            publishedAt: "24 лютого 2026",
+            publishedAtIso: "2026-02-24",
+            readTime: "12 хв читання",
+            tags: [
+                    "YouTube",
+                    "Операції",
+                    "Обмін"
+            ],
+            seoTitle: "Як масштабуватися до 10 обмінів на місяць: практичний гайд для Біржа Каналів",
+            seoDescription: "Операційна модель для росту обсягів без втрати якості. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "how to scale to 10 exchanges per month",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "conversion-optimization-for-offer-page",
+                    "case-study-education-channel-growth-exchange",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Як масштабуватися до 10 обмінів на місяць",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Базовий",
+                                    score: 34
+                            },
+                            {
+                                    stage: "Покращений",
+                                    score: 49
+                            },
+                            {
+                                    stage: "Системний",
+                                    score: 63
+                            },
+                            {
+                                    stage: "Масштабований",
+                                    score: 74
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "score",
+                                    name: "Ключовий показник (%)",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Як масштабуватися до 10 обмінів на місяць»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("як масштабуватися до 10 обмінів на місяць")
+    },
+    {
+            slug: "conversion-optimization-for-offer-page",
+            title: "Оптимізація конверсії сторінки офера",
+            excerpt: "UX і копірайт підходи для підвищення response rate.",
+            coverImage: "/images/blog/conversion-optimization-for-offer-page.svg",
+            coverAlt: "Ілюстрація статті: Оптимізація конверсії сторінки офера",
+            publishedAt: "25 лютого 2026",
+            publishedAtIso: "2026-02-25",
+            readTime: "9 хв читання",
+            tags: [
+                    "YouTube",
+                    "Конверсія",
+                    "Обмін"
+            ],
+            seoTitle: "Оптимізація конверсії сторінки офера: практичний гайд для Біржа Каналів",
+            seoDescription: "UX і копірайт підходи для підвищення response rate. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "conversion optimization for offer page",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "case-study-education-channel-growth-exchange",
+                    "case-study-gaming-channel-growth-exchange",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Оптимізація конверсії сторінки офера",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "line",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Ц1",
+                                    baseline: 39,
+                                    system: 44
+                            },
+                            {
+                                    stage: "Ц2",
+                                    baseline: 41,
+                                    system: 50
+                            },
+                            {
+                                    stage: "Ц3",
+                                    baseline: 40,
+                                    system: 56
+                            },
+                            {
+                                    stage: "Ц4",
+                                    baseline: 43,
+                                    system: 62
+                            },
+                            {
+                                    stage: "Ц5",
+                                    baseline: 42,
+                                    system: 67
+                            },
+                            {
+                                    stage: "Ц6",
+                                    baseline: 45,
+                                    system: 72
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "baseline",
+                                    name: "Базовий підхід",
+                                    color: "#94a3b8"
+                            },
+                            {
+                                    key: "system",
+                                    name: "Системний підхід",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Оптимізація конверсії сторінки офера»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("оптимізація конверсії сторінки офера")
+    },
+    {
+            slug: "case-study-education-channel-growth-exchange",
+            title: "Кейс: ріст освітнього каналу через обміни",
+            excerpt: "Практичний кейс з KPI, помилками та результатами за цикл.",
+            coverImage: "/images/blog/case-study-education-channel-growth-exchange.svg",
+            coverAlt: "Ілюстрація статті: Кейс: ріст освітнього каналу через обміни",
+            publishedAt: "25 лютого 2026",
+            publishedAtIso: "2026-02-25",
+            readTime: "10 хв читання",
+            tags: [
+                    "YouTube",
+                    "Кейс",
+                    "Обмін"
+            ],
+            seoTitle: "Кейс: ріст освітнього каналу через обміни: практичний гайд для Біржа Каналів",
+            seoDescription: "Практичний кейс з KPI, помилками та результатами за цикл. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "case study education channel growth exchange",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "case-study-gaming-channel-growth-exchange",
+                    "case-study-business-channel-growth-exchange",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Кейс: ріст освітнього каналу через обміни",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Базовий",
+                                    score: 34
+                            },
+                            {
+                                    stage: "Покращений",
+                                    score: 49
+                            },
+                            {
+                                    stage: "Системний",
+                                    score: 63
+                            },
+                            {
+                                    stage: "Масштабований",
+                                    score: 74
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "score",
+                                    name: "Ключовий показник (%)",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Кейс: ріст освітнього каналу через обміни»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("кейс: ріст освітнього каналу через обміни")
+    },
+    {
+            slug: "case-study-gaming-channel-growth-exchange",
+            title: "Кейс: масштабування геймінг-каналу через обміни",
+            excerpt: "Як зберегти retention при зростанні кількості партнерств.",
+            coverImage: "/images/blog/case-study-gaming-channel-growth-exchange.svg",
+            coverAlt: "Ілюстрація статті: Кейс: масштабування геймінг-каналу через обміни",
+            publishedAt: "26 лютого 2026",
+            publishedAtIso: "2026-02-26",
+            readTime: "11 хв читання",
+            tags: [
+                    "YouTube",
+                    "Кейс",
+                    "Обмін"
+            ],
+            seoTitle: "Кейс: масштабування геймінг-каналу через обміни: практичний гайд для Біржа Каналів",
+            seoDescription: "Як зберегти retention при зростанні кількості партнерств. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "case study gaming channel growth exchange",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "case-study-business-channel-growth-exchange",
+                    "communication-sla-for-youtube-collab-teams",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Кейс: масштабування геймінг-каналу через обміни",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "line",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Ц1",
+                                    baseline: 39,
+                                    system: 44
+                            },
+                            {
+                                    stage: "Ц2",
+                                    baseline: 41,
+                                    system: 50
+                            },
+                            {
+                                    stage: "Ц3",
+                                    baseline: 40,
+                                    system: 56
+                            },
+                            {
+                                    stage: "Ц4",
+                                    baseline: 43,
+                                    system: 62
+                            },
+                            {
+                                    stage: "Ц5",
+                                    baseline: 42,
+                                    system: 67
+                            },
+                            {
+                                    stage: "Ц6",
+                                    baseline: 45,
+                                    system: 72
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "baseline",
+                                    name: "Базовий підхід",
+                                    color: "#94a3b8"
+                            },
+                            {
+                                    key: "system",
+                                    name: "Системний підхід",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Кейс: масштабування геймінг-каналу через обміни»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("кейс: масштабування геймінг-каналу через обміни")
+    },
+    {
+            slug: "case-study-business-channel-growth-exchange",
+            title: "Кейс бізнес-каналу: обміни і якість лідів",
+            excerpt: "Фокус на якість цільових запитів замість простого обсягу.",
+            coverImage: "/images/blog/case-study-business-channel-growth-exchange.svg",
+            coverAlt: "Ілюстрація статті: Кейс бізнес-каналу: обміни і якість лідів",
+            publishedAt: "26 лютого 2026",
+            publishedAtIso: "2026-02-26",
+            readTime: "12 хв читання",
+            tags: [
+                    "YouTube",
+                    "Кейс",
+                    "Обмін"
+            ],
+            seoTitle: "Кейс бізнес-каналу: обміни і якість лідів: практичний гайд для Біржа Каналів",
+            seoDescription: "Фокус на якість цільових запитів замість простого обсягу. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "case study business channel growth exchange",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "communication-sla-for-youtube-collab-teams",
+                    "multi-channel-portfolio-strategy-for-creators",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Кейс бізнес-каналу: обміни і якість лідів",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Базовий",
+                                    score: 34
+                            },
+                            {
+                                    stage: "Покращений",
+                                    score: 49
+                            },
+                            {
+                                    stage: "Системний",
+                                    score: 63
+                            },
+                            {
+                                    stage: "Масштабований",
+                                    score: 74
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "score",
+                                    name: "Ключовий показник (%)",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Кейс бізнес-каналу: обміни і якість лідів»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("кейс бізнес-каналу: обміни і якість лідів")
+    },
+    {
+            slug: "communication-sla-for-youtube-collab-teams",
+            title: "SLA комунікації для команд колаборацій",
+            excerpt: "Як стандарти часу відповіді прискорюють цикл угод.",
+            coverImage: "/images/blog/communication-sla-for-youtube-collab-teams.svg",
+            coverAlt: "Ілюстрація статті: SLA комунікації для команд колаборацій",
+            publishedAt: "27 лютого 2026",
+            publishedAtIso: "2026-02-27",
+            readTime: "9 хв читання",
+            tags: [
+                    "YouTube",
+                    "Комунікація",
+                    "Обмін"
+            ],
+            seoTitle: "SLA комунікації для команд колаборацій: практичний гайд для Біржа Каналів",
+            seoDescription: "Як стандарти часу відповіді прискорюють цикл угод. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "communication sla for youtube collab teams",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "multi-channel-portfolio-strategy-for-creators",
+                    "monthly-report-template-for-channel-exchanges",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: SLA комунікації для команд колаборацій",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "line",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Ц1",
+                                    baseline: 39,
+                                    system: 44
+                            },
+                            {
+                                    stage: "Ц2",
+                                    baseline: 41,
+                                    system: 50
+                            },
+                            {
+                                    stage: "Ц3",
+                                    baseline: 40,
+                                    system: 56
+                            },
+                            {
+                                    stage: "Ц4",
+                                    baseline: 43,
+                                    system: 62
+                            },
+                            {
+                                    stage: "Ц5",
+                                    baseline: 42,
+                                    system: 67
+                            },
+                            {
+                                    stage: "Ц6",
+                                    baseline: 45,
+                                    system: 72
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "baseline",
+                                    name: "Базовий підхід",
+                                    color: "#94a3b8"
+                            },
+                            {
+                                    key: "system",
+                                    name: "Системний підхід",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «SLA комунікації для команд колаборацій»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("sla комунікації для команд колаборацій")
+    },
+    {
+            slug: "multi-channel-portfolio-strategy-for-creators",
+            title: "Портфельна стратегія для креатора з кількома каналами",
+            excerpt: "Централізоване управління обмінами для портфеля каналів.",
+            coverImage: "/images/blog/multi-channel-portfolio-strategy-for-creators.svg",
+            coverAlt: "Ілюстрація статті: Портфельна стратегія для креатора з кількома каналами",
+            publishedAt: "27 лютого 2026",
+            publishedAtIso: "2026-02-27",
+            readTime: "10 хв читання",
+            tags: [
+                    "YouTube",
+                    "Стратегія",
+                    "Обмін"
+            ],
+            seoTitle: "Портфельна стратегія для креатора з кількома каналами: практичний гайд для Біржа Каналів",
+            seoDescription: "Централізоване управління обмінами для портфеля каналів. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "multi channel portfolio strategy for creators",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "monthly-report-template-for-channel-exchanges",
+                    "ai-assisted-workflow-for-youtube-collaboration",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Портфельна стратегія для креатора з кількома каналами",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Базовий",
+                                    score: 34
+                            },
+                            {
+                                    stage: "Покращений",
+                                    score: 49
+                            },
+                            {
+                                    stage: "Системний",
+                                    score: 63
+                            },
+                            {
+                                    stage: "Масштабований",
+                                    score: 74
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "score",
+                                    name: "Ключовий показник (%)",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Портфельна стратегія для креатора з кількома каналами»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("портфельна стратегія для креатора з кількома каналами")
+    },
+    {
+            slug: "monthly-report-template-for-channel-exchanges",
+            title: "Щомісячний звіт по обмінах: шаблон",
+            excerpt: "Структура monthly report для контролю KPI та рішень.",
+            coverImage: "/images/blog/monthly-report-template-for-channel-exchanges.svg",
+            coverAlt: "Ілюстрація статті: Щомісячний звіт по обмінах: шаблон",
+            publishedAt: "28 лютого 2026",
+            publishedAtIso: "2026-02-28",
+            readTime: "11 хв читання",
+            tags: [
+                    "YouTube",
+                    "Звітність",
+                    "Обмін"
+            ],
+            seoTitle: "Щомісячний звіт по обмінах: шаблон: практичний гайд для Біржа Каналів",
+            seoDescription: "Структура monthly report для контролю KPI та рішень. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "monthly report template for channel exchanges",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "ai-assisted-workflow-for-youtube-collaboration",
+                    "youtube-exchange-pricing-model-2026",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: Щомісячний звіт по обмінах: шаблон",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "line",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Ц1",
+                                    baseline: 39,
+                                    system: 44
+                            },
+                            {
+                                    stage: "Ц2",
+                                    baseline: 41,
+                                    system: 50
+                            },
+                            {
+                                    stage: "Ц3",
+                                    baseline: 40,
+                                    system: 56
+                            },
+                            {
+                                    stage: "Ц4",
+                                    baseline: 43,
+                                    system: 62
+                            },
+                            {
+                                    stage: "Ц5",
+                                    baseline: 42,
+                                    system: 67
+                            },
+                            {
+                                    stage: "Ц6",
+                                    baseline: 45,
+                                    system: 72
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "baseline",
+                                    name: "Базовий підхід",
+                                    color: "#94a3b8"
+                            },
+                            {
+                                    key: "system",
+                                    name: "Системний підхід",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «Щомісячний звіт по обмінах: шаблон»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("щомісячний звіт по обмінах: шаблон")
+    },
+    {
+            slug: "ai-assisted-workflow-for-youtube-collaboration",
+            title: "AI-воркфлоу для YouTube-колаборацій",
+            excerpt: "Де автоматизація реально економить час команди.",
+            coverImage: "/images/blog/ai-assisted-workflow-for-youtube-collaboration.svg",
+            coverAlt: "Ілюстрація статті: AI-воркфлоу для YouTube-колаборацій",
+            publishedAt: "28 лютого 2026",
+            publishedAtIso: "2026-02-28",
+            readTime: "12 хв читання",
+            tags: [
+                    "YouTube",
+                    "AI",
+                    "Обмін"
+            ],
+            seoTitle: "AI-воркфлоу для YouTube-колаборацій: практичний гайд для Біржа Каналів",
+            seoDescription: "Де автоматизація реально економить час команди. Матеріал містить графіки, логіку рішень, FAQ і покрокові дії для креаторів.",
+            keywords: [
+                    "ai assisted workflow for youtube collaboration",
+                    "обмін каналами",
+                    "біржа каналів",
+                    "youtube колаборації"
+            ],
+            relatedSlugs: [
+                    "youtube-exchange-pricing-model-2026",
+                    "how-to-write-offer-description-that-converts",
+                    "youtube-collab-strategy-2026"
+            ],
+            chart: {
+                    title: "Аналітичний зріз: AI-воркфлоу для YouTube-колаборацій",
+                    description: "Порівняння базового та системного підходів у динаміці.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            {
+                                    stage: "Базовий",
+                                    score: 34
+                            },
+                            {
+                                    stage: "Покращений",
+                                    score: 49
+                            },
+                            {
+                                    stage: "Системний",
+                                    score: 63
+                            },
+                            {
+                                    stage: "Масштабований",
+                                    score: 74
+                            }
+                    ],
+                    series: [
+                            {
+                                    key: "score",
+                                    name: "Ключовий показник (%)",
+                                    color: "#005bbb"
+                            }
+                    ],
+                    insights: [
+                            "Системний процес знижує ризик випадкових результатів.",
+                            "Прозорі KPI прискорюють прийняття рішень між партнерами."
+                    ]
+            },
+            faq: [
+                    {
+                            q: "З чого почати тему «AI-воркфлоу для YouTube-колаборацій»?",
+                            a: "Почніть з аудиту поточних метрик і зафіксуйте критерій успіху на перший цикл."
+                    },
+                    {
+                            q: "Яка типова помилка на старті?",
+                            a: "Запуск без узгоджених KPI, дедлайнів та правил приймання результату."
+                    }
+            ],
+            sections: makeLongSections("ai-воркфлоу для youtube-колаборацій")
+    }
 ];
 
 export function getBlogArticlesPreview() {
