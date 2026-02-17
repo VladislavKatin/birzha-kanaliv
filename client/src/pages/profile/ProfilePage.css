@@ -1,4 +1,4 @@
-/* ─── Profile Pages ──────────────────────────────── */
+﻿/* Profile Pages */
 .profile-page {
     max-width: 900px;
 }
@@ -227,7 +227,7 @@
     margin-top: 16px;
 }
 
-/* ─── Edit Profile ───────────────────────────────── */
+/* Edit Profile */
 .edit-profile-page {
     max-width: 980px;
 }

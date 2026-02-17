@@ -16,6 +16,9 @@ function collectSourceFiles(dir, result = []) {
             continue;
         }
         if (TARGET_EXTENSIONS.has(path.extname(entry.name))) {
+            if (entry.name === 'encodingGuard.unit.spec.js') {
+                continue;
+            }
             result.push(fullPath);
         }
     }
@@ -25,10 +28,13 @@ function collectSourceFiles(dir, result = []) {
 function findBrokenEncodingLine(content) {
     const lines = content.split(/\r?\n/);
     const replacementChar = '\uFFFD';
+    const mojibakeMarkers = ['в”', 'вЂ'];
 
     for (let index = 0; index < lines.length; index += 1) {
         const line = lines[index];
-        if (line.includes(replacementChar)) {
+        const hasReplacementChar = line.includes(replacementChar);
+        const hasMojibakeMarker = mojibakeMarkers.some((marker) => line.includes(marker));
+        if (hasReplacementChar || hasMojibakeMarker) {
             return index + 1;
         }
     }

@@ -78,26 +78,35 @@ export default function SupportChatsPage() {
     const activeThread = useMemo(() => threads.find((thread) => thread.id === activeThreadId) || null, [threads, activeThreadId]);
     const filteredThreads = useMemo(() => {
         const query = threadSearch.trim().toLowerCase();
-        return threads.filter((thread) => {
-            const unread = isThreadUnread(thread, { myUserId });
-            if (unreadOnly && !unread) {
-                return false;
-            }
+        return threads
+            .filter((thread) => {
+                const unread = isThreadUnread(thread, { myUserId });
+                if (unreadOnly && !unread) {
+                    return false;
+                }
 
-            if (!query) {
-                return true;
-            }
+                if (!query) {
+                    return true;
+                }
 
-            const haystack = [
-                getThreadTitle(thread),
-                getThreadSubtitle(thread),
-                thread.lastMessage?.content || '',
-            ]
-                .join(' ')
-                .toLowerCase();
+                const haystack = [
+                    getThreadTitle(thread),
+                    getThreadSubtitle(thread),
+                    thread.lastMessage?.content || '',
+                ]
+                    .join(' ')
+                    .toLowerCase();
 
-            return haystack.includes(query);
-        });
+                return haystack.includes(query);
+            })
+            .sort((left, right) => {
+                if (left.type === 'support' && right.type !== 'support') return -1;
+                if (right.type === 'support' && left.type !== 'support') return 1;
+
+                const leftTime = new Date(left.lastMessageAt || left.lastMessage?.createdAt || 0).getTime();
+                const rightTime = new Date(right.lastMessageAt || right.lastMessage?.createdAt || 0).getTime();
+                return rightTime - leftTime;
+            });
     }, [threads, threadSearch, unreadOnly, myUserId]);
 
     useEffect(() => {
