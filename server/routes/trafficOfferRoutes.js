@@ -396,14 +396,15 @@ router.post('/:id/respond', auth, async (req, res) => {
             }
 
             if (process.env.NODE_ENV !== 'test') {
-                const limitsConfig = await getSystemLimits({ ActionLog });
+                const limitsConfig = await getSystemLimits({ ActionLog, transaction });
                 const activeMatches = await TrafficMatch.count({
                     where: {
                         [Op.or]: [
                             { initiatorChannelId: selected.channelId },
                             { targetChannelId: selected.channelId },
                         ],
-                        status: { [Op.in]: ['pending', 'accepted'] },
+                        // Limit only truly active exchanges. Pending requests should not block new proposals.
+                        status: 'accepted',
                     },
                     transaction,
                 });
@@ -423,7 +424,7 @@ router.post('/:id/respond', auth, async (req, res) => {
                     return {
                         error: {
                             status: 429,
-                            body: { error: `Maximum ${limitsConfig.limits.activeExchangesPerChannel} active exchanges at the same time` },
+                            body: { error: `Maximum ${limitsConfig.limits.activeExchangesPerChannel} accepted exchanges at the same time` },
                         },
                     };
                 }
