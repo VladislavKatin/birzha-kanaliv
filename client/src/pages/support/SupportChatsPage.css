@@ -2,6 +2,8 @@
     max-width: 1280px;
     width: 100%;
     min-width: 0;
+    display: grid;
+    gap: 12px;
 }
 
 .support-header {
@@ -29,6 +31,8 @@
     height: clamp(560px, 74vh, 900px);
     border: 1px solid #dbe6f3;
     background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
     min-height: 0;
     width: 100%;
     align-items: stretch;
@@ -92,6 +96,13 @@
     max-width: 100%;
     overflow: hidden;
     contain: layout paint;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.support-thread-item:hover {
+    border-color: #b9d3f1;
+    background: #f8fbff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .support-thread-item.active {
@@ -194,6 +205,8 @@
     background: #f8fbff;
     min-width: 0;
     overflow: hidden;
+    display: grid;
+    gap: 2px;
 }
 
 .support-chat-topbar h2 {
@@ -215,12 +228,15 @@
 
 .support-quick-actions {
     margin-top: 10px;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
     gap: 6px;
     max-width: 100%;
-    overflow: hidden;
+    overflow-x: auto;
+    padding-bottom: 2px;
     align-items: flex-start;
+    scrollbar-width: thin;
 }
 
 .support-quick-action-btn {
@@ -233,9 +249,10 @@
     padding: 6px 10px;
     min-height: 0;
     min-width: 0;
-    max-width: 100%;
-    white-space: normal;
-    word-break: break-word;
+    max-width: 360px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .support-quick-action-btn:hover {
@@ -249,7 +266,7 @@
     background: linear-gradient(180deg, #fbfdff, #f2f7ff);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     min-height: 0;
     overscroll-behavior: contain;
 }
@@ -289,6 +306,7 @@
     color: #0f172a;
     min-width: 0;
     overflow-wrap: anywhere;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05);
 }
 
 .support-chat-message.mine .support-chat-bubble {
@@ -348,7 +366,7 @@
 .support-chat-input-wrap {
     padding: 12px;
     border-top: 1px solid #dbe6f3;
-    background: #ffffff;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
     min-width: 0;
 }
 
@@ -362,6 +380,7 @@
 
 .support-chat-controls .btn {
     min-height: 40px;
+    white-space: nowrap;
 }
 
 .support-chat-input {
@@ -377,6 +396,7 @@
     color: #0f172a;
     background: #ffffff;
     overflow-wrap: anywhere;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .support-chat-preview {
@@ -423,11 +443,19 @@
         border-right: none;
         border-bottom: 1px solid #dbe6f3;
     }
+
+    .support-quick-action-btn {
+        max-width: 300px;
+    }
 }
 
 @media (max-width: 760px) {
     .support-chat-controls {
         grid-template-columns: 1fr;
+    }
+
+    .support-chat-controls .btn {
+        width: 100%;
     }
 
     .support-thread-item {
