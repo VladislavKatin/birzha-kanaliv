@@ -622,3 +622,33 @@
         height: 190px;
     }
 }
+
+@media (max-width: 560px) {
+    .hero-actions {
+        flex-direction: column;
+    }
+
+    .hero-actions .hero-btn {
+        width: 100%;
+    }
+
+    .hero-panel {
+        padding: 18px;
+    }
+
+    .stats-inner {
+        grid-template-columns: 1fr;
+    }
+
+    .blog-card-body {
+        padding: 14px;
+    }
+
+    .blog-card h3 {
+        font-size: 19px;
+    }
+
+    .cta-actions .hero-btn {
+        width: 100%;
+    }
+}

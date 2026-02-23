@@ -53,3 +53,23 @@
     font-size: 14px;
     line-height: 1.65;
 }
+
+@media (max-width: 560px) {
+    .faq-page {
+        padding-top: 28px;
+        padding-bottom: 56px;
+    }
+
+    .faq-page-header h1 {
+        line-height: 1.2;
+    }
+
+    .faq-page-item {
+        padding: 12px 12px;
+    }
+
+    .faq-page-item summary {
+        font-size: 14px;
+        line-height: 1.45;
+    }
+}
