@@ -171,7 +171,7 @@ export default function AdminControlCenterPage() {
         }, ADMIN_SUPPORT_POLL_MS);
 
         return () => clearInterval(intervalId);
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         if (!supportActiveUserId) {
@@ -179,7 +179,7 @@ export default function AdminControlCenterPage() {
             return;
         }
         loadSupportMessages(supportActiveUserId);
-    }, [supportActiveUserId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [supportActiveUserId]);
 
     useEffect(() => {
         supportListEndRef.current?.scrollIntoView({ behavior: 'smooth' });

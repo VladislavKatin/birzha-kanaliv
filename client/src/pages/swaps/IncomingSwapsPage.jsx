@@ -303,14 +303,6 @@ export default function IncomingSwapsPage() {
         }
     }
 
-    async function openCompleteChecklist(swapId) {
-        setCompleteState({
-            swapId,
-            checks: { ...completionChecklistDefaults },
-            submitting: false,
-        });
-    }
-
     async function handleCompleteDirect(swapId) {
         const confirmed = window.confirm('Підтвердити завершення обміну? Партнер також має підтвердити зі свого боку.');
         if (!confirmed) return;
