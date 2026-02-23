@@ -4,17 +4,16 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import './SettingsPage.css';
 
-export default function NotificationSettingsPage() {
-    const { dbUser } = useAuthStore();
-    const [prefs, setPrefs] = useState({
-        email_new_proposal: true,
-        email_message: true,
-        email_deal_complete: true,
-        telegram: false,
-        webpush: false,
-    });
-    const [saving, setSaving] = useState(false);
-    const [telegramInfo, setTelegramInfo] = useState({
+const DEFAULT_PREFS = {
+    email_new_proposal: true,
+    email_message: true,
+    email_deal_complete: true,
+    telegram: false,
+    webpush: false,
+};
+
+function createDefaultTelegramInfo() {
+    return {
         configured: null,
         botUsername: null,
         deepLink: null,
@@ -22,7 +21,14 @@ export default function NotificationSettingsPage() {
         telegramUsername: null,
         telegramChatId: null,
         telegramLinkedAt: null,
-    });
+    };
+}
+
+export default function NotificationSettingsPage() {
+    const { dbUser } = useAuthStore();
+    const [prefs, setPrefs] = useState(DEFAULT_PREFS);
+    const [saving, setSaving] = useState(false);
+    const [telegramInfo, setTelegramInfo] = useState(createDefaultTelegramInfo());
     const [loadingTelegram, setLoadingTelegram] = useState(false);
     const [telegramLoadError, setTelegramLoadError] = useState('');
     const [sendingTelegramTest, setSendingTelegramTest] = useState(false);
@@ -32,10 +38,15 @@ export default function NotificationSettingsPage() {
     const [sendingWebPushTest, setSendingWebPushTest] = useState(false);
 
     useEffect(() => {
-        if (dbUser?.notificationPrefs) {
-            setPrefs((prev) => ({ ...prev, ...dbUser.notificationPrefs }));
+        // Reset user-specific view state on account change to avoid leaking data between sessions.
+        setPrefs(DEFAULT_PREFS);
+        setTelegramInfo(createDefaultTelegramInfo());
+        setTelegramLoadError('');
+
+        if (dbUser?.notificationPrefs && typeof dbUser.notificationPrefs === 'object') {
+            setPrefs({ ...DEFAULT_PREFS, ...dbUser.notificationPrefs });
         }
-    }, [dbUser]);
+    }, [dbUser?.id, dbUser?.notificationPrefs]);
 
     const loadTelegramInfo = useCallback(async () => {
         if (!dbUser?.id) return;
@@ -43,10 +54,12 @@ export default function NotificationSettingsPage() {
         setTelegramLoadError('');
         try {
             const response = await api.get('/profile/notifications/telegram-link');
-            setTelegramInfo(response.data || {});
+            setTelegramInfo({ ...createDefaultTelegramInfo(), ...(response.data || {}) });
         } catch (error) {
             const message = error?.response?.data?.error || 'Не вдалося отримати Telegram-налаштування';
             setTelegramLoadError(message);
+            setTelegramInfo(createDefaultTelegramInfo());
+            setPrefs((prev) => ({ ...prev, telegram: false }));
             toast.error(message);
         } finally {
             setLoadingTelegram(false);
