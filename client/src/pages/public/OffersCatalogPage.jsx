@@ -48,12 +48,32 @@ export default function OffersCatalogPage() {
         setError('');
 
         try {
-            const suffix = query ? `${query}&includeAll=true&limit=60` : '?includeAll=true&limit=60';
-            const response = await api.get(`/offers${suffix}`);
+            const params = new URLSearchParams(query.startsWith('?') ? query.slice(1) : query);
+            const limit = 120;
+            params.set('includeAll', 'true');
+            params.set('limit', String(limit));
+
+            const collectedOffers = [];
+            let page = 1;
+            let totalPages = 1;
+
+            do {
+                params.set('page', String(page));
+                const response = await api.get(`/offers?${params.toString()}`);
+                if (cancelledRef.current) {
+                    return;
+                }
+                const pageOffers = response.data?.offers || [];
+                const pagination = response.data?.pagination || {};
+                totalPages = Number(pagination.pages || 1);
+                collectedOffers.push(...pageOffers);
+                page += 1;
+            } while (page <= totalPages);
+
             if (cancelledRef.current) {
                 return;
             }
-            setOffers(response.data.offers || []);
+            setOffers(collectedOffers);
         } catch (loadError) {
             if (!cancelledRef.current) {
                 const message = getApiErrorMessage(loadError, 'Не вдалося завантажити каталог пропозицій.');

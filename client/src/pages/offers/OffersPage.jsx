@@ -62,9 +62,24 @@ export default function OffersPage() {
             }
 
             params.set('includeAll', 'true');
-            params.set('limit', '60');
-            const response = await api.get(`/offers?${params.toString()}`);
-            setOffers(response.data.offers || response.data || []);
+            const limit = 120;
+            params.set('limit', String(limit));
+
+            const collectedOffers = [];
+            let page = 1;
+            let totalPages = 1;
+
+            do {
+                params.set('page', String(page));
+                const response = await api.get(`/offers?${params.toString()}`);
+                const pageOffers = response.data?.offers || [];
+                const pagination = response.data?.pagination || {};
+                totalPages = Number(pagination.pages || 1);
+                collectedOffers.push(...pageOffers);
+                page += 1;
+            } while (page <= totalPages);
+
+            setOffers(collectedOffers);
         } catch (loadError) {
             console.error('Failed to load offers:', loadError);
             const message = getApiErrorMessage(loadError, 'Не вдалося завантажити пропозиції. Спробуйте ще раз.');
