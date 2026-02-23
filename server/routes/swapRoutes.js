@@ -25,12 +25,28 @@ function parsePositiveInt(value, fallback, min = 1, max = 100) {
     return parsed;
 }
 
-function dedupeMatchesById(items) {
+function dedupeMatchesByLogicalKey(items) {
     const map = new Map();
     for (const item of Array.isArray(items) ? items : []) {
-        if (!item || !item.id) continue;
-        if (!map.has(item.id)) {
-            map.set(item.id, item);
+        if (!item) continue;
+        const key = [
+            item.offerId || '',
+            item.initiatorChannelId || '',
+            item.targetChannelId || '',
+            item.status || '',
+        ].join(':');
+        if (!key) continue;
+
+        const previous = map.get(key);
+        if (!previous) {
+            map.set(key, item);
+            continue;
+        }
+
+        const prevTs = new Date(previous.updatedAt || previous.createdAt || 0).getTime();
+        const nextTs = new Date(item.updatedAt || item.createdAt || 0).getTime();
+        if (nextTs >= prevTs) {
+            map.set(key, item);
         }
     }
     return Array.from(map.values());
@@ -292,7 +308,7 @@ router.get('/incoming', auth, async (req, res) => {
             order: [['createdAt', 'DESC']],
         });
 
-        const baseSwaps = dedupeMatchesById(swaps.map((swap) => {
+        const baseSwaps = dedupeMatchesByLogicalKey(swaps.map((swap) => {
             const plain = swap.toJSON();
             const myChannelId = plain.targetChannelId;
             const hasReviewed = Array.isArray(plain.reviews)
@@ -454,7 +470,7 @@ router.get('/outgoing', auth, async (req, res) => {
             order: [['createdAt', 'DESC']],
         });
 
-        const baseSwaps = dedupeMatchesById(swaps.map((swap) => {
+        const baseSwaps = dedupeMatchesByLogicalKey(swaps.map((swap) => {
             const plain = swap.toJSON();
             const myChannelId = plain.initiatorChannelId;
             const hasReviewed = Array.isArray(plain.reviews)

@@ -398,7 +398,7 @@ router.post('/:id/respond', auth, async (req, res) => {
             // No hard cap for creating new offer responses.
             // Users can negotiate multiple exchanges in parallel.
 
-            const existing = await TrafficMatch.findOne({
+            const existingMatches = await TrafficMatch.findAll({
                 where: {
                     offerId: offer.id,
                     initiatorChannelId: selected.channelId,
@@ -406,9 +406,34 @@ router.post('/:id/respond', auth, async (req, res) => {
                 },
                 transaction,
                 lock: transaction.LOCK.UPDATE,
+                order: [['updatedAt', 'DESC'], ['createdAt', 'DESC']],
             });
 
+            const existing = existingMatches[0] || null;
             if (existing) {
+                const duplicateIds = existingMatches.slice(1).map((row) => row.id);
+                if (duplicateIds.length > 0) {
+                    await TrafficMatch.update(
+                        { status: 'rejected' },
+                        {
+                            where: { id: { [Op.in]: duplicateIds } },
+                            transaction,
+                        },
+                    );
+
+                    await ActionLog.create({
+                        userId: result.user.id,
+                        action: 'match_duplicate_open_rows_resolved',
+                        details: {
+                            offerId: offer.id,
+                            initiatorChannelId: selected.channelId,
+                            keptMatchId: existing.id,
+                            rejectedDuplicateIds: duplicateIds,
+                        },
+                        ip: req.ip,
+                    }, { transaction });
+                }
+
                 await ActionLog.create({
                     userId: result.user.id,
                     action: 'match_respond_idempotent_hit',
