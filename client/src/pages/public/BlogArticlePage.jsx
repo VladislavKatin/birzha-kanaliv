@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import PublicLayout from '../../components/layout/PublicLayout';
@@ -45,6 +45,7 @@ const VISUAL_ARTICLE_SLUGS = new Set([
     'seasonal-content-planning-for-ukraine',
     'legal-and-tax-basics-for-creator-collabs-ua',
 ]);
+const BLOG_IMAGE_FALLBACK = '/images/blog/youtube-collab-strategy-2026.svg';
 
 function getSectionVisual(article, sectionIndex, heading) {
     if (!article || !VISUAL_ARTICLE_SLUGS.has(article.slug)) {
@@ -125,7 +126,6 @@ function ChartBlock({ chart }) {
 }
 
 export default function BlogArticlePage() {
-    const navigate = useNavigate();
     const { slug } = useParams();
     const article = getBlogArticleBySlug(slug);
 
@@ -161,6 +161,7 @@ export default function BlogArticlePage() {
             keywords: article.keywords,
             path: `/blog/${article.slug}`,
             image: article.coverImage,
+            imageAlt: article.coverAlt,
             type: 'article',
         });
 
@@ -177,17 +178,17 @@ export default function BlogArticlePage() {
         <PublicLayout>
             <article className="blog-article-page">
                 <div className="blog-article-inner">
-                    <button className="blog-back" onClick={() => navigate('/blog')}>
+                    <Link className="blog-back" to="/blog">
                         <ArrowLeft size={16} /> Назад до блогу
-                    </button>
+                    </Link>
 
                     {!article ? (
                         <section className="blog-not-found">
                             <h1>Статтю не знайдено</h1>
                             <p>Спробуйте повернутись на головну сторінку та вибрати інший матеріал.</p>
-                            <button onClick={() => navigate('/')} className="blog-primary-btn">
+                            <Link to="/" className="blog-primary-btn">
                                 На головну
-                            </button>
+                            </Link>
                         </section>
                     ) : (
                         <>
@@ -201,7 +202,16 @@ export default function BlogArticlePage() {
                                 </div>
                                 <h1>{article.title}</h1>
                                 <p>{article.excerpt}</p>
-                                <img src={article.coverImage} alt={article.coverAlt} />
+                                <img
+                                    src={article.coverImage}
+                                    alt={article.coverAlt}
+                                    loading="eager"
+                                    fetchPriority="high"
+                                    decoding="async"
+                                    onError={(event) => {
+                                        event.currentTarget.src = BLOG_IMAGE_FALLBACK;
+                                    }}
+                                />
                             </header>
 
                             <section className="blog-article-content">
@@ -213,7 +223,15 @@ export default function BlogArticlePage() {
                                         <h2>{section.heading}</h2>
                                         {visual ? (
                                             <figure className="blog-section-figure">
-                                                <img src={visual.src} alt={visual.alt} loading="lazy" />
+                                                <img
+                                                    src={visual.src}
+                                                    alt={visual.alt}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    onError={(event) => {
+                                                        event.currentTarget.src = article.coverImage;
+                                                    }}
+                                                />
                                                 <figcaption>{visual.caption}</figcaption>
                                             </figure>
                                         ) : null}
@@ -247,11 +265,19 @@ export default function BlogArticlePage() {
                                     <div className="blog-related-grid">
                                         {related.map((item) => (
                                             <article key={item.slug} className="blog-related-item">
-                                                <img src={item.coverImage} alt="" loading="lazy" />
+                                                <img
+                                                    src={item.coverImage}
+                                                    alt={`Обкладинка статті: ${item.title}`}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    onError={(event) => {
+                                                        event.currentTarget.src = BLOG_IMAGE_FALLBACK;
+                                                    }}
+                                                />
                                                 <div>
                                                     <h4>{item.title}</h4>
                                                     <p>{item.excerpt}</p>
-                                                    <button onClick={() => navigate(`/blog/${item.slug}`)}>Перейти до статті</button>
+                                                    <Link to={`/blog/${item.slug}`}>Перейти до статті</Link>
                                                 </div>
                                             </article>
                                         ))}

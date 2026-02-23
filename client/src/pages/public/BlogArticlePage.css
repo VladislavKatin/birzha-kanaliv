@@ -19,6 +19,7 @@
     align-items: center;
     cursor: pointer;
     margin-bottom: 20px;
+    text-decoration: none;
 }
 
 .blog-not-found {
@@ -45,6 +46,8 @@
     color: #ffffff;
     font-weight: 700;
     cursor: pointer;
+    display: inline-flex;
+    text-decoration: none;
 }
 
 .blog-article-hero {
@@ -235,7 +238,7 @@
     line-height: 1.6;
 }
 
-.blog-related-item button {
+.blog-related-item a {
     border: none;
     border-radius: 10px;
     padding: 8px 12px;
@@ -243,6 +246,8 @@
     color: #ffffff;
     font-weight: 700;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
 }
 
 @media (max-width: 768px) {
@@ -293,8 +298,9 @@
         font-size: 16px;
     }
 
-    .blog-related-item button {
+    .blog-related-item a {
         width: 100%;
+        justify-content: center;
     }
 }
 

@@ -18,6 +18,7 @@ export function buildSeoPayload(input = {}) {
     const keywords = Array.isArray(input.keywords) ? input.keywords.join(', ') : '';
     const url = toAbsoluteUrl(input.path || '/');
     const image = toAbsoluteUrl(input.image || '/icons/icon-512.png');
+    const imageAlt = input.imageAlt || title;
 
     return {
         title,
@@ -25,6 +26,7 @@ export function buildSeoPayload(input = {}) {
         keywords,
         url,
         image,
+        imageAlt,
         type: input.type || 'website',
         robots: input.robots || 'index,follow,max-image-preview:large',
     };
@@ -34,12 +36,16 @@ export function buildBlogCollectionJsonLd(articles = []) {
     return {
         '@context': 'https://schema.org',
         '@type': 'Blog',
+        '@id': `${BASE_URL}/blog#blog`,
         name: 'Блог Біржа Каналів',
         description: 'Практичні матеріали для розвитку YouTube-каналу',
         url: `${BASE_URL}/blog`,
+        inLanguage: 'uk-UA',
         blogPost: articles.map(article => ({
             '@type': 'BlogPosting',
             headline: article.title,
+            description: article.excerpt,
+            image: toAbsoluteUrl(article.coverImage),
             datePublished: article.publishedAtIso || article.publishedAt,
             url: `${BASE_URL}/blog/${article.slug}`,
         })),
@@ -190,10 +196,13 @@ export function applyPageSeo(input = {}) {
     upsertMeta('meta[property="og:type"]', 'property', 'og:type', payload.type);
     upsertMeta('meta[property="og:url"]', 'property', 'og:url', payload.url);
     upsertMeta('meta[property="og:image"]', 'property', 'og:image', payload.image);
+    upsertMeta('meta[property="og:image:alt"]', 'property', 'og:image:alt', payload.imageAlt);
     upsertMeta('meta[name="twitter:card"]', 'name', 'twitter:card', 'summary_large_image');
     upsertMeta('meta[name="twitter:title"]', 'name', 'twitter:title', payload.title);
     upsertMeta('meta[name="twitter:description"]', 'name', 'twitter:description', payload.description);
+    upsertMeta('meta[name="twitter:url"]', 'name', 'twitter:url', payload.url);
     upsertMeta('meta[name="twitter:image"]', 'name', 'twitter:image', payload.image);
+    upsertMeta('meta[name="twitter:image:alt"]', 'name', 'twitter:image:alt', payload.imageAlt);
     upsertMeta('meta[name="robots"]', 'name', 'robots', payload.robots);
     upsertMeta('meta[property="og:site_name"]', 'property', 'og:site_name', 'Біржа Каналів');
     upsertMeta('meta[property="og:locale"]', 'property', 'og:locale', 'uk_UA');

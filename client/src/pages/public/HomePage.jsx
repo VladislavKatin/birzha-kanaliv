@@ -1,5 +1,5 @@
 ﻿import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     ArrowRight,
     BadgeCheck,
@@ -356,7 +356,12 @@ export default function HomePage() {
                         <div className="blog-grid">
                             {featuredArticles.map((article) => (
                                 <article key={article.slug} className="blog-card">
-                                    <img src={article.coverImage} alt={article.coverAlt} loading="lazy" />
+                                    <img
+                                        src={article.coverImage}
+                                        alt={article.coverAlt}
+                                        loading="lazy"
+                                        decoding="async"
+                                    />
                                     <div className="blog-card-body">
                                         <div className="blog-card-meta">
                                             <span>{article.publishedAt}</span>
@@ -364,13 +369,13 @@ export default function HomePage() {
                                         </div>
                                         <h3>{article.title}</h3>
                                         <p>{article.excerpt}</p>
-                                        <button
+                                        <Link
                                             className="blog-link"
-                                            onClick={() => navigate(`/blog/${article.slug}`)}
+                                            to={`/blog/${article.slug}`}
                                             aria-label={`Read article ${article.title}`}
                                         >
                                             Читати статтю <ArrowRight size={16} />
-                                        </button>
+                                        </Link>
                                     </div>
                                 </article>
                             ))}

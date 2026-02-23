@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import PublicLayout from '../../components/layout/PublicLayout';
 import { filterBlogArticlesByTag, getAllBlogTags, getBlogArticlesPreview } from '../../services/blogArticles';
@@ -12,7 +12,6 @@ import {
 import './BlogListPage.css';
 
 export default function BlogListPage() {
-    const navigate = useNavigate();
     const [activeTag, setActiveTag] = useState('All');
     const tags = useMemo(() => getAllBlogTags(), []);
     const allArticles = useMemo(() => getBlogArticlesPreview(), []);
@@ -39,9 +38,9 @@ export default function BlogListPage() {
         <PublicLayout>
             <section className="blog-list-page">
                 <div className="blog-list-inner">
-                    <button className="blog-list-back" onClick={() => navigate('/#blog')}>
+                    <Link className="blog-list-back" to="/#blog">
                         <ArrowLeft size={16} /> На головну
-                    </button>
+                    </Link>
 
                     <header className="blog-list-header">
                         <h1>Блог Біржа Каналів</h1>
@@ -64,7 +63,7 @@ export default function BlogListPage() {
                     <div className="blog-list-grid">
                         {articles.map((article) => (
                             <article key={article.slug} className="blog-list-card">
-                                <img src={article.coverImage} alt={article.coverAlt} loading="lazy" />
+                                <img src={article.coverImage} alt={article.coverAlt} loading="lazy" decoding="async" />
                                 <div className="blog-list-card-body">
                                     <div className="blog-list-meta">
                                         <span>{article.publishedAt}</span>
@@ -77,9 +76,9 @@ export default function BlogListPage() {
                                             <span key={`${article.slug}-${tag}`}>{tag}</span>
                                         ))}
                                     </div>
-                                    <button className="blog-list-link" onClick={() => navigate(`/blog/${article.slug}`)}>
+                                    <Link className="blog-list-link" to={`/blog/${article.slug}`}>
                                         Читати статтю <ArrowRight size={16} />
-                                    </button>
+                                    </Link>
                                 </div>
                             </article>
                         ))}
