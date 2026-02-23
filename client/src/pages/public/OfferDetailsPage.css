@@ -214,3 +214,40 @@
         width: fit-content;
     }
 }
+
+@media (max-width: 560px) {
+    .offer-details-page {
+        padding-top: 28px;
+        padding-bottom: 56px;
+    }
+
+    .offer-details-card {
+        padding: 14px;
+        gap: 14px;
+    }
+
+    .offer-details-head h1 {
+        line-height: 1.25;
+    }
+
+    .offer-details-actions {
+        flex-direction: column;
+    }
+
+    .offer-details-actions select {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .offer-details-actions button {
+        width: 100%;
+    }
+
+    .auth-required-actions {
+        flex-direction: column;
+    }
+
+    .auth-required-actions button {
+        width: 100%;
+    }
+}

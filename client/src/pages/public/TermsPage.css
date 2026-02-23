@@ -70,3 +70,14 @@
         padding: 14px 14px 4px;
     }
 }
+
+@media (max-width: 560px) {
+    .terms-page {
+        padding-top: 28px;
+        padding-bottom: 56px;
+    }
+
+    .terms-page-header h1 {
+        line-height: 1.2;
+    }
+}

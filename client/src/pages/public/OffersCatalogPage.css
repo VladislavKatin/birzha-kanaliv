@@ -252,3 +252,41 @@
         grid-template-columns: 1fr;
     }
 }
+
+@media (max-width: 560px) {
+    .offers-catalog-page {
+        padding-top: 28px;
+        padding-bottom: 56px;
+    }
+
+    .offers-catalog-header h1 {
+        line-height: 1.2;
+    }
+
+    .public-offer-card {
+        padding: 12px;
+    }
+
+    .public-offer-head {
+        grid-template-columns: 42px 1fr;
+        align-items: start;
+    }
+
+    .public-offer-head img {
+        width: 42px;
+        height: 42px;
+    }
+
+    .public-offer-head span {
+        grid-column: 1 / -1;
+        width: fit-content;
+    }
+
+    .auth-required-actions {
+        flex-direction: column;
+    }
+
+    .auth-required-actions button {
+        width: 100%;
+    }
+}
