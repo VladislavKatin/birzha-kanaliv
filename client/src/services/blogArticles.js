@@ -2570,8 +2570,123 @@ const BLOG_ARTICLES = [
     }
 ];
 
+const SEO_TITLE_MIN = 52;
+const SEO_TITLE_MAX = 75;
+const SEO_DESC_MIN = 120;
+const SEO_DESC_MAX = 165;
+
+function trimToLength(input, maxLength) {
+    const value = String(input || '').trim();
+    if (value.length <= maxLength) {
+        return value;
+    }
+
+    const cut = value.slice(0, maxLength);
+    const spaceIndex = cut.lastIndexOf(' ');
+    return `${(spaceIndex > 36 ? cut.slice(0, spaceIndex) : cut).trim()}…`;
+}
+
+function buildSeoTitle(article) {
+    const base = String(article.seoTitle || article.title || '').trim();
+    if (!base) {
+        return 'Біржа Каналів: практичний гайд для YouTube-креаторів';
+    }
+
+    let title = trimToLength(base, SEO_TITLE_MAX);
+    if (title.length < SEO_TITLE_MIN) {
+        title = trimToLength(`${title} для YouTube-креаторів`, SEO_TITLE_MAX);
+    }
+    return title;
+}
+
+function buildSeoDescription(article) {
+    const base = String(article.seoDescription || article.excerpt || '').trim();
+    const fallbackTail = 'Покрокова логіка, метрики, кейси та безпечна модель обміну аудиторією на Біржа Каналів.';
+    let description = base;
+
+    if (description.length < SEO_DESC_MIN) {
+        description = `${description} ${fallbackTail}`.trim();
+    }
+
+    if (description.length > SEO_DESC_MAX) {
+        description = trimToLength(description, SEO_DESC_MAX);
+    }
+
+    return description;
+}
+
+function buildCoverAlt(article) {
+    const alt = String(article.coverAlt || '').trim();
+    if (alt.length >= 40) {
+        return alt;
+    }
+    return `Обкладинка статті «${article.title}» для блогу Біржа Каналів про YouTube-обміни.`;
+}
+
+function buildKeywords(article) {
+    const base = Array.isArray(article.keywords) ? article.keywords : [];
+    const fromTags = Array.isArray(article.tags)
+        ? article.tags.map((tag) => `${String(tag).toLowerCase()} youtube`)
+        : [];
+    const defaults = ['біржа каналів', 'обмін каналами', 'просування youtube', 'колаборації youtube'];
+    const ordered = [...base, ...fromTags, ...defaults]
+        .map((value) => String(value || '').trim())
+        .filter(Boolean);
+
+    const deduped = [];
+    const seen = new Set();
+    for (const value of ordered) {
+        const key = value.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        deduped.push(value);
+    }
+
+    return deduped.slice(0, 6);
+}
+
+function normalizeRelatedSlugs(article, allArticles) {
+    const ownSlug = article.slug;
+    const source = Array.isArray(article.relatedSlugs) ? article.relatedSlugs : [];
+    const valid = source.filter((slug, index) => (
+        typeof slug === 'string'
+        && slug !== ownSlug
+        && allArticles.some((candidate) => candidate.slug === slug)
+        && source.indexOf(slug) === index
+    ));
+
+    if (valid.length >= 3) {
+        return valid.slice(0, 4);
+    }
+
+    const sourceTags = new Set(Array.isArray(article.tags) ? article.tags : []);
+    const fallback = allArticles
+        .filter((candidate) => candidate.slug !== ownSlug && !valid.includes(candidate.slug))
+        .sort((a, b) => {
+            const aShared = (a.tags || []).filter((tag) => sourceTags.has(tag)).length;
+            const bShared = (b.tags || []).filter((tag) => sourceTags.has(tag)).length;
+            return bShared - aShared;
+        })
+        .map((candidate) => candidate.slug);
+
+    return [...valid, ...fallback].slice(0, 4);
+}
+
+function normalizeArticle(article, allArticles) {
+    return {
+        ...article,
+        seoTitle: buildSeoTitle(article),
+        seoDescription: buildSeoDescription(article),
+        coverAlt: buildCoverAlt(article),
+        keywords: buildKeywords(article),
+        relatedSlugs: normalizeRelatedSlugs(article, allArticles),
+    };
+}
+
+const NORMALIZED_BLOG_ARTICLES = BLOG_ARTICLES.map((article) => normalizeArticle(article, BLOG_ARTICLES));
+
 export function getBlogArticlesPreview() {
-    return BLOG_ARTICLES.map((article) => ({
+    return NORMALIZED_BLOG_ARTICLES.map((article) => ({
         slug: article.slug,
         title: article.title,
         excerpt: article.excerpt,
@@ -2585,19 +2700,19 @@ export function getBlogArticlesPreview() {
 }
 
 export function getBlogArticleBySlug(slug) {
-    return BLOG_ARTICLES.find((article) => article.slug === slug) || null;
+    return NORMALIZED_BLOG_ARTICLES.find((article) => article.slug === slug) || null;
 }
 
 export function getAllBlogArticles() {
-    return BLOG_ARTICLES;
+    return NORMALIZED_BLOG_ARTICLES;
 }
 
 export function getRelatedBlogArticles(slug, limit = 3) {
-    const source = BLOG_ARTICLES.find((article) => article.slug === slug);
+    const source = NORMALIZED_BLOG_ARTICLES.find((article) => article.slug === slug);
     const sourceTags = new Set(source?.tags || []);
     const sourceDate = source?.publishedAtIso ? new Date(source.publishedAtIso).getTime() : 0;
 
-    return BLOG_ARTICLES
+    return NORMALIZED_BLOG_ARTICLES
         .filter((article) => article.slug !== slug)
         .map((article) => {
             const sharedTags = (article.tags || []).filter((tag) => sourceTags.has(tag)).length;
@@ -2621,7 +2736,7 @@ export function getRelatedBlogArticles(slug, limit = 3) {
 }
 
 export function getAllBlogTags() {
-    const tags = BLOG_ARTICLES.flatMap((article) => article.tags || []);
+    const tags = NORMALIZED_BLOG_ARTICLES.flatMap((article) => article.tags || []);
     const unique = Array.from(new Set(tags));
     return ['All', ...unique];
 }
