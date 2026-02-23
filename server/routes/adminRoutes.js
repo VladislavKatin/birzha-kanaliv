@@ -921,6 +921,90 @@ router.get('/support/threads', auth, admin, async (req, res) => {
 });
 
 /**
+ * @route GET /api/admin/menu-badges
+ * @description Aggregated menu badges for admin sidebar (new user registrations and similar counters).
+ * @access Private (admin)
+ */
+router.get('/menu-badges', auth, admin, async (req, res) => {
+    try {
+        const payload = await sequelize.transaction(async (transaction) => {
+            const lastSeenLog = await ActionLog.findOne({
+                where: {
+                    userId: req.dbUser.id,
+                    action: 'admin_menu_badges_seen',
+                },
+                order: [['createdAt', 'DESC']],
+                transaction,
+            });
+
+            const usersSeenAt = lastSeenLog?.details?.scope === 'users'
+                ? lastSeenLog.createdAt
+                : null;
+
+            const usersWhere = {
+                role: { [Op.ne]: 'admin' },
+            };
+            if (usersSeenAt) {
+                usersWhere.createdAt = { [Op.gt]: usersSeenAt };
+            }
+
+            const [newUsers] = await Promise.all([
+                User.count({ where: usersWhere, transaction }),
+            ]);
+
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_menu_badges_opened',
+                details: {
+                    usersSeenAt: usersSeenAt ? usersSeenAt.toISOString() : null,
+                    newUsers,
+                },
+                ip: req.ip,
+            }, { transaction });
+
+            return {
+                newUsers,
+                usersSeenAt: usersSeenAt ? usersSeenAt.toISOString() : null,
+            };
+        });
+
+        res.json(payload);
+    } catch (error) {
+        console.error('Admin menu badges error:', error);
+        res.status(500).json({ error: 'Failed to load admin menu badges' });
+    }
+});
+
+/**
+ * @route POST /api/admin/menu-badges/seen
+ * @description Mark a specific admin badge scope as seen.
+ * @access Private (admin)
+ */
+router.post('/menu-badges/seen', auth, admin, async (req, res) => {
+    try {
+        const scope = String(req.body?.scope || '').trim() || 'users';
+        const allowedScopes = new Set(['users']);
+        if (!allowedScopes.has(scope)) {
+            return res.status(400).json({ error: 'Invalid badge scope' });
+        }
+
+        await sequelize.transaction(async (transaction) => {
+            await ActionLog.create({
+                userId: req.dbUser.id,
+                action: 'admin_menu_badges_seen',
+                details: { scope },
+                ip: req.ip,
+            }, { transaction });
+        });
+
+        res.json({ ok: true, scope });
+    } catch (error) {
+        console.error('Admin menu badge seen error:', error);
+        res.status(500).json({ error: 'Failed to mark admin menu badge as seen' });
+    }
+});
+
+/**
  * @route GET /api/admin/support/threads/:userId/messages
  * @description Get support thread messages for a concrete user.
  * @access Private (admin)
