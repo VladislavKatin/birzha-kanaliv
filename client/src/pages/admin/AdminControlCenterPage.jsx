@@ -1,8 +1,10 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { formatAdminDate, normalizeAdminOverview, normalizeAdminUsers } from '../../services/adminCenter';
 import './AdminControlCenterPage.css';
+
+const ADMIN_SUPPORT_POLL_MS = 30000;
 
 function DistributionList({ title, items }) {
     return (
@@ -35,6 +37,17 @@ export default function AdminControlCenterPage() {
     const [userFilter, setUserFilter] = useState({ search: '', role: '' });
     const [userPage, setUserPage] = useState(1);
     const [updatingUserId, setUpdatingUserId] = useState('');
+    const supportListEndRef = useRef(null);
+    const [supportThreads, setSupportThreads] = useState([]);
+    const [supportLoading, setSupportLoading] = useState(true);
+    const [supportError, setSupportError] = useState('');
+    const [supportActiveUserId, setSupportActiveUserId] = useState('');
+    const [supportMessagesLoading, setSupportMessagesLoading] = useState(false);
+    const [supportMessagesError, setSupportMessagesError] = useState('');
+    const [supportMessages, setSupportMessages] = useState([]);
+    const [supportReply, setSupportReply] = useState('');
+    const [supportReplySending, setSupportReplySending] = useState(false);
+    const [supportSearch, setSupportSearch] = useState('');
 
     useEffect(() => {
         loadOverview();
@@ -151,6 +164,181 @@ export default function AdminControlCenterPage() {
         }
     }
 
+    useEffect(() => {
+        loadSupportThreads();
+        const intervalId = setInterval(() => {
+            loadSupportThreads({ silent: true });
+        }, ADMIN_SUPPORT_POLL_MS);
+
+        return () => clearInterval(intervalId);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        if (!supportActiveUserId) {
+            setSupportMessages([]);
+            return;
+        }
+        loadSupportMessages(supportActiveUserId);
+    }, [supportActiveUserId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        supportListEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [supportMessages]);
+
+    useEffect(() => {
+        async function markSeen() {
+            try {
+                await api.post('/admin/menu-badges/seen', { scope: 'support' });
+            } catch (markError) {
+                console.error('Failed to mark admin support badge as seen:', markError);
+            }
+        }
+
+        markSeen();
+    }, []);
+
+    useEffect(() => {
+        function handleSupportMessage(event) {
+            const incoming = event.detail;
+            if (!incoming?.id) {
+                return;
+            }
+
+            const senderId = String(incoming.sender?.id || '');
+            if (!senderId) {
+                return;
+            }
+
+            setSupportThreads((prev) => {
+                const threadIndex = prev.findIndex((thread) => thread.user?.id === senderId);
+                if (threadIndex < 0) {
+                    return prev;
+                }
+                const thread = prev[threadIndex];
+                const updated = {
+                    ...thread,
+                    lastMessage: incoming.content || (incoming.imageData ? '[image]' : ''),
+                    lastMessageAt: incoming.createdAt || new Date().toISOString(),
+                    totalMessages: Number(thread.totalMessages || 0) + 1,
+                };
+                return [updated, ...prev.filter((item) => item.user?.id !== senderId)];
+            });
+
+            if (supportActiveUserId === senderId) {
+                setSupportMessages((prev) => (prev.some((item) => item.id === incoming.id) ? prev : [...prev, incoming]));
+            }
+        }
+
+        window.addEventListener('support:message', handleSupportMessage);
+        return () => window.removeEventListener('support:message', handleSupportMessage);
+    }, [supportActiveUserId]);
+
+    function formatSupportTime(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return date.toLocaleString('uk-UA', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    }
+
+    async function loadSupportThreads(options = {}) {
+        const { silent = false } = options;
+        if (!silent) {
+            setSupportLoading(true);
+        }
+        setSupportError('');
+
+        try {
+            const response = await api.get('/admin/support/threads');
+            const threads = response.data?.threads || [];
+            setSupportThreads(threads);
+
+            setSupportActiveUserId((prev) => {
+                if (prev && threads.some((thread) => thread.user?.id === prev)) {
+                    return prev;
+                }
+                return threads[0]?.user?.id || '';
+            });
+        } catch (loadError) {
+            setSupportError(loadError.response?.data?.error || 'Не вдалося завантажити звернення підтримки.');
+        } finally {
+            if (!silent) {
+                setSupportLoading(false);
+            }
+        }
+    }
+
+    async function loadSupportMessages(userId) {
+        if (!userId) return;
+        setSupportMessagesLoading(true);
+        setSupportMessagesError('');
+
+        try {
+            const response = await api.get(`/admin/support/threads/${userId}/messages`);
+            setSupportMessages(response.data?.messages || []);
+        } catch (loadError) {
+            setSupportMessages([]);
+            setSupportMessagesError(loadError.response?.data?.error || 'Не вдалося завантажити повідомлення.');
+        } finally {
+            setSupportMessagesLoading(false);
+        }
+    }
+
+    async function handleSendSupportReply() {
+        const content = supportReply.trim();
+        if (!supportActiveUserId || !content || supportReplySending) {
+            return;
+        }
+
+        setSupportReplySending(true);
+        try {
+            const response = await api.post(`/admin/support/threads/${supportActiveUserId}/messages`, { content });
+            const message = response.data?.message;
+
+            if (message) {
+                setSupportMessages((prev) => [...prev, message]);
+                setSupportThreads((prev) => prev.map((thread) => {
+                    if (thread.user?.id !== supportActiveUserId) return thread;
+                    return {
+                        ...thread,
+                        totalMessages: Number(thread.totalMessages || 0) + 1,
+                        lastMessage: message.content || '',
+                        lastMessageAt: message.createdAt || new Date().toISOString(),
+                    };
+                }));
+            }
+
+            setSupportReply('');
+            toast.success('Відповідь надіслано.');
+        } catch (sendError) {
+            toast.error(sendError.response?.data?.error || 'Не вдалося надіслати відповідь.');
+        } finally {
+            setSupportReplySending(false);
+        }
+    }
+
+    const filteredSupportThreads = useMemo(() => {
+        const query = supportSearch.trim().toLowerCase();
+        const sorted = [...supportThreads].sort(
+            (left, right) => new Date(right.lastMessageAt || 0).getTime() - new Date(left.lastMessageAt || 0).getTime(),
+        );
+
+        if (!query) {
+            return sorted;
+        }
+
+        return sorted.filter((thread) => {
+            const haystack = [
+                thread.user?.displayName || '',
+                thread.user?.email || '',
+                thread.lastMessage || '',
+            ].join(' ').toLowerCase();
+            return haystack.includes(query);
+        });
+    }, [supportSearch, supportThreads]);
     const summaryCards = useMemo(
         () => [
             { label: 'Користувачі', value: data.summary.totalUsers },
@@ -318,6 +506,103 @@ export default function AdminControlCenterPage() {
                 )}
             </article>
 
+            <section className="card admin-support-card">
+                <div className="admin-users-header">
+                    <h3>Чат із користувачами</h3>
+                    <button className="btn btn-secondary btn-sm" onClick={() => loadSupportThreads()}>
+                        Оновити звернення
+                    </button>
+                </div>
+
+                <div className="admin-support-layout">
+                    <aside className="admin-support-threads">
+                        <input
+                            type="text"
+                            value={supportSearch}
+                            onChange={(event) => setSupportSearch(event.target.value)}
+                            placeholder="Пошук по email або імені"
+                        />
+
+                        {supportLoading ? (
+                            <p className="admin-empty">Завантаження звернень...</p>
+                        ) : supportError ? (
+                            <p className="admin-empty">{supportError}</p>
+                        ) : filteredSupportThreads.length === 0 ? (
+                            <p className="admin-empty">Звернень поки немає.</p>
+                        ) : (
+                            filteredSupportThreads.map((thread) => {
+                                const isActive = thread.user?.id === supportActiveUserId;
+                                return (
+                                    <button
+                                        key={thread.user?.id}
+                                        className={`admin-support-thread ${isActive ? 'active' : ''}`}
+                                        type="button"
+                                        onClick={() => setSupportActiveUserId(thread.user?.id || '')}
+                                    >
+                                        <strong>{thread.user?.displayName || thread.user?.email || 'Користувач'}</strong>
+                                        <span>{thread.user?.email || '-'}</span>
+                                        <small>{thread.lastMessage || 'Без тексту'}</small>
+                                        <em>{formatSupportTime(thread.lastMessageAt)}</em>
+                                    </button>
+                                );
+                            })
+                        )}
+                    </aside>
+
+                    <div className="admin-support-chat">
+                        {!supportActiveUserId ? (
+                            <p className="admin-empty">Оберіть звернення зі списку.</p>
+                        ) : supportMessagesLoading ? (
+                            <p className="admin-empty">Завантаження повідомлень...</p>
+                        ) : supportMessagesError ? (
+                            <p className="admin-empty">{supportMessagesError}</p>
+                        ) : (
+                            <>
+                                <div className="admin-support-messages">
+                                    {supportMessages.length === 0 ? (
+                                        <p className="admin-empty">Повідомлень ще немає.</p>
+                                    ) : supportMessages.map((message) => {
+                                        const isAdmin = message.isAdmin;
+                                        return (
+                                            <div key={message.id} className={`admin-support-message ${isAdmin ? 'mine' : 'theirs'}`}>
+                                                <div className="admin-support-bubble">
+                                                    <strong>{isAdmin ? 'Адміністрація' : (message.sender?.displayName || 'Користувач')}</strong>
+                                                    {message.content && <p>{message.content}</p>}
+                                                    {message.imageData && (
+                                                        <a href={message.imageData} target="_blank" rel="noreferrer">
+                                                            <img src={message.imageData} alt="Вкладення" />
+                                                        </a>
+                                                    )}
+                                                    <time>{formatSupportTime(message.createdAt)}</time>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    <div ref={supportListEndRef} />
+                                </div>
+
+                                <div className="admin-support-reply">
+                                    <textarea
+                                        rows={3}
+                                        value={supportReply}
+                                        onChange={(event) => setSupportReply(event.target.value)}
+                                        placeholder="Напишіть відповідь користувачу..."
+                                    />
+                                    <button
+                                        className="btn btn-primary"
+                                        type="button"
+                                        onClick={handleSendSupportReply}
+                                        disabled={supportReplySending || !supportReply.trim()}
+                                    >
+                                        Надіслати
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </section>
+
             <section className="admin-data-grid">
                 <article className="card admin-table-card">
                     <h3>Останні користувачі</h3>
@@ -403,3 +688,4 @@ export default function AdminControlCenterPage() {
         </div>
     );
 }
+

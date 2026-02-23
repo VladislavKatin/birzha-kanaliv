@@ -1,5 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react';
-import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import useGlobalSocket from '../../hooks/useGlobalSocket';
@@ -30,9 +30,11 @@ export default function DashboardLayout() {
     const { user, dbUser, signOut } = useAuthStore();
     const { connected, notifications, onlineUsers, clearNotification, clearAllNotifications } = useGlobalSocket();
     const navigate = useNavigate();
+    const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [menuBadges, setMenuBadges] = useState({ incoming: 0, outgoing: 0, messages: 0 });
+    const [adminMenuBadges, setAdminMenuBadges] = useState({ newSupportMessages: 0 });
     const menuThreadsRef = useRef([]);
     const badgesRequestInFlightRef = useRef(false);
     const lastMenuBadgesLoadAtRef = useRef(0);
@@ -45,6 +47,7 @@ export default function DashboardLayout() {
         if (path === '/swaps/incoming') return menuBadges.incoming;
         if (path === '/swaps/outgoing') return menuBadges.outgoing;
         if (path === '/support/chats') return menuBadges.messages;
+        if (path === '/admin' || path === '/dashboard/admin') return adminMenuBadges.newSupportMessages || 0;
         return 0;
     };
 
@@ -121,6 +124,82 @@ export default function DashboardLayout() {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [dbUser]);
+
+    useEffect(() => {
+        if (dbUser?.role !== 'admin') {
+            setAdminMenuBadges({ newSupportMessages: 0 });
+            return;
+        }
+
+        let cancelled = false;
+
+        async function loadAdminMenuBadges() {
+            try {
+                const response = await api.get('/admin/menu-badges');
+                if (!cancelled) {
+                    setAdminMenuBadges({
+                        newSupportMessages: Number(response.data?.newSupportMessages || 0),
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load admin menu badges:', error);
+                if (!cancelled) {
+                    setAdminMenuBadges({ newSupportMessages: 0 });
+                }
+            }
+        }
+
+        loadAdminMenuBadges();
+        const intervalId = setInterval(loadAdminMenuBadges, 60000);
+
+        return () => {
+            cancelled = true;
+            clearInterval(intervalId);
+        };
+    }, [dbUser?.role]);
+
+    useEffect(() => {
+        if (dbUser?.role !== 'admin') return;
+        if (location.pathname !== '/admin' && location.pathname !== '/dashboard/admin') return;
+
+        let cancelled = false;
+
+        async function markSupportSeen() {
+            try {
+                await api.post('/admin/menu-badges/seen', { scope: 'support' });
+            } catch (error) {
+                console.error('Failed to mark support admin badge as seen:', error);
+            } finally {
+                if (!cancelled) {
+                    setAdminMenuBadges({ newSupportMessages: 0 });
+                }
+            }
+        }
+
+        markSupportSeen();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [dbUser?.role, location.pathname]);
+
+    useEffect(() => {
+        if (dbUser?.role !== 'admin') return;
+
+        function handleSupportMessage(event) {
+            const incoming = event.detail;
+            if (!incoming?.id) return;
+            if (location.pathname === '/admin' || location.pathname === '/dashboard/admin') return;
+            if (incoming.isAdmin) return;
+
+            setAdminMenuBadges((prev) => ({
+                newSupportMessages: Number(prev?.newSupportMessages || 0) + 1,
+            }));
+        }
+
+        window.addEventListener('support:message', handleSupportMessage);
+        return () => window.removeEventListener('support:message', handleSupportMessage);
+    }, [dbUser?.role, location.pathname]);
 
     return (
         <div className="dashboard-layout">
