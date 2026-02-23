@@ -311,6 +311,23 @@ export default function IncomingSwapsPage() {
         });
     }
 
+    async function handleCompleteDirect(swapId) {
+        const confirmed = window.confirm('Підтвердити завершення обміну? Партнер також має підтвердити зі свого боку.');
+        if (!confirmed) return;
+
+        setProcessing(swapId);
+        try {
+            const response = await api.post(`/chat/${swapId}/complete`);
+            const completed = response.data?.match?.status === 'completed';
+            toast.success(completed ? 'Обмін завершено' : 'Підтверджено, очікуємо партнера');
+            await loadSwaps();
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Не вдалося підтвердити обмін');
+        } finally {
+            setProcessing(null);
+        }
+    }
+
     async function handleCompleteSubmit() {
         if (!completeState.swapId) return;
         const allChecked = Object.values(completeState.checks).every(Boolean);
@@ -610,7 +627,7 @@ export default function IncomingSwapsPage() {
                                             <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/support/chats?thread=match-${swap.id}`)}>
                                                 Повідомлення
                                             </button>
-                                            <button className="btn btn-primary btn-sm" onClick={() => openCompleteChecklist(swap.id)} disabled={processing === swap.id}>
+                                            <button className="btn btn-primary btn-sm" onClick={() => handleCompleteDirect(swap.id)} disabled={processing === swap.id}>
                                                 Обмін завершено
                                             </button>
                                         </>
