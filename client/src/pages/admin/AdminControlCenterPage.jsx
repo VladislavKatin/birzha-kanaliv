@@ -5,6 +5,7 @@ import { formatAdminDate, normalizeAdminOverview, normalizeAdminUsers } from '..
 import './AdminControlCenterPage.css';
 
 const ADMIN_SUPPORT_POLL_MS = 30000;
+const ADMIN_SUPPORT_MESSAGES_BATCH = 120;
 
 function DistributionList({ title, items }) {
     return (
@@ -45,6 +46,7 @@ export default function AdminControlCenterPage() {
     const [supportMessagesLoading, setSupportMessagesLoading] = useState(false);
     const [supportMessagesError, setSupportMessagesError] = useState('');
     const [supportMessages, setSupportMessages] = useState([]);
+    const [supportVisibleCount, setSupportVisibleCount] = useState(ADMIN_SUPPORT_MESSAGES_BATCH);
     const [supportReply, setSupportReply] = useState('');
     const [supportReplySending, setSupportReplySending] = useState(false);
     const [supportSearch, setSupportSearch] = useState('');
@@ -178,6 +180,7 @@ export default function AdminControlCenterPage() {
             setSupportMessages([]);
             return;
         }
+        setSupportVisibleCount(ADMIN_SUPPORT_MESSAGES_BATCH);
         loadSupportMessages(supportActiveUserId);
     }, [supportActiveUserId]);
 
@@ -339,6 +342,15 @@ export default function AdminControlCenterPage() {
             return haystack.includes(query);
         });
     }, [supportSearch, supportThreads]);
+
+    const visibleSupportMessages = useMemo(() => {
+        if (!Array.isArray(supportMessages) || supportMessages.length <= supportVisibleCount) {
+            return supportMessages;
+        }
+        return supportMessages.slice(supportMessages.length - supportVisibleCount);
+    }, [supportMessages, supportVisibleCount]);
+
+    const hiddenSupportMessagesCount = Math.max(0, supportMessages.length - visibleSupportMessages.length);
     const summaryCards = useMemo(
         () => [
             { label: 'Користувачі', value: data.summary.totalUsers },
@@ -559,9 +571,18 @@ export default function AdminControlCenterPage() {
                         ) : (
                             <>
                                 <div className="admin-support-messages">
+                                    {hiddenSupportMessagesCount > 0 && (
+                                        <button
+                                            type="button"
+                                            className="admin-support-load-older"
+                                            onClick={() => setSupportVisibleCount((prev) => prev + ADMIN_SUPPORT_MESSAGES_BATCH)}
+                                        >
+                                            Показати ще {Math.min(ADMIN_SUPPORT_MESSAGES_BATCH, hiddenSupportMessagesCount)} старіших повідомлень
+                                        </button>
+                                    )}
                                     {supportMessages.length === 0 ? (
                                         <p className="admin-empty">Повідомлень ще немає.</p>
-                                    ) : supportMessages.map((message) => {
+                                    ) : visibleSupportMessages.map((message) => {
                                         const isAdmin = message.isAdmin;
                                         return (
                                             <div key={message.id} className={`admin-support-message ${isAdmin ? 'mine' : 'theirs'}`}>

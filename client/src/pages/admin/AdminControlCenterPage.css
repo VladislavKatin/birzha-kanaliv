@@ -256,6 +256,22 @@
     overflow-y: auto;
 }
 
+.admin-support-load-older {
+    align-self: center;
+    border: 1px solid #c7daf2;
+    background: #f5f9ff;
+    color: #1d4f86;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.admin-support-load-older:hover {
+    border-color: #9ec0e7;
+    background: #edf5ff;
+}
+
 .admin-support-message {
     display: flex;
 }
