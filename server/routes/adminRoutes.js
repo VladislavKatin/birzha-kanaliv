@@ -21,6 +21,53 @@ const ALLOWED_ROLES = new Set(['user', 'admin', 'suspended']);
 const ALLOWED_OFFER_STATUSES = new Set(['open', 'matched', 'completed']);
 const ALLOWED_MATCH_STATUSES = new Set(['pending', 'accepted', 'completed', 'rejected']);
 const DEMO_CHANNEL_PREFIX = 'UC_DEMO_';
+const DEMO_USER_EMAIL_PATTERN = 'demo.%@example.com';
+
+function buildNonDemoChannelWhere(baseWhere = {}) {
+    return {
+        [Op.and]: [
+            baseWhere,
+            {
+                channelId: {
+                    [Op.notILike]: `${DEMO_CHANNEL_PREFIX}%`,
+                },
+            },
+        ],
+    };
+}
+
+function buildNonDemoUserWhere(baseWhere = {}) {
+    return {
+        [Op.and]: [
+            baseWhere,
+            {
+                email: {
+                    [Op.notILike]: DEMO_USER_EMAIL_PATTERN,
+                },
+            },
+        ],
+    };
+}
+
+function isDemoUser(user) {
+    const email = String(user?.email || '').toLowerCase();
+    return email.startsWith('demo.') && email.endsWith('@example.com');
+}
+
+function buildStrictNonDemoUserWhere(baseWhere = {}) {
+    return {
+        [Op.and]: [
+            baseWhere,
+            { email: { [Op.notILike]: '%@example.com' } },
+            { email: { [Op.notILike]: '%@example.test' } },
+        ],
+    };
+}
+
+function isRealOnlyQuery(req) {
+    const raw = String(req.query?.realOnly || '').trim().toLowerCase();
+    return raw === '1' || raw === 'true' || raw === 'yes';
+}
 
 function parsePagination(req, defaultLimit = 20, maxLimit = 100) {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
@@ -48,10 +95,13 @@ function toCsv(headers, rows) {
  */
 router.get('/overview', auth, admin, async (req, res) => {
     try {
+        const realOnly = isRealOnlyQuery(req);
         const now = new Date();
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
         const payload = await sequelize.transaction(async (transaction) => {
+            const nonDemoChannelWhere = buildNonDemoChannelWhere();
+            const nonDemoUserWhere = realOnly ? buildStrictNonDemoUserWhere() : buildNonDemoUserWhere();
             const [
                 totalUsers,
                 totalChannels,
@@ -62,36 +112,107 @@ router.get('/overview', auth, admin, async (req, res) => {
                 newUsers7d,
                 matchesCompleted7d,
             ] = await Promise.all([
-                User.count({ transaction }),
-                YouTubeAccount.count({ transaction }),
-                TrafficOffer.count({ transaction }),
-                TrafficMatch.count({ transaction }),
-                Message.count({ transaction }),
-                Review.count({ transaction }),
-                User.count({ where: { createdAt: { [Op.gte]: sevenDaysAgo } }, transaction }),
-                TrafficMatch.count({ where: { status: 'completed', updatedAt: { [Op.gte]: sevenDaysAgo } }, transaction }),
+                User.count({ where: nonDemoUserWhere, transaction }),
+                YouTubeAccount.count({ where: nonDemoChannelWhere, transaction }),
+                TrafficOffer.count({
+                    include: [{
+                        model: YouTubeAccount,
+                        as: 'channel',
+                        attributes: [],
+                        required: true,
+                        where: nonDemoChannelWhere,
+                    }],
+                    transaction,
+                }),
+                TrafficMatch.count({
+                    include: [
+                        { model: YouTubeAccount, as: 'initiatorChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                        { model: YouTubeAccount, as: 'targetChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                    ],
+                    transaction,
+                }),
+                Message.count({
+                    include: [
+                        {
+                            model: User,
+                            as: 'sender',
+                            attributes: [],
+                            required: true,
+                            where: nonDemoUserWhere,
+                        },
+                        {
+                            model: ChatRoom,
+                            as: 'chatRoom',
+                            attributes: [],
+                            required: true,
+                            include: [{
+                                model: TrafficMatch,
+                                as: 'match',
+                                attributes: [],
+                                required: true,
+                                include: [
+                                    { model: YouTubeAccount, as: 'initiatorChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                                    { model: YouTubeAccount, as: 'targetChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                                ],
+                            }],
+                        },
+                    ],
+                    transaction,
+                }),
+                Review.count({
+                    include: [
+                        { model: YouTubeAccount, as: 'fromChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                        { model: YouTubeAccount, as: 'toChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                    ],
+                    transaction,
+                }),
+                User.count({
+                    where: realOnly
+                        ? buildStrictNonDemoUserWhere({ createdAt: { [Op.gte]: sevenDaysAgo } })
+                        : buildNonDemoUserWhere({ createdAt: { [Op.gte]: sevenDaysAgo } }),
+                    transaction,
+                }),
+                TrafficMatch.count({
+                    where: { status: 'completed', updatedAt: { [Op.gte]: sevenDaysAgo } },
+                    include: [
+                        { model: YouTubeAccount, as: 'initiatorChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                        { model: YouTubeAccount, as: 'targetChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                    ],
+                    transaction,
+                }),
             ]);
 
             const [offerStatusRows, matchStatusRows, topNicheRows] = await Promise.all([
                 TrafficOffer.findAll({
-                    attributes: ['status', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+                    attributes: ['status', [sequelize.fn('COUNT', sequelize.col('TrafficOffer.id')), 'count']],
+                    include: [{
+                        model: YouTubeAccount,
+                        as: 'channel',
+                        attributes: [],
+                        required: true,
+                        where: nonDemoChannelWhere,
+                    }],
                     group: ['status'],
                     raw: true,
                     transaction,
                 }),
                 TrafficMatch.findAll({
-                    attributes: ['status', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+                    attributes: ['status', [sequelize.fn('COUNT', sequelize.col('TrafficMatch.id')), 'count']],
+                    include: [
+                        { model: YouTubeAccount, as: 'initiatorChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                        { model: YouTubeAccount, as: 'targetChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                    ],
                     group: ['status'],
                     raw: true,
                     transaction,
                 }),
                 YouTubeAccount.findAll({
                     attributes: ['niche', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
-                    where: {
+                    where: buildNonDemoChannelWhere({
                         niche: {
                             [Op.not]: null,
                         },
-                    },
+                    }),
                     group: ['niche'],
                     order: [[sequelize.literal('count'), 'DESC']],
                     limit: 6,
@@ -103,6 +224,7 @@ router.get('/overview', auth, admin, async (req, res) => {
             const [recentUsers, recentMatches, recentMessages] = await Promise.all([
                 User.findAll({
                     attributes: ['id', 'displayName', 'email', 'role', 'createdAt'],
+                    where: nonDemoUserWhere,
                     order: [['createdAt', 'DESC']],
                     limit: 10,
                     transaction,
@@ -110,8 +232,8 @@ router.get('/overview', auth, admin, async (req, res) => {
                 TrafficMatch.findAll({
                     attributes: ['id', 'status', 'createdAt', 'updatedAt'],
                     include: [
-                        { model: YouTubeAccount, as: 'initiatorChannel', attributes: ['id', 'channelTitle'] },
-                        { model: YouTubeAccount, as: 'targetChannel', attributes: ['id', 'channelTitle'] },
+                        { model: YouTubeAccount, as: 'initiatorChannel', attributes: ['id', 'channelTitle'], required: true, where: nonDemoChannelWhere },
+                        { model: YouTubeAccount, as: 'targetChannel', attributes: ['id', 'channelTitle'], required: true, where: nonDemoChannelWhere },
                         { model: TrafficOffer, as: 'offer', attributes: ['id', 'type', 'status'] },
                     ],
                     order: [['updatedAt', 'DESC']],
@@ -121,11 +243,28 @@ router.get('/overview', auth, admin, async (req, res) => {
                 Message.findAll({
                     attributes: ['id', 'content', 'createdAt'],
                     include: [
-                        { model: User, as: 'sender', attributes: ['id', 'displayName', 'email'] },
+                        {
+                            model: User,
+                            as: 'sender',
+                            attributes: ['id', 'displayName', 'email'],
+                            required: true,
+                            where: nonDemoUserWhere,
+                        },
                         {
                             model: ChatRoom,
                             as: 'chatRoom',
                             attributes: ['id', 'matchId'],
+                            required: true,
+                            include: [{
+                                model: TrafficMatch,
+                                as: 'match',
+                                attributes: ['id'],
+                                required: true,
+                                include: [
+                                    { model: YouTubeAccount, as: 'initiatorChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                                    { model: YouTubeAccount, as: 'targetChannel', attributes: [], required: true, where: nonDemoChannelWhere },
+                                ],
+                            }],
                         },
                     ],
                     order: [['createdAt', 'DESC']],
@@ -189,6 +328,7 @@ router.get('/overview', auth, admin, async (req, res) => {
  */
 router.get('/users', auth, admin, async (req, res) => {
     try {
+        const realOnly = isRealOnlyQuery(req);
         const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
         const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
         const offset = (page - 1) * limit;
@@ -208,8 +348,9 @@ router.get('/users', auth, admin, async (req, res) => {
         }
 
         const payload = await sequelize.transaction(async (transaction) => {
+            const nonDemoUsersWhere = realOnly ? buildStrictNonDemoUserWhere(where) : buildNonDemoUserWhere(where);
             const { rows, count } = await User.findAndCountAll({
-                where,
+                where: nonDemoUsersWhere,
                 attributes: ['id', 'firebaseUid', 'email', 'displayName', 'role', 'createdAt', 'updatedAt'],
                 order: [['createdAt', 'DESC']],
                 limit,
@@ -221,7 +362,7 @@ router.get('/users', auth, admin, async (req, res) => {
             const channelCountsRaw = userIds.length > 0
                 ? await YouTubeAccount.findAll({
                     attributes: ['userId', [sequelize.fn('COUNT', sequelize.col('id')), 'channelCount']],
-                    where: { userId: { [Op.in]: userIds } },
+                    where: buildNonDemoChannelWhere({ userId: { [Op.in]: userIds } }),
                     group: ['userId'],
                     raw: true,
                     transaction,
@@ -837,9 +978,13 @@ router.get('/exchange-history', auth, admin, async (req, res) => {
  */
 router.get('/support/threads', auth, admin, async (req, res) => {
     try {
+        const realOnly = isRealOnlyQuery(req);
         const payload = await sequelize.transaction(async (transaction) => {
+            const userWhere = realOnly
+                ? buildStrictNonDemoUserWhere({ role: { [Op.ne]: 'admin' } })
+                : buildNonDemoUserWhere({ role: { [Op.ne]: 'admin' } });
             const users = await User.findAll({
-                where: { role: { [Op.ne]: 'admin' } },
+                where: userWhere,
                 attributes: ['id', 'displayName', 'email', 'role', 'createdAt'],
                 raw: true,
                 transaction,
@@ -942,12 +1087,13 @@ router.get('/menu-badges', auth, admin, async (req, res) => {
             const usersSeenAt = usersSeenLog?.createdAt || null;
             const supportSeenAt = supportSeenLog?.createdAt || null;
 
-            const usersWhere = {
+            const usersBaseWhere = {
                 role: { [Op.ne]: 'admin' },
             };
             if (usersSeenAt) {
-                usersWhere.createdAt = { [Op.gt]: usersSeenAt };
+                usersBaseWhere.createdAt = { [Op.gt]: usersSeenAt };
             }
+            const usersWhere = buildNonDemoUserWhere(usersBaseWhere);
 
             const supportMessageWhere = {
                 action: 'support_chat_message',
@@ -964,7 +1110,7 @@ router.get('/menu-badges', auth, admin, async (req, res) => {
                         model: User,
                         as: 'user',
                         required: true,
-                        where: { role: { [Op.ne]: 'admin' } },
+                        where: buildNonDemoUserWhere({ role: { [Op.ne]: 'admin' } }),
                         attributes: [],
                     }],
                     transaction,
@@ -1034,12 +1180,17 @@ router.post('/menu-badges/seen', auth, admin, async (req, res) => {
  */
 router.get('/support/threads/:userId/messages', auth, admin, async (req, res) => {
     try {
+        const realOnly = isRealOnlyQuery(req);
         const payload = await sequelize.transaction(async (transaction) => {
             const user = await User.findByPk(req.params.userId, {
                 attributes: ['id', 'displayName', 'email', 'role'],
                 transaction,
             });
-            if (!user || user.role === 'admin') {
+            const excludedByRealOnly = realOnly && (
+                String(user?.email || '').toLowerCase().endsWith('@example.com')
+                || String(user?.email || '').toLowerCase().endsWith('@example.test')
+            );
+            if (!user || user.role === 'admin' || isDemoUser(user) || excludedByRealOnly) {
                 return null;
             }
 
@@ -1114,6 +1265,7 @@ router.get('/support/threads/:userId/messages', auth, admin, async (req, res) =>
  */
 router.post('/support/threads/:userId/messages', auth, admin, async (req, res) => {
     try {
+        const realOnly = isRealOnlyQuery(req);
         let incoming;
         try {
             incoming = normalizeIncomingMessagePayload(req.body || {});
@@ -1126,7 +1278,11 @@ router.post('/support/threads/:userId/messages', auth, admin, async (req, res) =
                 attributes: ['id', 'displayName', 'email', 'role'],
                 transaction,
             });
-            if (!user || user.role === 'admin') {
+            const excludedByRealOnly = realOnly && (
+                String(user?.email || '').toLowerCase().endsWith('@example.com')
+                || String(user?.email || '').toLowerCase().endsWith('@example.test')
+            );
+            if (!user || user.role === 'admin' || isDemoUser(user) || excludedByRealOnly) {
                 return null;
             }
 

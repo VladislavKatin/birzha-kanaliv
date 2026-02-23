@@ -439,8 +439,8 @@
     .admin-support-layout {
         grid-template-columns: 1fr;
         grid-template-rows: 220px minmax(0, 1fr);
-        height: clamp(620px, 80vh, 980px);
-        min-height: 620px;
+        height: clamp(580px, 80vh, 960px);
+        min-height: 580px;
     }
 
     .admin-support-threads {
@@ -499,6 +499,44 @@
     word-break: break-word;
 }
 
+/* Admin page compactness and overflow safeguards */
+.admin-page {
+    margin: 0 auto;
+}
+
+.admin-summary-card {
+    min-height: 92px;
+}
+
+.admin-users-card {
+    overflow: hidden;
+}
+
+.admin-user-id {
+    max-width: 320px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-support-layout {
+    height: clamp(520px, 72vh, 860px);
+    min-height: 520px;
+}
+
+.admin-table-wrap {
+    max-width: 100%;
+}
+
+.admin-table-card table {
+    table-layout: fixed;
+}
+
+.admin-table-card th,
+.admin-table-card td {
+    overflow-wrap: anywhere;
+}
+
 @media (max-width: 760px) {
     .admin-users-header {
         flex-wrap: wrap;
@@ -511,11 +549,19 @@
     .admin-support-layout {
         grid-template-rows: 210px minmax(0, 1fr);
         height: calc(100dvh - 170px);
-        min-height: 560px;
+        min-height: 520px;
         max-height: none;
     }
 
     .admin-support-reply {
         padding: 8px;
+    }
+
+    .admin-summary-card strong {
+        font-size: 22px;
+    }
+
+    .admin-user-id {
+        max-width: 220px;
     }
 }

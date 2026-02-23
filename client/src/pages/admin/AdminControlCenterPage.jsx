@@ -73,6 +73,7 @@ export default function AdminControlCenterPage() {
                     params.set('role', userFilter.role);
                 }
 
+                params.set('realOnly', '1');
                 const response = await api.get(`/admin/users?${params.toString()}`);
                 if (cancelled) {
                     return;
@@ -101,7 +102,7 @@ export default function AdminControlCenterPage() {
         setError('');
 
         try {
-            const response = await api.get('/admin/overview');
+            const response = await api.get('/admin/overview?realOnly=1');
             setData(normalizeAdminOverview(response.data));
         } catch (err) {
             setError(err.response?.data?.error || 'Не вдалося завантажити дані адмінки.');
@@ -255,7 +256,7 @@ export default function AdminControlCenterPage() {
         setSupportError('');
 
         try {
-            const response = await api.get('/admin/support/threads');
+            const response = await api.get('/admin/support/threads?realOnly=1');
             const threads = response.data?.threads || [];
             setSupportThreads(threads);
 
@@ -280,7 +281,7 @@ export default function AdminControlCenterPage() {
         setSupportMessagesError('');
 
         try {
-            const response = await api.get(`/admin/support/threads/${userId}/messages`);
+            const response = await api.get(`/admin/support/threads/${userId}/messages?realOnly=1`);
             setSupportMessages(response.data?.messages || []);
         } catch (loadError) {
             setSupportMessages([]);
@@ -298,7 +299,7 @@ export default function AdminControlCenterPage() {
 
         setSupportReplySending(true);
         try {
-            const response = await api.post(`/admin/support/threads/${supportActiveUserId}/messages`, { content });
+            const response = await api.post(`/admin/support/threads/${supportActiveUserId}/messages?realOnly=1`, { content });
             const message = response.data?.message;
 
             if (message) {
@@ -461,7 +462,7 @@ export default function AdminControlCenterPage() {
                                                 <div className="admin-user-cell">
                                                     <strong>{user.displayName || user.email}</strong>
                                                     <span>{user.email}</span>
-                                                    <span>{user.id}</span>
+                                                    <span className="admin-user-id">{user.id}</span>
                                                 </div>
                                             </td>
                                             <td>
