@@ -558,7 +558,7 @@ export default function IncomingSwapsPage() {
                                 <div className="swap-item-actions">
                                     <button
                                         className="btn btn-secondary btn-sm"
-                                        onClick={() => navigate(`/offers/${swap.offerId}`)}
+                                        onClick={() => navigate(`/dashboard/offers?targetOfferId=${swap.offerId}`)}
                                         disabled={!swap.offerId}
                                     >
                                         Переглянути канал

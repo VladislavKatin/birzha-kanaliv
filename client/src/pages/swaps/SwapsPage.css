@@ -83,6 +83,15 @@
     color: var(--text-secondary);
 }
 
+.swaps-bulk-selectall input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    margin: 0;
+    accent-color: var(--brand-400);
+}
+
 .swaps-bulk-count {
     font-size: 12px;
     color: var(--text-muted);
@@ -111,6 +120,15 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+.swap-selectbox input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    margin: 0;
+    accent-color: var(--brand-400);
 }
 
 .swap-item-avatar {
