@@ -9,6 +9,8 @@ const { encodeState, decodeState } = require('../services/oauthStateService');
 const { encryptToken, decryptToken } = require('../services/tokenCryptoService');
 const { normalizeOptionalString } = require('../utils/validators');
 
+const AUTO_ANOMALY_FLAG_REASON = 'Аномальний ріст підписників';
+
 /**
  * @route GET /api/youtube/connect
  * @description Generate YouTube OAuth URL for channel connection
@@ -306,6 +308,7 @@ router.post('/refresh', auth, async (req, res) => {
             channelInfo?.subscribers || 0,
             previousSubs
         );
+        const wasAutoFlagged = account.isFlagged && account.flagReason === AUTO_ANOMALY_FLAG_REASON;
 
         await sequelize.transaction(async (transaction) => {
             await account.update({
@@ -318,8 +321,10 @@ router.post('/refresh', auth, async (req, res) => {
                 ctr: analytics.ctr,
                 recentVideos,
                 lastAnalyticsUpdate: new Date(),
-                isFlagged: isAnomalous ? true : account.isFlagged,
-                flagReason: isAnomalous ? 'Аномальний ріст підписників' : account.flagReason,
+                // Do not hard-block channels by auto-anomaly checks.
+                // Keep manual moderation only and clean up legacy auto-flags.
+                isFlagged: wasAutoFlagged ? false : account.isFlagged,
+                flagReason: wasAutoFlagged ? null : account.flagReason,
             }, { transaction });
 
             await ActionLog.create({
@@ -328,6 +333,19 @@ router.post('/refresh', auth, async (req, res) => {
                 details: { channelId: account.channelId, anomalous: isAnomalous },
                 ip: req.ip,
             }, { transaction });
+
+            if (isAnomalous) {
+                await ActionLog.create({
+                    userId: user.id,
+                    action: 'analytics_anomaly_detected',
+                    details: {
+                        channelId: account.channelId,
+                        previousSubscribers: previousSubs,
+                        currentSubscribers: channelInfo?.subscribers || 0,
+                    },
+                    ip: req.ip,
+                }, { transaction });
+            }
         });
 
         res.json({ message: 'Analytics refreshed', flagged: isAnomalous });
