@@ -1,14 +1,11 @@
 ﻿import { useEffect, useRef, useState } from 'react';
-import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
 import useGlobalSocket from '../../hooks/useGlobalSocket';
 import api from '../../services/api';
 import { buildNotificationKey, formatToastMessage } from '../../services/globalNotifications';
-import {
-    computeMenuBadgeCounts,
-    markThreadsSeen,
-} from '../../services/menuBadges';
+import { computeMenuBadgeCounts } from '../../services/menuBadges';
 import Icon from '../common/Icon';
 import './DashboardLayout.css';
 
@@ -32,7 +29,6 @@ const topLinks = [
 export default function DashboardLayout() {
     const { user, dbUser, signOut } = useAuthStore();
     const { connected, notifications, onlineUsers, clearNotification, clearAllNotifications } = useGlobalSocket();
-    const location = useLocation();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -125,11 +121,6 @@ export default function DashboardLayout() {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [dbUser]);
-
-    useEffect(() => {
-        if (!location.pathname.startsWith('/support/chats')) return;
-        markThreadsSeen(menuThreadsRef.current);
-    }, [location.pathname]);
 
     return (
         <div className="dashboard-layout">

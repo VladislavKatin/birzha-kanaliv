@@ -468,7 +468,7 @@ export default function OutgoingSwapsPage() {
                     <h3>Немає вихідних пропозицій</h3>
                     <p>
                         Знайдіть партнера в{' '}
-                        <button className="link-btn" onClick={() => navigate('/offers')}>
+                        <button className="link-btn" onClick={() => navigate('/dashboard/offers')}>
                             каталозі пропозицій
                         </button>
                     </p>

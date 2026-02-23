@@ -24,7 +24,7 @@ const SOCIAL_SUGGESTED_PREFIXES = {
 };
 
 export default function EditProfilePage() {
-    const { dbUser, refreshUserData } = useAuthStore();
+    const { dbUser, refreshUserData, signOut } = useAuthStore();
     const navigate = useNavigate();
     const [initialForm, setInitialForm] = useState(null);
     const [form, setForm] = useState({
@@ -198,6 +198,7 @@ export default function EditProfilePage() {
 
         try {
             await api.delete('/gdpr/account', { data: { confirmation: 'DELETE_MY_ACCOUNT' } });
+            await signOut();
             toast.success('Акаунт видалено');
             navigate('/auth');
         } catch (error) {
