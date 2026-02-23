@@ -624,10 +624,13 @@
 
     .edit-profile-header-actions {
         width: 100%;
+        display: flex;
+        flex-wrap: wrap;
     }
 
     .edit-profile-header-actions .btn {
         flex: 1;
+        min-width: 0;
     }
 
     .profile-header-top {
@@ -678,5 +681,16 @@
 
     .gdpr-actions {
         flex-direction: column;
+    }
+}
+
+@media (max-width: 560px) {
+    .network-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-completion-head {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

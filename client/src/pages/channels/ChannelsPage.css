@@ -568,6 +568,14 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
+    .channel-card-actions {
+        flex-direction: column;
+    }
+
+    .channel-card-actions .btn {
+        width: 100%;
+    }
+
     .settings-actions {
         flex-direction: column;
     }

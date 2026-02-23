@@ -263,6 +263,12 @@
         flex-direction: column;
     }
 
+    .filter-select,
+    .filter-input {
+        min-width: 0;
+        width: 100%;
+    }
+
     .offers-grid {
         grid-template-columns: 1fr;
     }

@@ -104,6 +104,22 @@
 }
 
 @media (max-width: 768px) {
+    .settings-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .toggle-row {
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .toggle-row > span:first-child {
+        flex: 1;
+        min-width: 0;
+    }
+
     .settings-page {
         padding: 0;
     }
