@@ -445,3 +445,51 @@
         word-break: break-word;
     }
 }
+
+@media (max-width: 560px) {
+    .swaps-header {
+        margin-bottom: 14px;
+    }
+
+    .swaps-controls {
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .swaps-bulk {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .swaps-bulk .btn {
+        width: 100%;
+    }
+
+    .swap-item {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .swap-item-channel {
+        gap: 10px;
+    }
+
+    .swap-item-avatar {
+        width: 42px;
+        height: 42px;
+    }
+
+    .swap-item-name {
+        font-size: 14px;
+    }
+
+    .swap-item-desc {
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+
+    .swaps-pagination {
+        justify-content: flex-start;
+        padding: 8px 10px;
+    }
+}

@@ -504,6 +504,7 @@
 
     .support-chat-controls .btn {
         width: 100%;
+        min-width: 0;
     }
 
     .support-thread-item {
@@ -546,5 +547,43 @@
 
     .support-thread-list {
         padding: 8px;
+    }
+
+    .support-quick-action-btn {
+        max-width: 240px;
+    }
+}
+
+@media (max-width: 420px) {
+    .support-page {
+        gap: 10px;
+    }
+
+    .support-workspace {
+        height: calc(100dvh - 176px);
+        min-height: 520px;
+    }
+
+    .support-thread-item {
+        padding: 8px;
+    }
+
+    .support-chat-list {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .support-chat-bubble {
+        width: 98%;
+        padding: 8px 10px;
+    }
+
+    .support-chat-bubble p {
+        font-size: 13px;
+    }
+
+    .support-chat-preview img {
+        width: 96px;
+        height: 68px;
     }
 }
