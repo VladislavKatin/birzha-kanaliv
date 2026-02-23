@@ -66,6 +66,9 @@ export default function DashboardLayout() {
             }
 
             seenNotificationKeysRef.current.add(key);
+            if (notification?.silent) {
+                return;
+            }
             const message = formatToastMessage(notification);
             if (message) {
                 toast(message);
