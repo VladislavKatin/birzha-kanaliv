@@ -580,3 +580,54 @@
         flex-direction: column;
     }
 }
+
+@media (max-width: 560px) {
+    .channels-header {
+        margin-bottom: 14px;
+        gap: 10px;
+    }
+
+    .channels-header h1 {
+        font-size: 22px;
+    }
+
+    .channels-grid {
+        gap: 12px;
+    }
+
+    .channel-card {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .channel-card-top {
+        gap: 10px;
+    }
+
+    .channel-card-avatar img {
+        width: 48px;
+        height: 48px;
+    }
+
+    .channel-card-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .channel-detail-name-row h1 {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 420px) {
+    .channel-card-name {
+        font-size: 14px;
+    }
+
+    .channel-stat-value {
+        font-size: 14px;
+    }
+
+    .channel-stat-label {
+        font-size: 10px;
+    }
+}

@@ -460,6 +460,60 @@
     }
 }
 
+@media (max-width: 560px) {
+    .dashboard-header {
+        margin-bottom: 14px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 22px;
+    }
+
+    .dashboard-grid {
+        gap: 12px;
+    }
+
+    .trust-score-circle {
+        width: 84px;
+        height: 84px;
+    }
+
+    .trust-score-value {
+        font-size: 26px;
+    }
+
+    .stat-card {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .quick-action-btn {
+        padding: 10px;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 420px) {
+    .dashboard-subtitle {
+        font-size: 13px;
+    }
+
+    .onboarding-item {
+        grid-template-columns: 10px 1fr;
+        gap: 8px;
+    }
+
+    .onboarding-item .btn,
+    .starter-guide-actions .btn {
+        width: 100%;
+    }
+}
+
 .onboarding-card {
     display: grid;
     gap: 12px;
