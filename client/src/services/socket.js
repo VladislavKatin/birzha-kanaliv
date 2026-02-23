@@ -27,11 +27,13 @@ export function resolveSocketUrl(env = import.meta.env) {
             const parsed = origin ? new URL(apiUrl, origin) : new URL(apiUrl);
             return trimTrailingSlash(parsed.origin);
         } catch {
-            return DEFAULT_SOCKET_URL;
+            const origin = browserOrigin();
+            return trimTrailingSlash(origin || DEFAULT_SOCKET_URL);
         }
     }
 
-    return DEFAULT_SOCKET_URL;
+    const origin = browserOrigin();
+    return trimTrailingSlash(origin || DEFAULT_SOCKET_URL);
 }
 
 export async function createAuthenticatedSocket(getToken, {
