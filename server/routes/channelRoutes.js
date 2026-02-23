@@ -5,6 +5,17 @@ const auth = require('../middleware/auth');
 const { listPublishedReviews } = require('../services/reviewReadService');
 const { ensureAutoOffersForChannels } = require('../services/autoOfferService');
 
+const AUTO_FLAG_REASONS = new Set([
+    'аномальний ріст підписників',
+    'anomalous subscriber growth',
+    'auto_anomaly',
+]);
+
+function isLegacyAutoFlagReason(flagReason) {
+    const normalized = String(flagReason || '').trim().toLowerCase();
+    return AUTO_FLAG_REASONS.has(normalized);
+}
+
 /**
  * @route GET /api/channels
  * @description List all public channels with optional niche/language/subscriber filters
@@ -64,11 +75,57 @@ router.get('/', async (req, res) => {
  */
 router.get('/my', auth, async (req, res) => {
     try {
-        const user = await User.findOne({ where: { firebaseUid: req.firebaseUser.uid } });
-        if (!user) return res.status(404).json({ error: 'User not found' });
+        const payload = await sequelize.transaction(async (transaction) => {
+            const user = await User.findOne({
+                where: { firebaseUid: req.firebaseUser.uid },
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+            });
+            if (!user) return { error: { status: 404, body: { error: 'User not found' } } };
 
-        const channels = await YouTubeAccount.findAll({ where: { userId: user.id } });
-        res.json({ channels });
+            const channels = await YouTubeAccount.findAll({
+                where: { userId: user.id },
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+                order: [['createdAt', 'DESC']],
+            });
+
+            const autoFlaggedIds = channels
+                .filter((channel) => channel.isFlagged && isLegacyAutoFlagReason(channel.flagReason))
+                .map((channel) => channel.id);
+
+            if (autoFlaggedIds.length > 0) {
+                await YouTubeAccount.update(
+                    { isFlagged: false, flagReason: null },
+                    { where: { id: { [Op.in]: autoFlaggedIds } }, transaction },
+                );
+
+                await ActionLog.create({
+                    userId: user.id,
+                    action: 'channel_legacy_auto_flags_cleared',
+                    details: {
+                        channelIds: autoFlaggedIds,
+                        source: 'channels_my',
+                    },
+                    ip: req.ip,
+                }, { transaction });
+
+                channels.forEach((channel) => {
+                    if (autoFlaggedIds.includes(channel.id)) {
+                        channel.isFlagged = false;
+                        channel.flagReason = null;
+                    }
+                });
+            }
+
+            return { channels };
+        });
+
+        if (payload.error) {
+            return res.status(payload.error.status).json(payload.error.body);
+        }
+
+        res.json({ channels: payload.channels });
     } catch (error) {
         console.error('Get my channels error:', error);
         res.status(500).json({ error: 'Failed to get channels' });
