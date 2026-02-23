@@ -2,6 +2,7 @@
 .swaps-page {
     width: 100%;
     max-width: 1180px;
+    min-width: 0;
 }
 
 .swaps-header {
@@ -64,6 +65,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    min-width: 0;
 }
 
 .swaps-bulk {
@@ -106,6 +108,7 @@
     padding: 14px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-md);
+    min-width: 0;
 }
 
 .swap-item-channel {
@@ -177,6 +180,7 @@
     align-items: flex-start;
     gap: 6px;
     min-width: 0;
+    width: 100%;
 }
 
 .swap-item-type {
@@ -318,6 +322,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 12px;
     padding: 10px 12px;
     margin-top: 12px;
@@ -352,6 +357,19 @@
     margin-top: 8px;
     color: var(--text-secondary);
     font-size: 13px;
+}
+
+.modal-checkline input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    margin-top: 1px;
+    accent-color: var(--brand-400);
+}
+
+.modal-checkline span {
+    line-height: 1.4;
 }
 
 .review-label {
@@ -412,9 +430,8 @@
     }
 
     .swap-item-details {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
+        flex-direction: column;
+        align-items: flex-start;
     }
 
     .swap-item-actions {
@@ -423,5 +440,6 @@
 
     .swap-item-actions .btn {
         flex: 1;
+        white-space: normal;
     }
 }
