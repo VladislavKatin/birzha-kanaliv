@@ -173,7 +173,9 @@
     background: #fff;
     display: grid;
     grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
-    min-height: 460px;
+    height: clamp(560px, 74vh, 900px);
+    min-height: 560px;
+    max-height: 900px;
 }
 
 .admin-support-threads {
@@ -437,6 +439,8 @@
     .admin-support-layout {
         grid-template-columns: 1fr;
         grid-template-rows: 220px minmax(0, 1fr);
+        height: clamp(620px, 80vh, 980px);
+        min-height: 620px;
     }
 
     .admin-support-threads {
@@ -506,7 +510,9 @@
 
     .admin-support-layout {
         grid-template-rows: 210px minmax(0, 1fr);
-        min-height: 540px;
+        height: calc(100dvh - 170px);
+        min-height: 560px;
+        max-height: none;
     }
 
     .admin-support-reply {

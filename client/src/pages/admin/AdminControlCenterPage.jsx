@@ -5,7 +5,7 @@ import { formatAdminDate, normalizeAdminOverview, normalizeAdminUsers } from '..
 import './AdminControlCenterPage.css';
 
 const ADMIN_SUPPORT_POLL_MS = 30000;
-const ADMIN_SUPPORT_MESSAGES_BATCH = 120;
+const ADMIN_SUPPORT_MESSAGES_BATCH = 40;
 
 function DistributionList({ title, items }) {
     return (
