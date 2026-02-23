@@ -25,6 +25,17 @@ function parsePositiveInt(value, fallback, min = 1, max = 100) {
     return parsed;
 }
 
+function dedupeMatchesById(items) {
+    const map = new Map();
+    for (const item of Array.isArray(items) ? items : []) {
+        if (!item || !item.id) continue;
+        if (!map.has(item.id)) {
+            map.set(item.id, item);
+        }
+    }
+    return Array.from(map.values());
+}
+
 function getRelevanceScore(swap) {
     const initiator = swap.initiatorChannel || {};
     const target = swap.targetChannel || {};
@@ -275,12 +286,13 @@ router.get('/incoming', auth, async (req, res) => {
                     as: 'reviews',
                     attributes: ['id', 'fromChannelId'],
                     required: false,
+                    separate: true,
                 },
             ],
             order: [['createdAt', 'DESC']],
         });
 
-        const baseSwaps = swaps.map((swap) => {
+        const baseSwaps = dedupeMatchesById(swaps.map((swap) => {
             const plain = swap.toJSON();
             const myChannelId = plain.targetChannelId;
             const hasReviewed = Array.isArray(plain.reviews)
@@ -291,7 +303,7 @@ router.get('/incoming', auth, async (req, res) => {
                 myChannelId,
                 hasReviewed,
             };
-        });
+        }));
 
         const initiatorChannelIds = Array.from(new Set(baseSwaps.map((swap) => swap.initiatorChannelId).filter(Boolean)));
         const partnerStatsMap = await buildPartnerStatsMap(initiatorChannelIds);
@@ -436,12 +448,13 @@ router.get('/outgoing', auth, async (req, res) => {
                     as: 'reviews',
                     attributes: ['id', 'fromChannelId'],
                     required: false,
+                    separate: true,
                 },
             ],
             order: [['createdAt', 'DESC']],
         });
 
-        const baseSwaps = swaps.map((swap) => {
+        const baseSwaps = dedupeMatchesById(swaps.map((swap) => {
             const plain = swap.toJSON();
             const myChannelId = plain.initiatorChannelId;
             const hasReviewed = Array.isArray(plain.reviews)
@@ -452,7 +465,7 @@ router.get('/outgoing', auth, async (req, res) => {
                 myChannelId,
                 hasReviewed,
             };
-        });
+        }));
 
         const targetChannelIds = Array.from(new Set(baseSwaps.map((swap) => swap.targetChannelId).filter(Boolean)));
         const partnerStatsMap = await buildPartnerStatsMap(targetChannelIds);
