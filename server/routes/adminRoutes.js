@@ -928,7 +928,7 @@ router.get('/support/threads', auth, admin, async (req, res) => {
 router.get('/menu-badges', auth, admin, async (req, res) => {
     try {
         const payload = await sequelize.transaction(async (transaction) => {
-            const lastSeenLog = await ActionLog.findOne({
+            const lastSeenLogs = await ActionLog.findAll({
                 where: {
                     userId: req.dbUser.id,
                     action: 'admin_menu_badges_seen',
@@ -937,9 +937,10 @@ router.get('/menu-badges', auth, admin, async (req, res) => {
                 transaction,
             });
 
-            const usersSeenAt = lastSeenLog?.details?.scope === 'users'
-                ? lastSeenLog.createdAt
-                : null;
+            const usersSeenLog = lastSeenLogs.find((log) => log.details?.scope === 'users') || null;
+            const supportSeenLog = lastSeenLogs.find((log) => log.details?.scope === 'support') || null;
+            const usersSeenAt = usersSeenLog?.createdAt || null;
+            const supportSeenAt = supportSeenLog?.createdAt || null;
 
             const usersWhere = {
                 role: { [Op.ne]: 'admin' },
@@ -948,8 +949,26 @@ router.get('/menu-badges', auth, admin, async (req, res) => {
                 usersWhere.createdAt = { [Op.gt]: usersSeenAt };
             }
 
-            const [newUsers] = await Promise.all([
+            const supportMessageWhere = {
+                action: 'support_chat_message',
+            };
+            if (supportSeenAt) {
+                supportMessageWhere.createdAt = { [Op.gt]: supportSeenAt };
+            }
+
+            const [newUsers, newSupportMessages] = await Promise.all([
                 User.count({ where: usersWhere, transaction }),
+                ActionLog.count({
+                    where: supportMessageWhere,
+                    include: [{
+                        model: User,
+                        as: 'user',
+                        required: true,
+                        where: { role: { [Op.ne]: 'admin' } },
+                        attributes: [],
+                    }],
+                    transaction,
+                }),
             ]);
 
             await ActionLog.create({
@@ -957,14 +976,18 @@ router.get('/menu-badges', auth, admin, async (req, res) => {
                 action: 'admin_menu_badges_opened',
                 details: {
                     usersSeenAt: usersSeenAt ? usersSeenAt.toISOString() : null,
+                    supportSeenAt: supportSeenAt ? supportSeenAt.toISOString() : null,
                     newUsers,
+                    newSupportMessages,
                 },
                 ip: req.ip,
             }, { transaction });
 
             return {
                 newUsers,
+                newSupportMessages,
                 usersSeenAt: usersSeenAt ? usersSeenAt.toISOString() : null,
+                supportSeenAt: supportSeenAt ? supportSeenAt.toISOString() : null,
             };
         });
 
@@ -983,7 +1006,7 @@ router.get('/menu-badges', auth, admin, async (req, res) => {
 router.post('/menu-badges/seen', auth, admin, async (req, res) => {
     try {
         const scope = String(req.body?.scope || '').trim() || 'users';
-        const allowedScopes = new Set(['users']);
+        const allowedScopes = new Set(['users', 'support']);
         if (!allowedScopes.has(scope)) {
             return res.status(400).json({ error: 'Invalid badge scope' });
         }

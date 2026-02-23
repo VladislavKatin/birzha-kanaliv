@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../services/api';
 
 function formatTime(value) {
@@ -21,6 +22,7 @@ function toDataUrl(file) {
 }
 
 export default function SupportPage() {
+    const location = useLocation();
     const bottomRef = useRef(null);
     const fileInputRef = useRef(null);
 
@@ -36,11 +38,20 @@ export default function SupportPage() {
 
     useEffect(() => {
         loadThreads();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const requestedUserId = params.get('userId');
+        if (!requestedUserId) return;
+        if (!threads.some((thread) => thread.user.id === requestedUserId)) return;
+        if (selectedUserId === requestedUserId) return;
+        loadMessages(requestedUserId);
+    }, [location.search, threads, selectedUserId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     async function loadThreads() {
         setLoadingThreads(true);
@@ -50,9 +61,13 @@ export default function SupportPage() {
             setThreads(nextThreads);
 
             if (nextThreads.length > 0) {
-                const nextUserId = selectedUserId && nextThreads.some((row) => row.user.id === selectedUserId)
-                    ? selectedUserId
-                    : nextThreads[0].user.id;
+                const requestedUserId = new URLSearchParams(location.search).get('userId');
+                const nextUserId = requestedUserId && nextThreads.some((row) => row.user.id === requestedUserId)
+                    ? requestedUserId
+                    : (selectedUserId && nextThreads.some((row) => row.user.id === selectedUserId)
+                        ? selectedUserId
+                        : nextThreads[0].user.id);
+
                 setSelectedUserId(nextUserId);
                 await loadMessages(nextUserId);
             } else {

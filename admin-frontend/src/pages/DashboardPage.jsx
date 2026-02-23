@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { formatAdminDate, normalizeAdminOverview } from '../services/adminCenter';
 
@@ -23,20 +24,26 @@ function DistributionCard({ title, items, keyName = 'status' }) {
 }
 
 export default function DashboardPage() {
+    const navigate = useNavigate();
     const [data, setData] = useState(() => normalizeAdminOverview());
+    const [supportThreads, setSupportThreads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
         load();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     async function load() {
         setLoading(true);
         setError('');
         try {
-            const response = await api.get('/admin/overview');
-            setData(normalizeAdminOverview(response.data));
+            const [overviewResponse, supportResponse] = await Promise.all([
+                api.get('/admin/overview'),
+                api.get('/admin/support/threads'),
+            ]);
+            setData(normalizeAdminOverview(overviewResponse.data));
+            setSupportThreads((supportResponse.data?.threads || []).slice(0, 6));
         } catch (err) {
             setError(err.response?.data?.error || 'Не вдалося завантажити аналітику');
         } finally {
@@ -109,6 +116,33 @@ export default function DashboardPage() {
                         </tbody>
                     </table>
                 </div>
+            </section>
+
+            <section className="card">
+                <div className="card-head">
+                    <h3>Нові звернення в чат підтримки</h3>
+                    <button className="btn btn-secondary" onClick={() => navigate('/support')}>
+                        Відкрити чат
+                    </button>
+                </div>
+                {supportThreads.length === 0 ? (
+                    <p className="empty-text">Нових звернень немає.</p>
+                ) : (
+                    <ul className="dist-list">
+                        {supportThreads.map((thread) => (
+                            <li key={thread.user.id}>
+                                <span>{thread.user.displayName || thread.user.email}</span>
+                                <strong>{formatAdminDate(thread.lastMessageAt)}</strong>
+                                <button
+                                    className="btn btn-secondary"
+                                    onClick={() => navigate(`/support?userId=${thread.user.id}`)}
+                                >
+                                    Відповісти
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </section>
         </div>
     );

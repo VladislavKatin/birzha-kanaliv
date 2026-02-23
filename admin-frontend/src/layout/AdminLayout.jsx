@@ -14,14 +14,14 @@ const navItems = [
     { to: '/system', label: 'Система', icon: Activity },
     { to: '/incidents', label: 'Інциденти', icon: ShieldAlert },
     { to: '/demo-content', label: 'Демо контент', icon: FlaskConical },
-    { to: '/support', label: 'Чат підтримки', icon: MessageSquareText },
+    { to: '/support', label: 'Чат підтримки', icon: MessageSquareText, badgeKey: 'newSupportMessages' },
 ];
 
 export default function AdminLayout() {
     const navigate = useNavigate();
     const location = useLocation();
     const { dbUser, signOut } = useAuth();
-    const [menuBadges, setMenuBadges] = useState({ newUsers: 0 });
+    const [menuBadges, setMenuBadges] = useState({ newUsers: 0, newSupportMessages: 0 });
 
     useEffect(() => {
         let cancelled = false;
@@ -32,11 +32,12 @@ export default function AdminLayout() {
                 if (!cancelled) {
                     setMenuBadges({
                         newUsers: Number(response.data?.newUsers || 0),
+                        newSupportMessages: Number(response.data?.newSupportMessages || 0),
                     });
                 }
             } catch {
                 if (!cancelled) {
-                    setMenuBadges({ newUsers: 0 });
+                    setMenuBadges({ newUsers: 0, newSupportMessages: 0 });
                 }
             }
         }
@@ -68,6 +69,30 @@ export default function AdminLayout() {
         }
 
         markUsersSeen();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [location.pathname]);
+
+    useEffect(() => {
+        if (location.pathname !== '/support') return;
+
+        let cancelled = false;
+
+        async function markSupportSeen() {
+            try {
+                await api.post('/admin/menu-badges/seen', { scope: 'support' });
+            } catch {
+                // ignore; polling will refresh counters anyway
+            } finally {
+                if (!cancelled) {
+                    setMenuBadges((prev) => ({ ...prev, newSupportMessages: 0 }));
+                }
+            }
+        }
+
+        markSupportSeen();
 
         return () => {
             cancelled = true;
