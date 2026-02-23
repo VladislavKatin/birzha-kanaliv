@@ -1,20 +1,22 @@
-п»їimport { Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './stores/AuthProvider';
 import AdminLayout from './layout/AdminLayout';
-import AuthPage from './pages/AuthPage';
-import DashboardPage from './pages/DashboardPage';
-import UsersPage from './pages/UsersPage';
-import SupportPage from './pages/SupportPage';
-import ChannelsPage from './pages/ChannelsPage';
-import OffersModerationPage from './pages/OffersModerationPage';
-import MatchesPage from './pages/MatchesPage';
-import ExchangeHistoryPage from './pages/ExchangeHistoryPage';
-import SystemInsightsPage from './pages/SystemInsightsPage';
-import IncidentsPage from './pages/IncidentsPage';
-import DemoContentPage from './pages/DemoContentPage';
+
+const AuthPage = lazy(() => import('./pages/AuthPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const UsersPage = lazy(() => import('./pages/UsersPage'));
+const SupportPage = lazy(() => import('./pages/SupportPage'));
+const ChannelsPage = lazy(() => import('./pages/ChannelsPage'));
+const OffersModerationPage = lazy(() => import('./pages/OffersModerationPage'));
+const MatchesPage = lazy(() => import('./pages/MatchesPage'));
+const ExchangeHistoryPage = lazy(() => import('./pages/ExchangeHistoryPage'));
+const SystemInsightsPage = lazy(() => import('./pages/SystemInsightsPage'));
+const IncidentsPage = lazy(() => import('./pages/IncidentsPage'));
+const DemoContentPage = lazy(() => import('./pages/DemoContentPage'));
 
 function LoadingScreen() {
-    return <div className="app-loader">Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ...</div>;
+    return <div className="app-loader">Завантаження...</div>;
 }
 
 function ProtectedRoute() {
@@ -32,25 +34,27 @@ function AppRoutes() {
     if (loading) return <LoadingScreen />;
 
     return (
-        <Routes>
-            <Route
-                path="/auth"
-                element={user && isAdmin ? <Navigate to="/dashboard" replace /> : <AuthPage />}
-            />
-            <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/channels" element={<ChannelsPage />} />
-                <Route path="/offers" element={<OffersModerationPage />} />
-                <Route path="/matches" element={<MatchesPage />} />
-                <Route path="/history" element={<ExchangeHistoryPage />} />
-                <Route path="/system" element={<SystemInsightsPage />} />
-                <Route path="/incidents" element={<IncidentsPage />} />
-                <Route path="/demo-content" element={<DemoContentPage />} />
-                <Route path="/support" element={<SupportPage />} />
-            </Route>
-            <Route path="*" element={<Navigate to={user && isAdmin ? '/dashboard' : '/auth'} replace />} />
-        </Routes>
+        <Suspense fallback={<LoadingScreen />}>
+            <Routes>
+                <Route
+                    path="/auth"
+                    element={user && isAdmin ? <Navigate to="/dashboard" replace /> : <AuthPage />}
+                />
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/users" element={<UsersPage />} />
+                    <Route path="/channels" element={<ChannelsPage />} />
+                    <Route path="/offers" element={<OffersModerationPage />} />
+                    <Route path="/matches" element={<MatchesPage />} />
+                    <Route path="/history" element={<ExchangeHistoryPage />} />
+                    <Route path="/system" element={<SystemInsightsPage />} />
+                    <Route path="/incidents" element={<IncidentsPage />} />
+                    <Route path="/demo-content" element={<DemoContentPage />} />
+                    <Route path="/support" element={<SupportPage />} />
+                </Route>
+                <Route path="*" element={<Navigate to={user && isAdmin ? '/dashboard' : '/auth'} replace />} />
+            </Routes>
+        </Suspense>
     );
 }
 
