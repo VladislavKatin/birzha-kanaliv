@@ -34,11 +34,39 @@ const VISUAL_ARTICLE_SLUGS = new Set([
     'multi-channel-portfolio-strategy-for-creators',
     'monthly-report-template-for-channel-exchanges',
     'ai-assisted-workflow-for-youtube-collaboration',
+    'youtube-channel-audit-checklist-2026',
+    'community-posts-growth-system',
+    'youtube-live-stream-collab-framework',
+    'thumbnail-ab-testing-for-channel-exchange',
+    'seo-keywords-for-youtube-channel-pages',
+    'onboarding-flow-for-new-collab-partners',
+    'churn-reduction-after-subscriber-exchange',
+    'creator-crm-for-partner-management',
+    'seasonal-content-planning-for-ukraine',
+    'legal-and-tax-basics-for-creator-collabs-ua',
 ]);
 
 function getSectionVisual(article, sectionIndex, heading) {
     if (!article || !VISUAL_ARTICLE_SLUGS.has(article.slug)) {
         return null;
+    }
+
+    // New long-form posts in this batch intentionally render two in-article visuals.
+    if (
+        article.slug === 'youtube-channel-audit-checklist-2026' ||
+        article.slug === 'community-posts-growth-system' ||
+        article.slug === 'youtube-live-stream-collab-framework' ||
+        article.slug === 'thumbnail-ab-testing-for-channel-exchange' ||
+        article.slug === 'seo-keywords-for-youtube-channel-pages' ||
+        article.slug === 'onboarding-flow-for-new-collab-partners' ||
+        article.slug === 'churn-reduction-after-subscriber-exchange' ||
+        article.slug === 'creator-crm-for-partner-management' ||
+        article.slug === 'seasonal-content-planning-for-ukraine' ||
+        article.slug === 'legal-and-tax-basics-for-creator-collabs-ua'
+    ) {
+        if (sectionIndex > 1) {
+            return null;
+        }
     }
 
     const src = `/images/blog/content/${article.slug}-section-${sectionIndex + 1}.svg`;

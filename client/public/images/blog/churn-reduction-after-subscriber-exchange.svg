@@ -1,0 +1,15 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900'>
+  <defs>
+    <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='hsl(268,72%,46%)'/>
+      <stop offset='100%' stop-color='hsl(152,90%,56%)'/>
+    </linearGradient>
+  </defs>
+  <rect width='1600' height='900' fill='url(#g)'/>
+  <rect x='80' y='90' width='1440' height='720' rx='36' fill='rgba(255,255,255,0.14)'/>
+  <text x='140' y='250' fill='#ffffff' font-family='Segoe UI, Arial, sans-serif' font-size='54' font-weight='700'>Біржа Каналів · Blog</text>
+  <text x='140' y='350' fill='#ffffff' font-family='Segoe UI, Arial, sans-serif' font-size='34' font-weight='600'>churn-reduction-after-subscriber-exchange</text>
+  <text x='140' y='430' fill='#ffffff' font-family='Segoe UI, Arial, sans-serif' font-size='28'>SEO · Аналітика · Обмін аудиторією</text>
+  <circle cx='1340' cy='210' r='110' fill='rgba(255,255,255,0.25)'/>
+  <circle cx='1260' cy='740' r='170' fill='rgba(255,255,255,0.2)'/>
+</svg>

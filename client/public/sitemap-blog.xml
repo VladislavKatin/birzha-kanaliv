@@ -67,6 +67,12 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://birzha-kanaliv.biz.ua/blog/community-posts-growth-system</loc>
+        <lastmod>2026-02-23</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://birzha-kanaliv.biz.ua/blog/how-to-scale-to-10-exchanges-per-month</loc>
         <lastmod>2026-02-18</lastmod>
         <changefreq>monthly</changefreq>
@@ -79,8 +85,20 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://birzha-kanaliv.biz.ua/blog/churn-reduction-after-subscriber-exchange</loc>
+        <lastmod>2026-02-23</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://birzha-kanaliv.biz.ua/blog/launch-playbook-for-new-channel-on-exchange</loc>
         <lastmod>2026-02-18</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://birzha-kanaliv.biz.ua/blog/legal-and-tax-basics-for-creator-collabs-ua</loc>
+        <lastmod>2026-02-23</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -99,6 +117,12 @@
     <url>
         <loc>https://birzha-kanaliv.biz.ua/blog/monthly-report-template-for-channel-exchanges</loc>
         <lastmod>2026-02-18</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://birzha-kanaliv.biz.ua/blog/onboarding-flow-for-new-collab-partners</loc>
+        <lastmod>2026-02-23</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -139,6 +163,12 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://birzha-kanaliv.biz.ua/blog/creator-crm-for-partner-management</loc>
+        <lastmod>2026-02-23</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://birzha-kanaliv.biz.ua/blog/retention-metrics-after-collaboration</loc>
         <lastmod>2026-02-18</lastmod>
         <changefreq>monthly</changefreq>
@@ -153,6 +183,36 @@
     <url>
         <loc>https://birzha-kanaliv.biz.ua/blog/subscriber-quality-vs-volume-in-exchanges</loc>
         <lastmod>2026-02-18</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://birzha-kanaliv.biz.ua/blog/seasonal-content-planning-for-ukraine</loc>
+        <lastmod>2026-02-23</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://birzha-kanaliv.biz.ua/blog/seo-keywords-for-youtube-channel-pages</loc>
+        <lastmod>2026-02-23</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://birzha-kanaliv.biz.ua/blog/thumbnail-ab-testing-for-channel-exchange</loc>
+        <lastmod>2026-02-23</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://birzha-kanaliv.biz.ua/blog/youtube-channel-audit-checklist-2026</loc>
+        <lastmod>2026-02-23</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://birzha-kanaliv.biz.ua/blog/youtube-live-stream-collab-framework</loc>
+        <lastmod>2026-02-23</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>

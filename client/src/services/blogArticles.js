@@ -2148,6 +2148,425 @@ const BLOG_ARTICLES = [
                     }
             ],
             sections: makeLongSections("ai-воркфлоу для youtube-колаборацій")
+    },
+    {
+            slug: "youtube-channel-audit-checklist-2026",
+            title: "Аудит YouTube-каналу 2026: повний чеклист перед обміном аудиторією",
+            excerpt: "Покроковий аудит каналу перед угодою: метрики, ризики, підготовка до безпечного обміну.",
+            coverImage: "/images/blog/youtube-channel-audit-checklist-2026.svg",
+            coverAlt: "Чеклист аудиту YouTube-каналу перед обміном аудиторією",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "12 хв читання",
+            tags: ["YouTube", "Аудит", "Обмін"],
+            seoTitle: "Аудит YouTube-каналу 2026: чеклист перед обміном аудиторією | Біржа Каналів",
+            seoDescription: "Детальний аудит каналу перед запуском обміну: KPI, безпека, ніша, утримання та готовність до угоди.",
+            keywords: ["аудит youtube каналу", "чеклист перед обміном", "біржа каналів аудит", "kpi youtube"],
+            relatedSlugs: [
+                    "pre-collab-audit-for-youtube-channels",
+                    "youtube-analytics-checklist-before-deal",
+                    "red-flags-in-channel-exchange-deals"
+            ],
+            chart: {
+                    title: "Що найбільше впливає на результат обміну після аудиту",
+                    description: "Після системного аудиту зменшується відсоток слабких угод і росте якість партнерств.",
+                    type: "bar",
+                    xKey: "factor",
+                    data: [
+                            { factor: "CTR", impact: 24 },
+                            { factor: "Утримання", impact: 37 },
+                            { factor: "Ніша", impact: 31 },
+                            { factor: "Регулярність", impact: 19 }
+                    ],
+                    series: [{ key: "impact", name: "Вплив на успіх (%)", color: "#005bbb" }],
+                    insights: [
+                            "Утримання та релевантність ніші дають найстабільніший приріст якості угод.",
+                            "Повний аудит знижує кількість невдалих пропозицій у перші 30 днів."
+                    ]
+            },
+            faq: [
+                    { q: "Коли проводити аудит?", a: "Перед кожною новою хвилею обмінів і після великих змін у контент-стратегії." },
+                    { q: "Що критично перевірити?", a: "CTR, утримання, темп публікацій, джерела переглядів і прозорість опису оферу." }
+            ],
+            sections: makeLongSections("аудит YouTube-каналу перед обміном")
+    },
+    {
+            slug: "community-posts-growth-system",
+            title: "Система росту через Community Posts: як гріти аудиторію між релізами",
+            excerpt: "Як перетворити вкладку Спільнота на стабільний канал реактивації аудиторії та підсилення обмінів.",
+            coverImage: "/images/blog/community-posts-growth-system.svg",
+            coverAlt: "Система росту YouTube-каналу через Community Posts",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "11 хв читання",
+            tags: ["YouTube", "Контент", "Зростання"],
+            seoTitle: "Community Posts для росту YouTube-каналу: практична система 2026",
+            seoDescription: "Побудуйте систему Community Posts для реактивації підписників, підвищення CTR і підтримки угод по обміну.",
+            keywords: ["community posts youtube", "реактивація підписників", "контент стратегія youtube", "зростання каналу"],
+            relatedSlugs: [
+                    "content-calendar-with-analytics-loop",
+                    "youtube-shorts-to-long-videos-funnel",
+                    "conversion-optimization-for-offer-page"
+            ],
+            chart: {
+                    title: "Ефект Community Posts на CTR основних релізів",
+                    description: "Регулярна робота зі Спільнотою підіймає залучення перед публікацією відео.",
+                    type: "line",
+                    xKey: "week",
+                    data: [
+                            { week: "Т1", ctrWithout: 4.2, ctrWith: 4.4 },
+                            { week: "Т2", ctrWithout: 4.1, ctrWith: 4.8 },
+                            { week: "Т3", ctrWithout: 4.3, ctrWith: 5.1 },
+                            { week: "Т4", ctrWithout: 4.2, ctrWith: 5.4 }
+                    ],
+                    series: [
+                            { key: "ctrWithout", name: "Без системи Posts", color: "#94a3b8" },
+                            { key: "ctrWith", name: "З системою Posts", color: "#005bbb" }
+                    ],
+                    insights: [
+                            "Передрелізне прогрівання працює як мультиплікатор стартових сигналів.",
+                            "Найбільший приріст видно в нішах з сильною дискусійною аудиторією."
+                    ]
+            },
+            faq: [
+                    { q: "Скільки постів робити на тиждень?", a: "Зазвичай 3-5 постів достатньо, якщо вони пов'язані з темою найближчих відео." },
+                    { q: "Що публікувати в першу чергу?", a: "Опитування, тизери, міні-розбори та запити на зворотний зв'язок по майбутнім релізам." }
+            ],
+            sections: makeLongSections("система росту через Community Posts")
+    },
+    {
+            slug: "youtube-live-stream-collab-framework",
+            title: "Live-колаборації на YouTube: фреймворк підготовки та масштабування",
+            excerpt: "Як запускати спільні стріми так, щоб вони приносили нову якісну аудиторію, а не одноразовий сплеск.",
+            coverImage: "/images/blog/youtube-live-stream-collab-framework.svg",
+            coverAlt: "Фреймворк live-колаборацій на YouTube",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "12 хв читання",
+            tags: ["YouTube", "Live", "Колаборації"],
+            seoTitle: "Live-колаборації на YouTube: повний фреймворк підготовки 2026",
+            seoDescription: "Практичний фреймворк live-колаборацій: сценарій ефіру, розподіл ролей, KPI і пост-аналіз результату.",
+            keywords: ["youtube live колаборації", "спільні стріми", "сценарій стріму", "kpi live"],
+            relatedSlugs: [
+                    "negotiation-script-for-channel-exchange",
+                    "communication-sla-for-youtube-collab-teams",
+                    "post-collab-retrospective-framework"
+            ],
+            chart: {
+                    title: "Утримання глядачів у live-ефірах при різних сценаріях",
+                    description: "Структуровані блоки ефіру значно покращують середню тривалість перегляду.",
+                    type: "line",
+                    xKey: "segment",
+                    data: [
+                            { segment: "0-10 хв", basic: 78, scripted: 82 },
+                            { segment: "10-25 хв", basic: 59, scripted: 70 },
+                            { segment: "25-40 хв", basic: 45, scripted: 60 },
+                            { segment: "40+ хв", basic: 31, scripted: 49 }
+                    ],
+                    series: [
+                            { key: "basic", name: "Без структури", color: "#94a3b8" },
+                            { key: "scripted", name: "З фреймворком", color: "#005bbb" }
+                    ],
+                    insights: [
+                            "Середина стріму є найкритичнішою ділянкою для втрати аудиторії.",
+                            "Чітка модерація і таймінг блоків підвищують шанси на завершені угоди."
+                    ]
+            },
+            faq: [
+                    { q: "Скільки триває оптимальний спільний стрім?", a: "Для більшості ніш добре працює 45-75 хвилин із чіткими тематичними блоками." },
+                    { q: "Що готувати до ефіру?", a: "Сценарний план, таймінг CTA, порядок взаємних згадок і правила модерації чату." }
+            ],
+            sections: makeLongSections("live-колаборації на YouTube")
+    },
+    {
+            slug: "thumbnail-ab-testing-for-channel-exchange",
+            title: "A/B тестування обкладинок для обмінних відео: як підняти CTR без клікбейту",
+            excerpt: "Практична система тестування thumbnail-пар для колабораційних релізів.",
+            coverImage: "/images/blog/thumbnail-ab-testing-for-channel-exchange.svg",
+            coverAlt: "A/B тестування thumbnail для обмінних YouTube-відео",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "10 хв читання",
+            tags: ["YouTube", "CTR", "Оптимізація"],
+            seoTitle: "A/B тест обкладинок YouTube: як збільшити CTR в обмінних інтеграціях",
+            seoDescription: "Детальна методика A/B тесту thumbnail для обмінних відео: гіпотези, контроль і правильна інтерпретація.",
+            keywords: ["ab тест обкладинок", "thumbnail youtube", "ctr optimization", "обмінні інтеграції"],
+            relatedSlugs: [
+                    "conversion-optimization-for-offer-page",
+                    "youtube-shorts-to-long-videos-funnel",
+                    "youtube-channel-audit-checklist-2026"
+            ],
+            chart: {
+                    title: "CTR після впровадження A/B тестування thumbnail",
+                    description: "Системний підхід дає стабільніший CTR, ніж інтуїтивний вибір обкладинки.",
+                    type: "bar",
+                    xKey: "mode",
+                    data: [
+                            { mode: "Інтуїтивно", ctr: 4.5 },
+                            { mode: "A/B разово", ctr: 5.2 },
+                            { mode: "A/B системно", ctr: 6.1 }
+                    ],
+                    series: [{ key: "ctr", name: "CTR (%)", color: "#005bbb" }],
+                    insights: [
+                            "Регулярні тести накопичують знання про аудиторію вашої ніші.",
+                            "Сильний thumbnail підсилює ефект навіть середнього заголовка."
+                    ]
+            },
+            faq: [
+                    { q: "Скільки варіантів обкладинки тестувати?", a: "Найчастіше достатньо 2-3 варіантів на один реліз, якщо є чітка гіпотеза." },
+                    { q: "Коли фіксувати переможця?", a: "Після однакового вікна збору даних та урахування джерел трафіку." }
+            ],
+            sections: makeLongSections("A/B тестування обкладинок для обмінних відео")
+    },
+    {
+            slug: "seo-keywords-for-youtube-channel-pages",
+            title: "SEO ключові слова для сторінки каналу та оферу: як отримати цільовий трафік",
+            excerpt: "Як правильно будувати семантику каналу й оферів, щоб вас знаходили релевантні партнери.",
+            coverImage: "/images/blog/seo-keywords-for-youtube-channel-pages.svg",
+            coverAlt: "SEO ключові слова для сторінок YouTube-каналу та оферів",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "11 хв читання",
+            tags: ["SEO", "YouTube", "Офери"],
+            seoTitle: "SEO для YouTube-каналу та оферу: ключові слова, що приводять партнерів",
+            seoDescription: "Робоча SEO-модель для сторінок каналу та оферів: семантика, намір пошуку, структура опису і конверсія.",
+            keywords: ["seo youtube канал", "ключові слова оферу", "семантика каналу", "біржа каналів seo"],
+            relatedSlugs: [
+                    "how-to-write-offer-description-that-converts",
+                    "conversion-optimization-for-offer-page",
+                    "youtube-exchange-pricing-model-2026"
+            ],
+            chart: {
+                    title: "Якість вхідних заявок до і після SEO-оптимізації",
+                    description: "Чітка семантика підвищує релевантність партнерів і зменшує відсів.",
+                    type: "line",
+                    xKey: "month",
+                    data: [
+                            { month: "М1", relevant: 38, irrelevant: 27 },
+                            { month: "М2", relevant: 44, irrelevant: 23 },
+                            { month: "М3", relevant: 51, irrelevant: 19 },
+                            { month: "М4", relevant: 57, irrelevant: 15 }
+                    ],
+                    series: [
+                            { key: "relevant", name: "Релевантні заявки (%)", color: "#005bbb" },
+                            { key: "irrelevant", name: "Нерелевантні заявки (%)", color: "#ef4444" }
+                    ],
+                    insights: [
+                            "Семантична точність покращує не тільки трафік, а й конверсію в домовленість.",
+                            "Найбільший ефект дає переписаний опис оферу з конкретними KPI."
+                    ]
+            },
+            faq: [
+                    { q: "Як часто оновлювати ключові слова?", a: "Щонайменше раз на місяць або після зміни ніші/формату контенту." },
+                    { q: "Що важливіше: частотність чи точність?", a: "Для обмінів важливіша точність наміру, а не максимальна частотність запиту." }
+            ],
+            sections: makeLongSections("SEO ключові слова для сторінки каналу та оферу")
+    },
+    {
+            slug: "onboarding-flow-for-new-collab-partners",
+            title: "Onboarding нового партнера: як скоротити шлях від заявки до першого обміну",
+            excerpt: "Готовий процес онбордингу партнерів: статуси, шаблони повідомлень, контроль якості.",
+            coverImage: "/images/blog/onboarding-flow-for-new-collab-partners.svg",
+            coverAlt: "Onboarding-флоу для нових партнерів у обмінах каналів",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "12 хв читання",
+            tags: ["Onboarding", "Колаборації", "Процеси"],
+            seoTitle: "Onboarding партнерів для обміну каналами: швидкий запуск без хаосу",
+            seoDescription: "Побудуйте onboarding-процес партнерів: етапи, SLA, ризики, автоповідомлення та контроль виконання угоди.",
+            keywords: ["onboarding партнерів", "обмін каналами процес", "sla колаборацій", "шаблони повідомлень"],
+            relatedSlugs: [
+                    "communication-sla-for-youtube-collab-teams",
+                    "negotiation-script-for-channel-exchange",
+                    "monthly-report-template-for-channel-exchanges"
+            ],
+            chart: {
+                    title: "Середній час запуску першої угоди після впровадження onboarding",
+                    description: "Стандартизований вхідний процес зменшує затримки та підвищує завершуваність.",
+                    type: "bar",
+                    xKey: "stage",
+                    data: [
+                            { stage: "До процесу", hours: 96 },
+                            { stage: "Частковий процес", hours: 63 },
+                            { stage: "Повний onboarding", hours: 38 }
+                    ],
+                    series: [{ key: "hours", name: "Години до старту угоди", color: "#005bbb" }],
+                    insights: [
+                            "Найбільше часу економиться на етапі узгодження умов.",
+                            "Шаблонні повідомлення скорочують навантаження на команду."
+                    ]
+            },
+            faq: [
+                    { q: "Який мінімальний набір етапів onboarding?", a: "Перевірка каналу, узгодження KPI, календар, стартова комунікація, контрольний чекін." },
+                    { q: "Що робити з партнером, який затримує відповіді?", a: "Використовувати SLA та автоматичні нагадування зі зрозумілими дедлайнами." }
+            ],
+            sections: makeLongSections("onboarding нового партнера для обміну")
+    },
+    {
+            slug: "churn-reduction-after-subscriber-exchange",
+            title: "Як зменшити відтік підписників після обміну: стратегія утримання на 30 днів",
+            excerpt: "Післяобмінна стратегія, що знижує churn і підвищує якість нової аудиторії.",
+            coverImage: "/images/blog/churn-reduction-after-subscriber-exchange.svg",
+            coverAlt: "Стратегія зменшення відтоку після обміну підписниками",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "11 хв читання",
+            tags: ["Утримання", "YouTube", "Аналітика"],
+            seoTitle: "Зменшення відтоку після обміну підписниками: план утримання на 30 днів",
+            seoDescription: "Практичний план зниження відтоку після обміну аудиторією: контентний міст, прогрів та контроль якості підписника.",
+            keywords: ["відтік підписників", "утримання після обміну", "youtube churn", "якість аудиторії"],
+            relatedSlugs: [
+                    "retention-metrics-after-collaboration",
+                    "subscriber-quality-vs-volume-in-exchanges",
+                    "community-posts-growth-system"
+            ],
+            chart: {
+                    title: "Відтік підписників у перші 30 днів після обміну",
+                    description: "Стратегія утримання помітно знижує втрати в критичний період.",
+                    type: "line",
+                    xKey: "day",
+                    data: [
+                            { day: "Д1", noPlan: 8.2, withPlan: 7.9 },
+                            { day: "Д7", noPlan: 14.4, withPlan: 11.6 },
+                            { day: "Д14", noPlan: 19.3, withPlan: 14.2 },
+                            { day: "Д30", noPlan: 25.1, withPlan: 17.8 }
+                    ],
+                    series: [
+                            { key: "noPlan", name: "Без плану утримання (%)", color: "#ef4444" },
+                            { key: "withPlan", name: "З планом утримання (%)", color: "#005bbb" }
+                    ],
+                    insights: [
+                            "Найбільший розрив формується між 7 та 14 днем після обміну.",
+                            "Серійний контент і чіткий контентний міст знижують churn."
+                    ]
+            },
+            faq: [
+                    { q: "Що робити в перші 72 години після обміну?", a: "Дати новим підписникам серію релевантних відео та чітку навігацію по каналу." },
+                    { q: "Яку метрику контролювати щодня?", a: "Динаміку відписок і утримання перших двох роликів після обміну." }
+            ],
+            sections: makeLongSections("зменшення відтоку після обміну підписниками")
+    },
+    {
+            slug: "creator-crm-for-partner-management",
+            title: "CRM для креатора: як вести партнерів, угоди та повторні обміни без хаосу",
+            excerpt: "Практична модель CRM для керування партнерською мережею і повторюваним зростанням.",
+            coverImage: "/images/blog/creator-crm-for-partner-management.svg",
+            coverAlt: "CRM-система для керування партнерами у біржі каналів",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "12 хв читання",
+            tags: ["CRM", "Колаборації", "Операції"],
+            seoTitle: "CRM для креатора: система керування партнерами та обмінами",
+            seoDescription: "Як побудувати CRM-процес для обмінів каналами: сегментація партнерів, статуси угод, історія взаємодій і повторні цикли.",
+            keywords: ["crm для креатора", "керування партнерами", "обмін каналами crm", "операції колаборацій"],
+            relatedSlugs: [
+                    "onboarding-flow-for-new-collab-partners",
+                    "monthly-report-template-for-channel-exchanges",
+                    "multi-channel-portfolio-strategy-for-creators"
+            ],
+            chart: {
+                    title: "Повторні угоди після впровадження CRM-процесу",
+                    description: "Системний облік історії підвищує частку повторних партнерств.",
+                    type: "bar",
+                    xKey: "period",
+                    data: [
+                            { period: "До CRM", repeatDeals: 18 },
+                            { period: "1 місяць", repeatDeals: 27 },
+                            { period: "2 місяць", repeatDeals: 34 },
+                            { period: "3 місяць", repeatDeals: 41 }
+                    ],
+                    series: [{ key: "repeatDeals", name: "Повторні угоди (%)", color: "#005bbb" }],
+                    insights: [
+                            "Найцінніший ефект CRM - стабільні повторні обміни з перевіреними партнерами.",
+                            "Сегментація партнерів за якістю спрощує пріоритезацію роботи."
+                    ]
+            },
+            faq: [
+                    { q: "Які статуси мають бути в CRM мінімально?", a: "Лід, перевірка, узгодження, активна угода, завершено, повторна пропозиція." },
+                    { q: "Що зберігати після кожного обміну?", a: "KPI, якість комунікації, ризики, фактичний результат і рекомендацію на майбутнє." }
+            ],
+            sections: makeLongSections("CRM для керування партнерами та обмінами")
+    },
+    {
+            slug: "seasonal-content-planning-for-ukraine",
+            title: "Сезонне планування контенту для України: як підготуватися до піків попиту",
+            excerpt: "Як планувати контент і обміни під сезонність українського ринку, щоб не втрачати охоплення.",
+            coverImage: "/images/blog/seasonal-content-planning-for-ukraine.svg",
+            coverAlt: "Сезонне планування контенту для українських YouTube-каналів",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "11 хв читання",
+            tags: ["Україна", "Контент", "Планування"],
+            seoTitle: "Сезонне планування YouTube-контенту для України: календар піків попиту",
+            seoDescription: "Створіть сезонний контент-план для українського ринку: підготовка тем, партнерств і обмінів до пікових періодів.",
+            keywords: ["сезонний контент план", "youtube україна", "календар попиту", "планування обмінів"],
+            relatedSlugs: [
+                    "local-ukrainian-youtube-niches-2026",
+                    "content-calendar-with-analytics-loop",
+                    "launch-playbook-for-new-channel-on-exchange"
+            ],
+            chart: {
+                    title: "Сезонний індекс попиту по кварталах",
+                    description: "Підготовка до піків заздалегідь дає перевагу в охопленні та якості заявок.",
+                    type: "line",
+                    xKey: "quarter",
+                    data: [
+                            { quarter: "Q1", demand: 58 },
+                            { quarter: "Q2", demand: 66 },
+                            { quarter: "Q3", demand: 61 },
+                            { quarter: "Q4", demand: 74 }
+                    ],
+                    series: [{ key: "demand", name: "Індекс попиту", color: "#005bbb" }],
+                    insights: [
+                            "Q4 часто має найвищу конкуренцію та найкращі можливості для масштабування.",
+                            "Попередня підготовка партнерств у Q3 підвищує ефективність старту Q4."
+                    ]
+            },
+            faq: [
+                    { q: "Коли формувати сезонний план?", a: "Оптимально за 6-8 тижнів до очікуваного піку, щоб встигнути підготувати партнерства." },
+                    { q: "Який тип контенту працює найкраще?", a: "Комбінація evergreen-тем і сезонних форматів із чітким CTA на наступні матеріали." }
+            ],
+            sections: makeLongSections("сезонне планування контенту для України")
+    },
+    {
+            slug: "legal-and-tax-basics-for-creator-collabs-ua",
+            title: "Юридичні та податкові основи колаборацій в Україні: мінімум, який має знати креатор",
+            excerpt: "Базова юридична та податкова рамка для безпечних партнерських інтеграцій і обмінів.",
+            coverImage: "/images/blog/legal-and-tax-basics-for-creator-collabs-ua.svg",
+            coverAlt: "Юридичні та податкові основи колаборацій для креаторів в Україні",
+            publishedAt: "23 лютого 2026",
+            publishedAtIso: "2026-02-23",
+            readTime: "13 хв читання",
+            tags: ["Право", "Податки", "Колаборації"],
+            seoTitle: "Юридичні та податкові основи колаборацій в Україні для YouTube-креатора",
+            seoDescription: "Практичний гайд з базових юридичних і податкових аспектів колаборацій: ризики, документи, фіксація умов і прозорість.",
+            keywords: ["податки креатора україна", "юридичні аспекти колаборацій", "договір колаборації", "безпека угод"],
+            relatedSlugs: [
+                    "safe-collaboration-contract-checklist",
+                    "red-flags-in-channel-exchange-deals",
+                    "communication-sla-for-youtube-collab-teams"
+            ],
+            chart: {
+                    title: "Частка конфліктів залежно від рівня формалізації умов",
+                    description: "Фіксація умов та очікувань істотно знижує кількість спірних ситуацій.",
+                    type: "bar",
+                    xKey: "level",
+                    data: [
+                            { level: "Усно", disputes: 46 },
+                            { level: "Частково письмово", disputes: 29 },
+                            { level: "Повна фіксація", disputes: 14 }
+                    ],
+                    series: [{ key: "disputes", name: "Спірні кейси (%)", color: "#005bbb" }],
+                    insights: [
+                            "Найбільше конфліктів виникає без чіткої письмової рамки домовленостей.",
+                            "Прозора фіксація KPI і дедлайнів захищає обидві сторони угоди."
+                    ]
+            },
+            faq: [
+                    { q: "Чи потрібен договір для кожної інтеграції?", a: "Для значущих за ризиком або вартістю інтеграцій письмова фіксація умов є бажаною." },
+                    { q: "Що обов'язково зафіксувати?", a: "Обсяг робіт, дедлайни, KPI, порядок приймання, відповідальність сторін та формат розрахунків." }
+            ],
+            sections: makeLongSections("юридичні та податкові основи колаборацій в Україні")
     }
 ];
 
