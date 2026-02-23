@@ -19,7 +19,7 @@ async function runSupportChatFunctionalTests() {
 
         assert.equal(load.status, 200);
         assert.equal(Array.isArray(load.body.messages), true);
-        assert.equal(!!load.body.adminWelcome, true);
+        assert.equal(load.body.adminWelcome, undefined);
 
         const send = await request(baseUrl, {
             method: 'POST',

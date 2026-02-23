@@ -78,7 +78,7 @@ export default function SupportChatsPage() {
     const [activeThreadId, setActiveThreadId] = useState('support');
     const [messages, setMessages] = useState([]);
     const [myUserId, setMyUserId] = useState('');
-    const [supportCache, setSupportCache] = useState({ adminWelcome: null, messages: [] });
+    const [supportCache, setSupportCache] = useState({ messages: [] });
     const [inputValue, setInputValue] = useState('');
     const [selectedImage, setSelectedImage] = useState('');
     const [sending, setSending] = useState(false);
@@ -204,14 +204,11 @@ export default function SupportChatsPage() {
                 api.get('/chat/threads'),
             ]);
 
-            const supportMessages = [supportResponse.data.adminWelcome, ...(supportResponse.data.messages || [])];
+            const supportMessages = supportResponse.data.messages || [];
             setMyUserId(supportResponse.data.myUserId || '');
-            setSupportCache({
-                adminWelcome: supportResponse.data.adminWelcome,
-                messages: supportResponse.data.messages || [],
-            });
+            setSupportCache({ messages: supportMessages });
 
-            const supportLast = supportMessages[supportMessages.length - 1] || supportResponse.data.adminWelcome;
+            const supportLast = supportMessages[supportMessages.length - 1] || null;
             const matchThreads = (threadsResponse.data.threads || []).map((thread) => ({
                 ...thread,
                 lastMessage: thread.lastMessage || null,
@@ -246,7 +243,7 @@ export default function SupportChatsPage() {
         setLoadingMessages(true);
         try {
             if (thread.type === 'support') {
-                const supportMessages = [supportCache.adminWelcome, ...(supportCache.messages || [])].filter(Boolean);
+                const supportMessages = supportCache.messages || [];
                 setMessages(supportMessages);
                 return;
             }
@@ -454,7 +451,6 @@ export default function SupportChatsPage() {
                                                 <div className="support-chat-bubble">
                                                     <div className="support-chat-author">
                                                         {mine ? 'Ви' : (item.isAdmin ? 'Адміністрація' : (item.sender?.displayName || 'Користувач'))}
-                                                        {item.isAdmin && <span className="support-chat-role">ADMIN</span>}
                                                     </div>
                                                     {item.imageData && (
                                                         <a href={item.imageData} target="_blank" rel="noreferrer" className="support-chat-image-link">

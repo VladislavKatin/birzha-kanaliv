@@ -8,9 +8,10 @@ const { emitSupportMessage } = require('../socketSetup');
 
 function mapSupportLogToMessage(log) {
     const details = log.details || {};
+    const normalizedText = String(details.text || '').trim();
     return {
         id: log.id,
-        content: details.text || '',
+        content: normalizedText,
         imageData: details.imageData || null,
         createdAt: log.createdAt,
         sender: {
@@ -21,6 +22,13 @@ function mapSupportLogToMessage(log) {
         },
         isAdmin: log.user?.role === 'admin',
     };
+}
+
+function isVisibleSupportMessage(log) {
+    const details = log.details || {};
+    const text = String(details.text || '').trim();
+    const hasImage = !!details.imageData;
+    return text.length > 0 || hasImage;
 }
 
 router.get('/chat', auth, async (req, res) => {
@@ -58,11 +66,11 @@ router.get('/chat', auth, async (req, res) => {
 
             const filteredLogs = logs.filter((log) => {
                 if (user.role === 'admin') {
-                    return true;
+                    return isVisibleSupportMessage(log);
                 }
 
                 if (log.userId === user.id) {
-                    return true;
+                    return isVisibleSupportMessage(log);
                 }
 
                 const senderIsAdmin = log.user?.role === 'admin';
@@ -71,7 +79,11 @@ router.get('/chat', auth, async (req, res) => {
                 }
 
                 const targetUserId = log.details?.targetUserId || null;
-                return !targetUserId || targetUserId === user.id;
+                if (targetUserId && targetUserId !== user.id) {
+                    return false;
+                }
+
+                return isVisibleSupportMessage(log);
             });
 
             await ActionLog.create({
@@ -94,20 +106,6 @@ router.get('/chat', auth, async (req, res) => {
         res.json({
             messages: payload.messages,
             myUserId: payload.user.id,
-            adminWelcome: {
-                id: 'support-admin-welcome',
-                content: 'Вітаємо в чаті адміністрації. Опишіть проблему або пропозицію, можна додати скріншот.',
-                imageData: null,
-                createdAt: new Date(0).toISOString(),
-                sender: {
-                    id: 'admin-system',
-                    displayName: 'Адміністрація',
-                    photoURL: null,
-                    role: 'admin',
-                },
-                isAdmin: true,
-                isSystem: true,
-            },
         });
 
         logInfo('support.chat.loaded', {
