@@ -272,6 +272,10 @@
 }
 
 @media (max-width: 560px) {
+    .blog-article-page {
+        padding: 20px 12px 52px;
+    }
+
     .blog-article-hero h1 {
         line-height: 1.25;
     }
@@ -291,5 +295,36 @@
 
     .blog-related-item button {
         width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .blog-article-hero,
+    .blog-article-content,
+    .blog-chart-card,
+    .blog-faq-card,
+    .blog-related-card {
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .blog-article-hero h1 {
+        font-size: 26px;
+    }
+
+    .blog-article-content h2,
+    .blog-chart-card h3,
+    .blog-faq-card h3,
+    .blog-related-card h3 {
+        font-size: 20px;
+    }
+
+    .blog-chart-wrap {
+        height: 200px;
+    }
+
+    .blog-section-figure figcaption {
+        padding: 8px 10px;
+        font-size: 12px;
     }
 }

@@ -154,6 +154,10 @@
 }
 
 @media (max-width: 560px) {
+    .blog-list-page {
+        padding: 22px 12px 52px;
+    }
+
     .blog-list-header h1 {
         line-height: 1.2;
     }
@@ -173,6 +177,18 @@
 }
 
 @media (max-width: 420px) {
+    .blog-list-header h1 {
+        font-size: 28px;
+    }
+
+    .blog-list-header p {
+        font-size: 14px;
+    }
+
+    .blog-list-card img {
+        height: 170px;
+    }
+
     .blog-tag-btn {
         width: 100%;
         justify-content: center;

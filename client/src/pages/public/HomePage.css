@@ -624,6 +624,14 @@
 }
 
 @media (max-width: 560px) {
+    .hero {
+        padding: 52px 0 44px;
+    }
+
+    .hero-title {
+        font-size: clamp(30px, 9vw, 38px);
+    }
+
     .hero-actions {
         flex-direction: column;
     }
@@ -634,6 +642,10 @@
 
     .hero-panel {
         padding: 18px;
+    }
+
+    .hero-panel-metric strong {
+        font-size: 34px;
     }
 
     .stats-inner {
@@ -650,5 +662,47 @@
 
     .cta-actions .hero-btn {
         width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .section-inner {
+        padding: 0 12px;
+    }
+
+    .hero-badge {
+        font-size: 12px;
+        padding: 6px 12px;
+        margin-bottom: 14px;
+    }
+
+    .hero-subtitle {
+        font-size: 15px;
+    }
+
+    .hero-panel h3 {
+        font-size: 18px;
+    }
+
+    .hero-panel-metric strong {
+        font-size: 30px;
+    }
+
+    .social-proof-tags span {
+        width: 100%;
+        text-align: center;
+    }
+
+    .personas-section,
+    .features-section,
+    .faq-section,
+    .steps-section,
+    .compare-section,
+    .blog-section {
+        padding: 52px 0;
+    }
+
+    .cta-section {
+        padding: 58px 12px;
     }
 }
