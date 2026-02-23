@@ -14,6 +14,7 @@
         "test:client": "cd client && npm test",
         "build": "cd client && npm run build",
         "build:admin": "cd admin-frontend && npm run build",
+        "audit:lighthouse:home": "lighthouse http://localhost:5173/ --only-categories=performance,accessibility,best-practices,seo --preset=desktop --chrome-flags=\"--headless=new --no-sandbox --disable-gpu\" --output=html --output-path=docs/lighthouse-home-desktop.html",
         "migrate": "cd server && npm run migrate",
         "migrate:undo": "cd server && npm run migrate:undo",
         "seed": "cd server && npm run seed",
@@ -30,6 +31,7 @@
     "author": "",
     "license": "MIT",
     "devDependencies": {
-        "concurrently": "^9.2.1"
+        "concurrently": "^9.2.1",
+        "lighthouse": "^13.0.3"
     }
 }
