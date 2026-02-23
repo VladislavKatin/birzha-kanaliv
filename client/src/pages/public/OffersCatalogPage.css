@@ -244,6 +244,10 @@
         grid-template-columns: 1fr;
     }
 
+    .offers-catalog-grid {
+        grid-template-columns: 1fr;
+    }
+
     .public-offer-actions {
         grid-template-columns: 1fr;
     }

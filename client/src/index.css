@@ -276,11 +276,17 @@ body {
 /* Minimum touch targets */
 button,
 a,
-input[type="checkbox"],
-input[type="radio"],
 select {
   min-height: 44px;
   min-width: 44px;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  min-width: 16px;
+  min-height: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 input[type="text"],
