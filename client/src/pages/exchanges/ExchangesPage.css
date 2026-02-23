@@ -185,5 +185,15 @@
 
     .exchange-actions .btn {
         width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .exchange-desc {
+        max-width: 100%;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
     }
 }

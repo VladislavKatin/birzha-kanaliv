@@ -238,3 +238,27 @@
         font-size: 17px;
     }
 }
+
+@media (max-width: 420px) {
+    .navbar {
+        height: 70px;
+    }
+
+    .public-main {
+        padding-top: 68px;
+    }
+
+    .navbar-inner {
+        padding: 0 12px;
+        gap: 10px;
+    }
+
+    .navbar-logo-text {
+        display: none;
+    }
+
+    .navbar-btn {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+}

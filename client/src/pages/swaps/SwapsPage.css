@@ -441,5 +441,7 @@
     .swap-item-actions .btn {
         flex: 1;
         white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 }
