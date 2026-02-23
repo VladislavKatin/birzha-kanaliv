@@ -42,6 +42,8 @@ export default function DashboardLayout() {
     const visibleNavItems = dbUser?.role === 'admin'
         ? [{ path: '/admin', label: 'Адмінка', description: 'Управління платформою', icon: 'settings' }, ...navItems]
         : navItems;
+    const unreadNotificationsCount = notifications.length;
+    const unreadNotificationsLabel = unreadNotificationsCount > 99 ? '99+' : String(unreadNotificationsCount);
 
     const getBadgeCountByPath = (path) => {
         if (path === '/swaps/incoming') return menuBadges.incoming;
@@ -271,13 +273,13 @@ export default function DashboardLayout() {
 
                     <div className="topbar-right">
                         <button
-                            className={`notifications-btn ${notifications.length > 0 ? 'has-items' : ''}`}
+                            className={`notifications-btn ${unreadNotificationsCount > 0 ? 'has-items' : ''}`}
                             onClick={() => setNotificationsOpen((open) => !open)}
                             title="Сповіщення"
-                            aria-label="Сповіщення"
+                            aria-label={unreadNotificationsCount > 0 ? `Сповіщення (${unreadNotificationsLabel})` : 'Сповіщення'}
                         >
                             <Icon name="bell" size={16} />
-                            {notifications.length > 0 && <span className="notifications-count">{notifications.length}</span>}
+                            {unreadNotificationsCount > 0 && <span className="notifications-count">{unreadNotificationsLabel}</span>}
                         </button>
 
                         {notificationsOpen && (

@@ -372,8 +372,9 @@
 
 .notifications-btn {
     position: relative;
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
     border-radius: 10px;
     border: 1px solid var(--border-color);
     background: var(--surface-2);
@@ -389,16 +390,18 @@
 
 .notifications-count {
     position: absolute;
-    top: -6px;
-    right: -6px;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
+    top: -7px;
+    right: -7px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
     border-radius: var(--radius-full);
     background: #e63b36;
     color: #ffffff;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 800;
+    line-height: 1;
+    border: 2px solid #ffffff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
