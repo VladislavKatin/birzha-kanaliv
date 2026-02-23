@@ -171,6 +171,8 @@ export default function OffersPage() {
     }
 
     const visibleOffers = prepareOffersForCatalog(offers);
+    const myChannelIds = new Set(myChannels.map((channel) => channel.id));
+    const isOwnOffer = (offer) => !!offer?.channel?.id && myChannelIds.has(offer.channel.id);
 
     return (
         <div className="offers-page">
@@ -281,8 +283,9 @@ export default function OffersPage() {
                                 <button
                                     className="btn btn-primary btn-sm"
                                     onClick={() => openResponseModal(offer)}
+                                    disabled={isOwnOffer(offer)}
                                 >
-                                    Запропонувати обмін
+                                    {isOwnOffer(offer) ? 'Ваш офер' : 'Запропонувати обмін'}
                                 </button>
                             </div>
                         </div>
@@ -293,6 +296,7 @@ export default function OffersPage() {
             {selectedOffer && (
                 <OfferPreviewModal
                     offer={selectedOffer}
+                    canPropose={!isOwnOffer(selectedOffer)}
                     onClose={() => setSelectedOffer(null)}
                     onPropose={(offer) => {
                         setSelectedOffer(null);

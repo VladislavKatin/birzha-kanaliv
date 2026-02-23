@@ -9,7 +9,7 @@
 import { buildFallbackAvatar, handleAvatarError, resolveChannelAvatar } from '../../services/avatar';
 import './OfferPreviewModal.css';
 
-export default function OfferPreviewModal({ offer, onClose, onPropose }) {
+export default function OfferPreviewModal({ offer, onClose, onPropose, canPropose = true }) {
     if (!offer) {
         return null;
     }
@@ -65,8 +65,14 @@ export default function OfferPreviewModal({ offer, onClose, onPropose }) {
 
                 {typeof onPropose === 'function' && (
                     <div className="offer-preview-actions">
-                        <button type="button" className="offer-preview-propose" onClick={() => onPropose(offer)}>
-                            Запропонувати обмін
+                        <button
+                            type="button"
+                            className="offer-preview-propose"
+                            onClick={() => onPropose(offer)}
+                            disabled={!canPropose}
+                            title={!canPropose ? 'Не можна відгукнутися на власний офер' : undefined}
+                        >
+                            {canPropose ? 'Запропонувати обмін' : 'Ваш офер'}
                         </button>
                     </div>
                 )}

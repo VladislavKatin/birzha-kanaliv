@@ -42,6 +42,8 @@ export default function OfferDetailsPage() {
     const [selectedChannelId, setSelectedChannelId] = useState('');
     const [showAuthPrompt, setShowAuthPrompt] = useState(false);
     const safeChannelTitle = normalizeDisplayText(offer?.channel?.channelTitle, 'Канал');
+    const myChannelIds = new Set(myChannels.map((channel) => channel.id));
+    const isOwnOffer = !!offer?.channel?.id && myChannelIds.has(offer.channel.id);
 
     useEffect(() => {
         let cancelled = false;
@@ -151,6 +153,10 @@ export default function OfferDetailsPage() {
             toast.error('Підключіть канал перед відгуком на пропозицію.');
             return;
         }
+        if (isOwnOffer) {
+            toast.error('Не можна відгукнутися на власний офер.');
+            return;
+        }
 
         setResponding(true);
         try {
@@ -229,9 +235,9 @@ export default function OfferDetailsPage() {
                                 <button
                                     className="primary"
                                     onClick={handleRespond}
-                                    disabled={responding}
+                                    disabled={responding || (user && isOwnOffer)}
                                 >
-                                    {user ? 'Запропонувати обмін' : 'Увійти, щоб запропонувати обмін'}
+                                    {user ? (isOwnOffer ? 'Ваш офер' : 'Запропонувати обмін') : 'Увійти, щоб запропонувати обмін'}
                                 </button>
                                 {user && (
                                     <button
