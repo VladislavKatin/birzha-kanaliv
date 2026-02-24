@@ -6,6 +6,7 @@ import './AdminControlCenterPage.css';
 
 const ADMIN_SUPPORT_POLL_MS = 30000;
 const ADMIN_SUPPORT_MESSAGES_BATCH = 40;
+const ADMIN_RECENT_MESSAGE_PREVIEW_LIMIT = 180;
 
 function DistributionList({ title, items }) {
     return (
@@ -366,6 +367,15 @@ export default function AdminControlCenterPage() {
         [data.summary],
     );
 
+    function buildRecentMessagePreview(message) {
+        const rawContent = String(message?.content || '').trim();
+        const content = rawContent || (message?.imageData ? '[Зображення]' : '[Без тексту]');
+        if (content.length <= ADMIN_RECENT_MESSAGE_PREVIEW_LIMIT) {
+            return content;
+        }
+        return `${content.slice(0, ADMIN_RECENT_MESSAGE_PREVIEW_LIMIT).trim()}…`;
+    }
+
     if (loading) {
         return (
             <div className="dashboard-loading">
@@ -694,11 +704,26 @@ export default function AdminControlCenterPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.recent.messages.map((message) => (
+                                {data.recent.messages.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4}>
+                                            <p className="admin-empty">Останніх повідомлень поки немає.</p>
+                                        </td>
+                                    </tr>
+                                ) : data.recent.messages.map((message) => (
                                     <tr key={message.id}>
-                                        <td>{message.sender?.displayName || message.sender?.email || '-'}</td>
-                                        <td>{message.chatRoom?.matchId || '-'}</td>
-                                        <td>{message.content}</td>
+                                        <td>
+                                            <div className="admin-recent-message-sender">
+                                                <strong>{message.sender?.displayName || message.sender?.email || '-'}</strong>
+                                                <span>{message.sender?.email || 'email недоступний'}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className="admin-recent-message-match">{message.chatRoom?.matchId || '-'}</span>
+                                        </td>
+                                        <td>
+                                            <p className="admin-recent-message-content">{buildRecentMessagePreview(message)}</p>
+                                        </td>
                                         <td>{formatAdminDate(message.createdAt)}</td>
                                     </tr>
                                 ))}

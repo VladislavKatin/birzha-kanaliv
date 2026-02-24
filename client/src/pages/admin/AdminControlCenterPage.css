@@ -390,6 +390,39 @@
     gap: 2px;
 }
 
+.admin-recent-message-sender {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.admin-recent-message-sender strong {
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+}
+
+.admin-recent-message-sender span {
+    font-size: 12px;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.admin-recent-message-match {
+    display: inline-block;
+    max-width: 100%;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+}
+
+.admin-recent-message-content {
+    margin: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+}
+
 .admin-user-cell strong {
     color: var(--text-primary);
 }
