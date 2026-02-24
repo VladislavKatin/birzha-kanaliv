@@ -423,6 +423,49 @@
     line-height: 1.45;
 }
 
+.admin-recent-channel-title {
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    color: var(--text-primary);
+}
+
+.admin-match-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.admin-match-status-pending {
+    background: rgba(251, 191, 36, 0.16);
+    border-color: rgba(251, 191, 36, 0.38);
+    color: #92400e;
+}
+
+.admin-match-status-accepted {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.38);
+    color: #1d4ed8;
+}
+
+.admin-match-status-completed {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.38);
+    color: #047857;
+}
+
+.admin-match-status-rejected,
+.admin-match-status-cancelled {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.36);
+    color: #b91c1c;
+}
+
 .admin-user-cell strong {
     color: var(--text-primary);
 }

@@ -8,6 +8,14 @@ const ADMIN_SUPPORT_POLL_MS = 30000;
 const ADMIN_SUPPORT_MESSAGES_BATCH = 40;
 const ADMIN_RECENT_MESSAGE_PREVIEW_LIMIT = 180;
 
+const MATCH_STATUS_LABELS = {
+    pending: 'Очікує',
+    accepted: 'Прийнято',
+    completed: 'Завершено',
+    rejected: 'Відхилено',
+    cancelled: 'Скасовано',
+};
+
 function DistributionList({ title, items }) {
     return (
         <section className="card admin-card">
@@ -376,6 +384,11 @@ export default function AdminControlCenterPage() {
         return `${content.slice(0, ADMIN_RECENT_MESSAGE_PREVIEW_LIMIT).trim()}…`;
     }
 
+    function getMatchStatusLabel(status) {
+        const normalized = String(status || '').toLowerCase();
+        return MATCH_STATUS_LABELS[normalized] || normalized || '-';
+    }
+
     if (loading) {
         return (
             <div className="dashboard-loading">
@@ -678,11 +691,25 @@ export default function AdminControlCenterPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.recent.matches.map((match) => (
+                                {data.recent.matches.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4}>
+                                            <p className="admin-empty">Останніх обмінів поки немає.</p>
+                                        </td>
+                                    </tr>
+                                ) : data.recent.matches.map((match) => (
                                     <tr key={match.id}>
-                                        <td>{match.initiatorChannel?.channelTitle || '-'}</td>
-                                        <td>{match.targetChannel?.channelTitle || '-'}</td>
-                                        <td>{match.status}</td>
+                                        <td>
+                                            <span className="admin-recent-channel-title">{match.initiatorChannel?.channelTitle || '-'}</span>
+                                        </td>
+                                        <td>
+                                            <span className="admin-recent-channel-title">{match.targetChannel?.channelTitle || '-'}</span>
+                                        </td>
+                                        <td>
+                                            <span className={`admin-match-status admin-match-status-${String(match.status || '').toLowerCase()}`}>
+                                                {getMatchStatusLabel(match.status)}
+                                            </span>
+                                        </td>
                                         <td>{formatAdminDate(match.updatedAt)}</td>
                                     </tr>
                                 ))}
