@@ -13,6 +13,7 @@
     "migrate:status": "npx sequelize-cli db:migrate:status",
     "seed": "npx sequelize-cli db:seed:all",
     "seed:undo": "npx sequelize-cli db:seed:undo:all",
+    "purge:bots": "node scripts/purgeBotUsers.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.js\""
