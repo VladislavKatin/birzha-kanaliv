@@ -1,5 +1,6 @@
 const { loadEnv } = require('./loadEnv');
 
+// In Railway production, do not load .env files. Railway injects env vars itself.
 if (process.env.NODE_ENV !== 'production') {
   loadEnv();
 }

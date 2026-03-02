@@ -1,51 +1,32 @@
-const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
 const dotenv = require('dotenv');
 
-let loaded = false;
-
-function applyLegacyDatabaseUrl() {
-    if (process.env.DATABASE_URL) {
-        return;
-    }
-
-    const host = process.env.DB_HOST;
-    const database = process.env.DB_NAME;
-    const user = process.env.DB_USER;
-
-    if (!host || !database || !user) {
-        return;
-    }
-
-    const password = encodeURIComponent(process.env.DB_PASSWORD || '');
-    const encodedUser = encodeURIComponent(user);
-    const port = process.env.DB_PORT || '5432';
-    process.env.DATABASE_URL = `postgresql://${encodedUser}:${password}@${host}:${port}/${database}`;
+function loadFirstExisting(paths) {
+  for (const p of paths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
 }
 
 function loadEnv() {
-    if (loaded) {
-        return;
-    }
+  // Never override environment variables already provided by Railway or CI.
+  // dotenv defaults to override: false, which is the behavior we want.
 
-    const rootDir = path.resolve(__dirname, '..');
-    const nodeEnv = process.env.NODE_ENV || 'development';
-    const envFiles = ['.env', `.env.${nodeEnv}`];
+  const root = process.cwd();
 
-    if (nodeEnv !== 'production') {
-        envFiles.push('.env.local');
-    }
+  const candidates = [
+    path.join(root, '.env.local'),
+    path.join(root, '.env'),
+    path.join(root, '.env.development'),
+    // Do not load .env.production here. Production env must come from hosting.
+  ];
 
-    envFiles.forEach((fileName) => {
-        const filePath = path.join(rootDir, fileName);
-        if (fs.existsSync(filePath)) {
-            dotenv.config({ path: filePath, override: true });
-        }
-    });
+  const envPath = loadFirstExisting(candidates);
 
-    applyLegacyDatabaseUrl();
-
-    loaded = true;
+  if (envPath) {
+    dotenv.config({ path: envPath, override: false });
+  }
 }
 
 module.exports = { loadEnv };
