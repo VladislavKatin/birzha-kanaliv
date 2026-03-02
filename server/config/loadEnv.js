@@ -2,31 +2,26 @@ const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
 
-function loadFirstExisting(paths) {
-  for (const p of paths) {
-    if (fs.existsSync(p)) return p;
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return;
   }
-  return null;
+
+  dotenv.config({ path: filePath, override: false });
 }
 
 function loadEnv() {
   // Never override environment variables already provided by Railway or CI.
-  // dotenv defaults to override: false, which is the behavior we want.
-
+  // Load local overrides first, then fill remaining keys from shared env files.
   const root = process.cwd();
 
   const candidates = [
     path.join(root, '.env.local'),
     path.join(root, '.env'),
     path.join(root, '.env.development'),
-    // Do not load .env.production here. Production env must come from hosting.
   ];
 
-  const envPath = loadFirstExisting(candidates);
-
-  if (envPath) {
-    dotenv.config({ path: envPath, override: false });
-  }
+  candidates.forEach(loadEnvFile);
 }
 
 module.exports = { loadEnv };
