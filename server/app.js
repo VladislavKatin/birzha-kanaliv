@@ -13,6 +13,10 @@ const app = express();
 app.set('trust proxy', 1);
 
 const allowedOrigins = getAllowedClientOrigins();
+const corsOptions = {
+    origin: corsOriginValidator,
+    credentials: true,
+};
 
 function corsOriginValidator(origin, callback) {
     if (!origin) {
@@ -32,10 +36,7 @@ function corsOriginValidator(origin, callback) {
 // Middleware
 app.use(helmet());
 app.use(requestId);
-app.use(cors({
-    origin: corsOriginValidator,
-    credentials: true
-}));
+app.use(cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -61,3 +62,4 @@ app.get('/health', (req, res) => {
 app.use(errorHandler);
 
 module.exports = app;
+module.exports.corsOptions = corsOptions;

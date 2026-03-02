@@ -1,17 +1,41 @@
-require('dotenv').config();
+const { loadEnv } = require('./loadEnv');
 
-module.exports = {
+loadEnv();
+
+function shouldUseSsl() {
+    const raw = String(process.env.DB_SSL || '').trim().toLowerCase();
+    if (raw === 'true') return true;
+    if (raw === 'false') return false;
+    return process.env.NODE_ENV === 'production';
+}
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+    throw new Error('DATABASE_URL is required. Set it in server/.env.local for development or Railway environment variables for production.');
+}
+
+const sequelizeOptions = {
     dialect: 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    database: process.env.DB_NAME || 'youtoobe',
-    username: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || '',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     pool: {
         max: 5,
         min: 0,
         acquire: 30000,
-        idle: 10000
-    }
+        idle: 10000,
+    },
+};
+
+if (shouldUseSsl()) {
+    sequelizeOptions.dialectOptions = {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false,
+        },
+    };
+}
+
+module.exports = {
+    databaseUrl,
+    sequelizeOptions,
 };

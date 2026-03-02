@@ -1,8 +1,5 @@
 const DEFAULT_CLIENT_ORIGINS = [
-    'http://localhost:5173',
-    'http://localhost:5174',
     'https://birzha-kanaliv.biz.ua',
-    'https://www.birzha-kanaliv.biz.ua',
     'https://admin.birzha-kanaliv.biz.ua',
 ];
 

@@ -1,6 +1,6 @@
 ﻿import { io } from 'socket.io-client';
 
-const DEFAULT_SOCKET_URL = 'http://localhost:3001';
+const DEFAULT_SOCKET_URL = 'http://127.0.0.1:3001';
 const SOCKET_TRANSPORTS = ['websocket', 'polling'];
 
 function trimTrailingSlash(value) {

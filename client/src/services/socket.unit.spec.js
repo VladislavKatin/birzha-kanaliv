@@ -15,5 +15,5 @@ export function runSocketUnitTests() {
     assert.equal(fromApiUrl, 'https://api.example.com');
 
     const fallback = resolveSocketUrl({});
-    assert.equal(fallback, 'http://localhost:3001');
+    assert.equal(fallback, 'http://127.0.0.1:3001');
 }

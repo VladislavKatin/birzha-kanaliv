@@ -1,5 +1,8 @@
-﻿require('dotenv').config();
 const http = require('http');
+const { loadEnv } = require('./config/loadEnv');
+
+loadEnv();
+
 const app = require('./app');
 const { sequelize } = require('./models');
 const setupSocket = require('./socketSetup');
@@ -39,7 +42,7 @@ async function start() {
     }
 
     server.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Server listening on port ${PORT}`);
       console.log('Socket.io ready');
     });
 
@@ -57,4 +60,8 @@ async function start() {
   }
 }
 
-start();
+if (require.main === module) {
+  start();
+}
+
+module.exports = { start, server };
