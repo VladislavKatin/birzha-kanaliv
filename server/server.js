@@ -1,7 +1,9 @@
 const http = require('http');
 const { loadEnv } = require('./config/loadEnv');
 
-loadEnv();
+if (process.env.NODE_ENV !== 'production') {
+  loadEnv();
+}
 
 const app = require('./app');
 const { sequelize } = require('./models');
