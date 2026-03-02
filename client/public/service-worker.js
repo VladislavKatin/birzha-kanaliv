@@ -1,10 +1,7 @@
-// Service Worker: cache-first for static assets, network-first for API GET
-const CACHE_NAME = 'birza-v3';
-const STATIC_ASSETS = ['/', '/index.html'];
+const CACHE_NAME = 'birza-static-v4';
 
 self.addEventListener('install', (event) => {
-    event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)));
-    self.skipWaiting();
+    event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
@@ -16,27 +13,58 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
+async function networkFirst(request) {
+    const cache = await caches.open(CACHE_NAME);
+
+    try {
+        const response = await fetch(request);
+        if (response.ok) {
+            cache.put(request, response.clone());
+        }
+        return response;
+    } catch (error) {
+        const cached = await cache.match(request);
+        if (cached) {
+            return cached;
+        }
+        throw error;
+    }
+}
+
+async function cacheFirst(request) {
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(request);
+
+    if (cached) {
+        return cached;
+    }
+
+    const response = await fetch(request);
+    if (response.ok) {
+        cache.put(request, response.clone());
+    }
+    return response;
+}
+
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
     const isHttp = url.protocol === 'http:' || url.protocol === 'https:';
 
-    if (!isHttp) {
+    if (!isHttp || request.method !== 'GET') {
         return;
     }
 
-    // Do not cache non-GET requests (POST/PUT/PATCH/DELETE)
-    if (request.method !== 'GET') {
-        event.respondWith(fetch(request));
-        return;
-    }
-
-    // Never cache API responses to avoid stale authenticated data.
     if (url.pathname.startsWith('/api/')) {
         event.respondWith(fetch(request));
         return;
     }
 
-    // Static assets: cache first
-    event.respondWith(caches.match(request).then((cached) => cached || fetch(request)));
+    const acceptsHtml = request.headers.get('accept')?.includes('text/html');
+    if (request.mode === 'navigate' || acceptsHtml) {
+        event.respondWith(networkFirst(request));
+        return;
+    }
+
+    event.respondWith(cacheFirst(request));
 });
