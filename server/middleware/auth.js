@@ -50,13 +50,28 @@ const auth = async (req, res, next) => {
             console.warn('Firebase Admin not initialized - skipping token verification');
             return res.status(503).json({ error: 'Сервіс авторизації не налаштований' });
         }
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        const allowed = await ensureNotSuspended(decodedToken.uid);
-        if (!allowed) {
-            return res.status(403).json({ error: 'Обліковий запис тимчасово призупинено' });
+        try {
+            const decoded = await admin.auth().verifyIdToken(token);
+            console.log('VERIFY OK:', decoded.uid);
+
+            const allowed = await ensureNotSuspended(decoded.uid);
+            if (!allowed) {
+                return res.status(403).json({ error: 'Обліковий запис тимчасово призупинено' });
+            }
+
+            req.user = decoded;
+            req.firebaseUser = decoded;
+            next();
+        } catch (e) {
+            console.error('VERIFY FAIL:', {
+                code: e?.code,
+                message: e?.message,
+            });
+            return res.status(401).json({
+                error: 'invalid_token',
+                details: e?.message,
+            });
         }
-        req.firebaseUser = decodedToken;
-        next();
     } catch (error) {
         console.error('Token verification failed:', error.message);
         return res.status(401).json({ error: 'Невалідний токен' });
