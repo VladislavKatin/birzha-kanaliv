@@ -2574,6 +2574,50 @@ const SEO_TITLE_MIN = 52;
 const SEO_TITLE_MAX = 75;
 const SEO_DESC_MIN = 120;
 const SEO_DESC_MAX = 165;
+const VISUAL_ARTICLE_SLUGS = new Set([
+    'youtube-exchange-pricing-model-2026',
+    'how-to-write-offer-description-that-converts',
+    'audience-overlap-analysis-for-youtube-exchanges',
+    'negotiation-script-for-channel-exchange',
+    'channel-brand-safety-checklist-for-collabs',
+    'retention-metrics-after-collaboration',
+    'subscriber-quality-vs-volume-in-exchanges',
+    'youtube-analytics-checklist-before-deal',
+    'red-flags-in-channel-exchange-deals',
+    'local-ukrainian-youtube-niches-2026',
+    'launch-playbook-for-new-channel-on-exchange',
+    'how-to-scale-to-10-exchanges-per-month',
+    'conversion-optimization-for-offer-page',
+    'case-study-education-channel-growth-exchange',
+    'case-study-gaming-channel-growth-exchange',
+    'case-study-business-channel-growth-exchange',
+    'communication-sla-for-youtube-collab-teams',
+    'multi-channel-portfolio-strategy-for-creators',
+    'monthly-report-template-for-channel-exchanges',
+    'ai-assisted-workflow-for-youtube-collaboration',
+    'youtube-channel-audit-checklist-2026',
+    'community-posts-growth-system',
+    'youtube-live-stream-collab-framework',
+    'thumbnail-ab-testing-for-channel-exchange',
+    'seo-keywords-for-youtube-channel-pages',
+    'onboarding-flow-for-new-collab-partners',
+    'churn-reduction-after-subscriber-exchange',
+    'creator-crm-for-partner-management',
+    'seasonal-content-planning-for-ukraine',
+    'legal-and-tax-basics-for-creator-collabs-ua',
+]);
+const TWO_VISUAL_SECTION_SLUGS = new Set([
+    'youtube-channel-audit-checklist-2026',
+    'community-posts-growth-system',
+    'youtube-live-stream-collab-framework',
+    'thumbnail-ab-testing-for-channel-exchange',
+    'seo-keywords-for-youtube-channel-pages',
+    'onboarding-flow-for-new-collab-partners',
+    'churn-reduction-after-subscriber-exchange',
+    'creator-crm-for-partner-management',
+    'seasonal-content-planning-for-ukraine',
+    'legal-and-tax-basics-for-creator-collabs-ua',
+]);
 
 function trimToLength(input, maxLength) {
     const value = String(input || '').trim();
@@ -2747,4 +2791,13 @@ export function filterBlogArticlesByTag(tag) {
     }
 
     return getBlogArticlesPreview().filter((article) => article.tags.includes(tag));
+}
+
+export function getBlogVisualSectionPaths(slug) {
+    if (!slug || !VISUAL_ARTICLE_SLUGS.has(slug)) {
+        return [];
+    }
+
+    const visualCount = TWO_VISUAL_SECTION_SLUGS.has(slug) ? 2 : 3;
+    return Array.from({ length: visualCount }, (_, index) => `/images/blog/content/${slug}-section-${index + 1}.svg`);
 }
