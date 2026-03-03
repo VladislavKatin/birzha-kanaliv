@@ -1,5 +1,6 @@
-﻿import { runSocketUnitTests } from './socket.unit.spec.js';
+import { runSocketUnitTests } from './socket.unit.spec.js';
 import { runSocketFunctionalTests } from './socket.functional.spec.js';
+import { runApiUnitTests } from './api.unit.spec.js';
 import { runNavigationUnitTests } from './navigation.unit.spec.js';
 import { runNavigationFunctionalTests } from './navigation.functional.spec.js';
 import { runGlobalNotificationUnitTests } from './globalNotifications.unit.spec.js';
@@ -24,6 +25,7 @@ async function run() {
     const tests = [
         { name: 'unit: resolveSocketUrl', fn: runSocketUnitTests },
         { name: 'functional: createAuthenticatedSocket', fn: runSocketFunctionalTests },
+        { name: 'unit: normalizeApiBaseUrl', fn: runApiUnitTests },
         { name: 'unit: navigation redirect helpers', fn: runNavigationUnitTests },
         { name: 'functional: post-auth navigation safety', fn: runNavigationFunctionalTests },
         { name: 'unit: global notification normalization', fn: runGlobalNotificationUnitTests },

@@ -1,11 +1,10 @@
 import axios from 'axios';
 import { auth } from './firebase';
 import { buildAuthRedirectPath } from './navigation';
-
-const defaultApiBaseUrl = import.meta.env.DEV ? '/api' : `${window.location.origin}/api`;
+import { defaultApiBaseUrl, normalizeApiBaseUrl } from './apiBaseUrl';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || defaultApiBaseUrl,
+    baseURL: normalizeApiBaseUrl(import.meta.env.VITE_API_URL),
     headers: {
         'Content-Type': 'application/json',
     },
