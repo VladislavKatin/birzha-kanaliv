@@ -10,6 +10,7 @@ const { runLoggerUnitTests } = require('./logger.unit.spec');
 const { runLoggerFunctionalTests } = require('./logger.functional.spec');
 const { runApiSmokeUnitTests } = require('./apiSmoke.unit.spec');
 const { runApiSmokeFunctionalTests } = require('./apiSmoke.functional.spec');
+const { runAuthLoginFunctionalTests } = require('./authLogin.functional.spec');
 const { runAdminOverviewUnitTests } = require('./adminOverview.unit.spec');
 const { runAdminOverviewFunctionalTests } = require('./adminOverview.functional.spec');
 const { runAdminUsersUnitTests } = require('./adminUsers.unit.spec');
@@ -46,6 +47,7 @@ async function run() {
         { name: 'functional: structured logger output', fn: runLoggerFunctionalTests },
         { name: 'unit: api smoke endpoint manifest', fn: runApiSmokeUnitTests },
         { name: 'functional: api smoke core flow', fn: runApiSmokeFunctionalTests },
+        { name: 'functional: auth login relinks existing email user', fn: runAuthLoginFunctionalTests },
         { name: 'unit: admin overview payload contract', fn: runAdminOverviewUnitTests },
         { name: 'functional: admin overview access and data', fn: runAdminOverviewFunctionalTests },
         { name: 'unit: admin users endpoint manifest', fn: runAdminUsersUnitTests },
