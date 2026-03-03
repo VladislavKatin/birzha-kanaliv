@@ -14,6 +14,7 @@
     "seed": "npx sequelize-cli db:seed:all --config config/config.js",
     "seed:undo": "npx sequelize-cli db:seed:undo:all --config config/config.js",
     "purge:bots": "node scripts/purgeBotUsers.js",
+    "blog:image": "node scripts/generateBlogCover.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.js\""
