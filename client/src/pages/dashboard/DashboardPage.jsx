@@ -12,6 +12,18 @@ import PartnerRecommendations from '../../components/common/PartnerRecommendatio
 import './DashboardPage.css';
 
 function getApiErrorMessage(error, fallbackMessage) {
+    if (!error?.response) {
+        return 'Не вдалося підключитися до API. Перевірте мережу або налаштування backend.';
+    }
+
+    if (error.response?.status === 401) {
+        return 'Сесію авторизації завершено. Увійдіть ще раз.';
+    }
+
+    if (error.response?.status === 503) {
+        return 'Сервіс авторизації backend не налаштований. Перевірте Railway змінні FIREBASE_*.';
+    }
+
     return error?.response?.data?.error || fallbackMessage;
 }
 
@@ -37,9 +49,23 @@ export default function DashboardPage() {
         setLoadError('');
         setLoading(true);
         try {
-            const [statsRes, activityRes] = await Promise.all([api.get('/user/stats'), api.get('/user/activity?limit=5')]);
-            setStats(statsRes.data);
-            setActivity(activityRes.data.events || []);
+            const [statsResult, activityResult] = await Promise.allSettled([
+                api.get('/user/stats'),
+                api.get('/user/activity?limit=5'),
+            ]);
+
+            if (statsResult.status === 'rejected') {
+                throw statsResult.reason;
+            }
+
+            setStats(statsResult.value.data);
+
+            if (activityResult.status === 'fulfilled') {
+                setActivity(activityResult.value.data.events || []);
+            } else {
+                console.error('Failed to load dashboard activity:', activityResult.reason);
+                setActivity([]);
+            }
         } catch (error) {
             console.error('Failed to load dashboard data:', error);
             const message = getApiErrorMessage(error, 'Не вдалося завантажити дані дашборду.');
