@@ -42,6 +42,11 @@ const auth = async (req, res, next) => {
 
     try {
         if (!admin.apps.length) {
+            console.log('ENV CHECK', {
+                FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+                FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL ? 'OK' : 'MISSING',
+                FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ? 'OK' : 'MISSING',
+            });
             console.warn('Firebase Admin not initialized - skipping token verification');
             return res.status(503).json({ error: 'Сервіс авторизації не налаштований' });
         }
