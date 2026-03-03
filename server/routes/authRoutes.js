@@ -4,6 +4,53 @@ const auth = require('../middleware/auth');
 const { logInfo, logError } = require('../services/logger');
 const { isNonEmptyString } = require('../utils/validators');
 
+function mapAuthLoginError(error) {
+    if (error.message === 'EMAIL_ALREADY_LINKED_TO_ANOTHER_USER') {
+        return {
+            status: 409,
+            body: { error: 'Email already linked to another user' },
+        };
+    }
+
+    if (error?.name === 'SequelizeUniqueConstraintError') {
+        return {
+            status: 409,
+            body: {
+                error: 'Database uniqueness conflict during auth sync',
+                details: error.errors?.map((item) => item.message).join('; ') || error.message,
+            },
+        };
+    }
+
+    if (error?.name === 'SequelizeValidationError') {
+        return {
+            status: 400,
+            body: {
+                error: 'Database validation failed during auth sync',
+                details: error.errors?.map((item) => item.message).join('; ') || error.message,
+            },
+        };
+    }
+
+    if (error?.name === 'SequelizeDatabaseError') {
+        return {
+            status: 500,
+            body: {
+                error: 'Database error during auth sync',
+                details: error.parent?.message || error.message,
+            },
+        };
+    }
+
+    return {
+        status: 500,
+        body: {
+            error: 'Authentication failed',
+            details: error.message,
+        },
+    };
+}
+
 async function resolveOrCreateUser({ transaction, uid, email, name, picture }) {
     let user = await User.findOne({
         where: { firebaseUid: uid },
@@ -146,10 +193,8 @@ router.post('/login', auth, async (req, res) => {
             firebaseUid: req.firebaseUser?.uid || null,
             error,
         });
-        if (error.message === 'EMAIL_ALREADY_LINKED_TO_ANOTHER_USER') {
-            return res.status(409).json({ error: 'Email already linked to another user' });
-        }
-        res.status(500).json({ error: 'Authentication failed' });
+        const mappedError = mapAuthLoginError(error);
+        res.status(mappedError.status).json(mappedError.body);
     }
 });
 

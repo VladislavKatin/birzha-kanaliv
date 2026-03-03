@@ -50,8 +50,8 @@ const useAuthStore = create((set, get) => ({
             if (firebaseUser) {
                 try {
                     await get()._syncWithBackend();
-                } catch {
-                    set({ error: 'Не вдалося синхронізувати авторизацію з сервером' });
+                } catch (err) {
+                    set({ error: getBackendSyncErrorMessage(err) });
                 }
             } else {
                 set({
@@ -220,6 +220,26 @@ function getErrorMessage(error) {
     }
 
     return 'Не вдалося увійти через Google. Спробуйте ще раз.';
+}
+
+function getBackendSyncErrorMessage(error) {
+    const backendError = String(error?.response?.data?.error || '').trim();
+    const details = String(error?.response?.data?.details || '').trim();
+    const status = error?.response?.status;
+
+    if (backendError && details) {
+        return `${backendError}: ${details}`;
+    }
+
+    if (backendError) {
+        return backendError;
+    }
+
+    if (status) {
+        return `Не вдалося синхронізувати авторизацію з сервером (HTTP ${status})`;
+    }
+
+    return 'Не вдалося синхронізувати авторизацію з сервером';
 }
 
 export default useAuthStore;
