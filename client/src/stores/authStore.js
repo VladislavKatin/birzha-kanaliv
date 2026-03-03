@@ -41,7 +41,7 @@ const useAuthStore = create((set, get) => ({
             redirectResultChecked = true;
             getRedirectResult(auth).catch((err) => {
                 console.error('Google redirect result error:', err);
-                set({ error: getErrorMessage(err?.code) });
+                set({ error: getErrorMessage(err) });
             });
         }
 
@@ -99,6 +99,7 @@ const useAuthStore = create((set, get) => ({
             }
             return { user: result.user, method: 'popup' };
         } catch (err) {
+            console.error('Google sign-in failed:', err);
             const code = String(err?.code || '');
 
             const shouldFallbackToRedirect = [
@@ -113,7 +114,7 @@ const useAuthStore = create((set, get) => ({
                     return { user: null, method: 'redirect' };
                 } catch (redirectError) {
                     console.error('Google redirect sign-in failed:', redirectError);
-                    const message = getErrorMessage(redirectError?.code);
+                    const message = getErrorMessage(redirectError);
                     set({ error: message });
                     throw new Error(message);
                 }
@@ -126,7 +127,7 @@ const useAuthStore = create((set, get) => ({
                 throw new Error(message);
             }
 
-            const message = getErrorMessage(code);
+            const message = getErrorMessage(err);
             set({ error: message });
             throw new Error(message);
         }
@@ -166,7 +167,10 @@ const useAuthStore = create((set, get) => ({
     },
 }));
 
-function getErrorMessage(code) {
+function getErrorMessage(error) {
+    const code = String(error?.code || '');
+    const rawMessage = String(error?.message || '').trim();
+    const normalizedMessage = rawMessage.toLowerCase();
     const messages = {
         'auth/popup-closed-by-user': 'Вікно входу було закрито. Спробуйте ще раз.',
         'auth/popup-blocked': 'Браузер заблокував popup. Дозвольте popups для цього сайту.',
@@ -183,7 +187,39 @@ function getErrorMessage(code) {
         'auth/configuration-not-found': 'Google Sign-In конфігурація не знайдена у Firebase',
     };
 
-    return messages[code] || 'Не вдалося увійти через Google. Спробуйте ще раз.';
+    if (messages[code]) {
+        return messages[code];
+    }
+
+    if (normalizedMessage.includes('unauthorized domain')) {
+        return messages['auth/unauthorized-domain'];
+    }
+
+    if (normalizedMessage.includes('operation is not allowed')) {
+        return messages['auth/operation-not-allowed'];
+    }
+
+    if (normalizedMessage.includes('invalid api key')) {
+        return messages['auth/invalid-api-key'];
+    }
+
+    if (normalizedMessage.includes('project not found')) {
+        return messages['auth/project-not-found'];
+    }
+
+    if (normalizedMessage.includes('configuration not found')) {
+        return messages['auth/configuration-not-found'];
+    }
+
+    if (normalizedMessage.includes('network request failed')) {
+        return messages['auth/network-request-failed'];
+    }
+
+    if (rawMessage) {
+        return `Google sign-in error: ${rawMessage}`;
+    }
+
+    return 'Не вдалося увійти через Google. Спробуйте ще раз.';
 }
 
 export default useAuthStore;
