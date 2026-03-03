@@ -82,8 +82,13 @@ const useAuthStore = create((set, get) => ({
                 await get()._syncWithBackend();
             } catch (syncError) {
                 const backendError = syncError?.response?.data?.error;
+                const backendDetails = syncError?.response?.data?.details;
                 const status = syncError?.response?.status;
-                if (backendError) {
+                if (backendError && backendDetails) {
+                    const message = `Google вхід є, але backend sync не вдався: ${backendError}: ${backendDetails}`;
+                    set({ error: message });
+                    throw new Error(message);
+                } else if (backendError) {
                     const message = `Google вхід є, але backend sync не вдався: ${backendError}`;
                     set({ error: message });
                     throw new Error(message);
