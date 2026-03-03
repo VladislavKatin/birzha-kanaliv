@@ -36,9 +36,7 @@ export default function AuthPage() {
                 navigate(nextPath);
             }
         } catch (signInError) {
-            if (!error) {
-                toast.error(signInError?.response?.data?.error || 'Не вдалося увійти через Google');
-            }
+            toast.error(signInError?.message || error || 'Не вдалося увійти через Google');
         } finally {
             setIsLoading(false);
         }

@@ -73,7 +73,7 @@ const useAuthStore = create((set, get) => ({
         if (configError) {
             const message = 'Firebase не налаштований у frontend .env';
             set({ error: `${message}: ${configError}` });
-            throw new Error(configError);
+            throw new Error(`${message}: ${configError}`);
         }
 
         try {
@@ -84,13 +84,18 @@ const useAuthStore = create((set, get) => ({
                 const backendError = syncError?.response?.data?.error;
                 const status = syncError?.response?.status;
                 if (backendError) {
-                    set({ error: `Google вхід є, але backend sync не вдався: ${backendError}` });
+                    const message = `Google вхід є, але backend sync не вдався: ${backendError}`;
+                    set({ error: message });
+                    throw new Error(message);
                 } else if (status) {
-                    set({ error: `Google вхід є, але backend sync повернув HTTP ${status}` });
+                    const message = `Google вхід є, але backend sync повернув HTTP ${status}`;
+                    set({ error: message });
+                    throw new Error(message);
                 } else {
-                    set({ error: 'Google вхід є, але backend sync не вдався' });
+                    const message = 'Google вхід є, але backend sync не вдався';
+                    set({ error: message });
+                    throw new Error(message);
                 }
-                throw syncError;
             }
             return { user: result.user, method: 'popup' };
         } catch (err) {
@@ -110,19 +115,20 @@ const useAuthStore = create((set, get) => ({
                     console.error('Google redirect sign-in failed:', redirectError);
                     const message = getErrorMessage(redirectError?.code);
                     set({ error: message });
-                    throw redirectError;
+                    throw new Error(message);
                 }
             }
 
             const backendError = err?.response?.data?.error;
             if (backendError) {
-                set({ error: `Помилка backend: ${backendError}` });
-                throw err;
+                const message = `Помилка backend: ${backendError}`;
+                set({ error: message });
+                throw new Error(message);
             }
 
             const message = getErrorMessage(code);
             set({ error: message });
-            throw err;
+            throw new Error(message);
         }
     },
 
