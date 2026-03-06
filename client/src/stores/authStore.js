@@ -231,6 +231,7 @@ function getBackendSyncErrorMessage(error) {
     const backendError = String(error?.response?.data?.error || '').trim();
     const details = String(error?.response?.data?.details || '').trim();
     const status = error?.response?.status;
+    const message = String(error?.message || '').trim();
 
     if (backendError && details) {
         return `${backendError}: ${details}`;
@@ -242,6 +243,10 @@ function getBackendSyncErrorMessage(error) {
 
     if (status) {
         return `Не вдалося синхронізувати авторизацію з сервером (HTTP ${status})`;
+    }
+
+    if (message) {
+        return message;
     }
 
     return 'Не вдалося синхронізувати авторизацію з сервером';
