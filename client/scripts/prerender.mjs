@@ -393,6 +393,11 @@ async function writeRoute(route, html) {
     await fs.writeFile(filePath, html, 'utf8');
 }
 
+async function writeBlogSitemap() {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${blogArticles.map((article) => `    <url>\n        <loc>https://birzha-kanaliv.biz.ua/blog/${article.slug}</loc>\n        <lastmod>${article.publishedAtIso}</lastmod>\n        <changefreq>monthly</changefreq>\n        <priority>0.7</priority>\n    </url>`).join('\n')}\n</urlset>\n`;
+    await fs.writeFile(path.join(distDir, 'sitemap-blog.xml'), xml, 'utf8');
+}
+
 for (const page of staticPages) {
     const htmlWithHead = injectHead(baseTemplate, { seo: page.seo, jsonLd: page.jsonLd });
     await writeRoute(page.route, withRootContent(htmlWithHead, page.render()));
@@ -429,3 +434,5 @@ const blog404 = getBlogArticleBySlug('missing-slug');
 if (blog404 !== null) {
     throw new Error('Unexpected blog lookup result while prerendering.');
 }
+
+await writeBlogSitemap();

@@ -28,7 +28,7 @@ export function runSeoFunctionalTests() {
 
     const listSchema = buildBlogCollectionJsonLd(getBlogArticlesPreview());
     assert.equal(listSchema['@type'], 'Blog');
-    assert.equal(listSchema.blogPost.length, 42);
+    assert.equal(listSchema.blogPost.length, getBlogArticlesPreview().length);
 
     const article = getBlogArticleBySlug('youtube-collab-strategy-2026');
     const articleSchema = buildBlogArticleJsonLd(article);

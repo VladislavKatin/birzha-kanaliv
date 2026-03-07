@@ -1,4 +1,6 @@
-﻿const CORE_BLOCKS = [
+﻿import { SEO_GROWTH_ARTICLES } from './blogArticles.seoGrowth.js';
+
+const CORE_BLOCKS = [
     'Стале зростання з\'являється тоді, коли команда креатора працює за повторюваною системою: чітка гіпотеза, чіткий обсяг робіт, вимірюваний KPI та зворотний зв\'язок після публікації. Без такої структури навіть сильний контент дає випадкові піки та нестабільний результат.',
     'Якість рішень зростає, коли команда аналізує не одну метрику марнославства, а зв\'язку KPI: охоплення, утримання, конверсію і якість аудиторії. Це прибирає хибні висновки та підвищує передбачуваність стратегії.',
     'Операційна дисципліна є мультиплікатором росту. Призначені відповідальні, дедлайни, критерії приймання та зафіксований пост-аналіз захищають процес від хаосу і прискорюють навчання у повторних циклах співпраці.',
@@ -2727,7 +2729,9 @@ function normalizeArticle(article, allArticles) {
     };
 }
 
-const NORMALIZED_BLOG_ARTICLES = BLOG_ARTICLES.map((article) => normalizeArticle(article, BLOG_ARTICLES));
+const ALL_BLOG_ARTICLES = [...SEO_GROWTH_ARTICLES, ...BLOG_ARTICLES];
+
+const NORMALIZED_BLOG_ARTICLES = ALL_BLOG_ARTICLES.map((article) => normalizeArticle(article, ALL_BLOG_ARTICLES));
 
 export function getBlogArticlesPreview() {
     return NORMALIZED_BLOG_ARTICLES.map((article) => ({
