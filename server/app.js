@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
-const { getAllowedClientOrigins } = require('./config/clientOrigins');
+const { getAllowedClientOrigins, normalizeOrigin } = require('./config/clientOrigins');
 const requestId = require('./middleware/requestId');
 
 const path = require('path');
@@ -16,6 +16,8 @@ const allowedOrigins = getAllowedClientOrigins();
 const corsOptions = {
     origin: corsOriginValidator,
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 };
 
 function corsOriginValidator(origin, callback) {
@@ -24,7 +26,7 @@ function corsOriginValidator(origin, callback) {
         return callback(null, true);
     }
 
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(normalizeOrigin(origin))) {
         return callback(null, true);
     }
 
@@ -34,9 +36,12 @@ function corsOriginValidator(origin, callback) {
 }
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+}));
 app.use(requestId);
 app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));

@@ -122,6 +122,7 @@ const useAuthStore = create((set, get) => ({
             const code = String(err?.code || '');
 
             const shouldFallbackToRedirect = [
+                'auth/popup-closed-by-user',
                 'auth/popup-blocked',
                 'auth/cancelled-popup-request',
                 'auth/operation-not-supported-in-this-environment',

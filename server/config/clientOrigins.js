@@ -5,12 +5,17 @@ const DEFAULT_CLIENT_ORIGINS = [
     'http://localhost:5174',
 ];
 
+function normalizeOrigin(origin) {
+    return String(origin || '').trim().replace(/\/+$/, '');
+}
+
 function getAllowedClientOrigins() {
-    const raw = process.env.CLIENT_URLS || process.env.CLIENT_URL || DEFAULT_CLIENT_ORIGINS.join(',');
-    return raw
+    const fromEnv = `${process.env.CLIENT_URLS || ''},${process.env.CLIENT_URL || ''}`
         .split(',')
-        .map((origin) => origin.trim())
+        .map(normalizeOrigin)
         .filter(Boolean);
+
+    return [...new Set([...DEFAULT_CLIENT_ORIGINS.map(normalizeOrigin), ...fromEnv])];
 }
 
 function getDefaultClientUrl() {
@@ -34,4 +39,5 @@ module.exports = {
     getAllowedClientOrigins,
     getDefaultClientUrl,
     resolveClientRedirectUrl,
+    normalizeOrigin,
 };
