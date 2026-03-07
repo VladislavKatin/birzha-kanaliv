@@ -53,8 +53,16 @@ if (isProduction) {
 // Routes
 app.use('/api', routes);
 
-// Health check
+// Health checks
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', service: 'birzha-kanaliv-api', timestamp: new Date().toISOString() });
+});
+
 app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
