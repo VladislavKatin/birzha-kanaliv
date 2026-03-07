@@ -22,10 +22,28 @@ function buildDialectOptions() {
     };
 }
 
+function normalizeDatabaseUrl(connectionString) {
+    const value = String(connectionString || '').trim();
+    if (!value) {
+        return value;
+    }
+
+    try {
+        const url = new URL(value);
+        url.searchParams.delete('sslmode');
+        url.searchParams.delete('uselibpqcompat');
+        return url.toString();
+    } catch {
+        return value;
+    }
+}
+
 function buildConfig() {
     if (!process.env.DATABASE_URL) {
         throw new Error('DATABASE_URL is required for Sequelize CLI.');
     }
+
+    process.env.DATABASE_URL = normalizeDatabaseUrl(process.env.DATABASE_URL);
 
     return {
         use_env_variable: 'DATABASE_URL',

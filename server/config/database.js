@@ -12,7 +12,24 @@ function shouldUseSsl() {
     return process.env.NODE_ENV === 'production';
 }
 
-const databaseUrl = process.env.DATABASE_URL;
+function normalizeDatabaseUrl(connectionString) {
+    const value = String(connectionString || '').trim();
+    if (!value) {
+        return value;
+    }
+
+    try {
+        const url = new URL(value);
+        // Let Sequelize/pg SSL settings come from dialectOptions.
+        url.searchParams.delete('sslmode');
+        url.searchParams.delete('uselibpqcompat');
+        return url.toString();
+    } catch {
+        return value;
+    }
+}
+
+const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL);
 
 if (!databaseUrl) {
     throw new Error('DATABASE_URL is required. Set it in server/.env.local for development or Railway environment variables for production.');
