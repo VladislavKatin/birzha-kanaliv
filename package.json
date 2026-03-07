@@ -12,7 +12,8 @@
         "test": "npm run test:server && npm run test:client",
         "test:server": "cd server && npm test",
         "test:client": "cd client && npm test",
-        "build": "cd client && npm run build",
+        "build": "npm run build:client",
+        "build:client": "npm --prefix client ci --include=dev && npm --prefix client run build",
         "build:admin": "cd admin-frontend && npm run build",
         "audit:lighthouse:home": "lighthouse http://localhost:5173/ --only-categories=performance,accessibility,best-practices,seo --preset=desktop --chrome-flags=\"--headless=new --no-sandbox --disable-gpu\" --output=html --output-path=docs/lighthouse-home-desktop.html",
         "migrate": "cd server && npm run migrate",
@@ -33,5 +34,8 @@
     "devDependencies": {
         "concurrently": "^9.2.1",
         "lighthouse": "^13.0.3"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.98.0"
     }
 }

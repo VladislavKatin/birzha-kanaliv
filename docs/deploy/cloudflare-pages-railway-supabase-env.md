@@ -30,6 +30,18 @@ Start command:
 npm start
 ```
 
+If you run a monorepo or frontend build from the repository root on Railway, use:
+
+```text
+Build command: npm run build
+```
+
+The root build script installs `client` dependencies with devDependencies before calling Vite, so `vite` is available even if Railway installs root packages in production mode. Optional hardening:
+
+```env
+NPM_CONFIG_PRODUCTION=false
+```
+
 Variables to create in Railway:
 
 ```env
