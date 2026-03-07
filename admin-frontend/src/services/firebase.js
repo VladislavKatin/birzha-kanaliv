@@ -10,12 +10,12 @@ import {
 } from 'firebase/auth';
 
 const defaultFirebaseConfig = {
-    apiKey: 'AIzaSyDRGg4B7AiZHJyAXgor_de7gp1KOmXkvEg',
-    authDomain: 'birzha-kanaliv.firebaseapp.com',
-    projectId: 'birzha-kanaliv',
-    storageBucket: 'birzha-kanaliv.firebasestorage.app',
-    messagingSenderId: '318760882241',
-    appId: '1:318760882241:web:e1c7b571e75206801676c0',
+    apiKey: 'AIzaSyCvXQGtjivj3p9uC5X4LLffY7sKrjw50Kg',
+    authDomain: 'viewexchange-3a790.firebaseapp.com',
+    projectId: 'viewexchange-3a790',
+    storageBucket: 'viewexchange-3a790.firebasestorage.app',
+    messagingSenderId: '608740325704',
+    appId: '1:608740325704:web:307ea9a0940f4e0ca75b7d',
 };
 
 const firebaseConfig = {
