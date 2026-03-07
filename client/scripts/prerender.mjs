@@ -15,12 +15,14 @@ import {
     getBlogArticlesPreview,
     getBlogArticleBySlug,
 } from '../src/services/blogArticles.js';
+import { HOME_FEATURED_BLOG_PREVIEWS } from '../src/services/blogFeaturedPreviews.js';
 
 const distDir = path.resolve('dist');
 const templatePath = path.join(distDir, 'index.html');
 const baseTemplate = await fs.readFile(templatePath, 'utf8');
 const blogArticles = getAllBlogArticles();
 const blogPreviews = getBlogArticlesPreview();
+const buildDate = new Date().toISOString().slice(0, 10);
 
 function escapeHtml(value) {
     return String(value || '')
@@ -111,7 +113,7 @@ function renderPageShell({ heading, intro, sections = [], links = [] }) {
 }
 
 function renderHomePage() {
-    const featured = blogPreviews.slice(0, 3).map(articleCard).join('\n');
+    const featured = HOME_FEATURED_BLOG_PREVIEWS.map(articleCard).join('\n');
     return `
         <main style="max-width:1120px;margin:0 auto;padding:48px 20px;font-family:Arial,sans-serif;line-height:1.6;color:#102a43;">
             <section>
@@ -198,7 +200,7 @@ const staticPages = [
             type: 'website',
         }),
         jsonLd: [
-            buildBlogCollectionJsonLd(blogPreviews),
+            buildBlogCollectionJsonLd(HOME_FEATURED_BLOG_PREVIEWS),
             buildOrganizationJsonLd(),
             buildWebsiteJsonLd(),
         ],
@@ -398,6 +400,30 @@ async function writeBlogSitemap() {
     await fs.writeFile(path.join(distDir, 'sitemap-blog.xml'), xml, 'utf8');
 }
 
+async function writePagesSitemap() {
+    const pageMeta = [
+        { route: '/', changefreq: 'daily', priority: '1.0' },
+        { route: '/offers', changefreq: 'hourly', priority: '0.9' },
+        { route: '/blog', changefreq: 'daily', priority: '0.8' },
+        { route: '/help', changefreq: 'monthly', priority: '0.7' },
+        { route: '/faq', changefreq: 'monthly', priority: '0.6' },
+        { route: '/privacy', changefreq: 'yearly', priority: '0.3' },
+        { route: '/terms', changefreq: 'yearly', priority: '0.3' },
+    ];
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pageMeta.map((page) => `    <url>\n        <loc>https://birzha-kanaliv.biz.ua${page.route === '/' ? '/' : page.route}</loc>\n        <lastmod>${buildDate}</lastmod>\n        <changefreq>${page.changefreq}</changefreq>\n        <priority>${page.priority}</priority>\n    </url>`).join('\n')}\n</urlset>\n`;
+    await fs.writeFile(path.join(distDir, 'sitemap-pages.xml'), xml, 'utf8');
+}
+
+async function writeSitemapIndex() {
+    const blogLastmod = blogArticles.reduce((latest, article) => (
+        article.publishedAtIso > latest ? article.publishedAtIso : latest
+    ), buildDate);
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <sitemap>\n        <loc>https://birzha-kanaliv.biz.ua/sitemap-pages.xml</loc>\n        <lastmod>${buildDate}</lastmod>\n    </sitemap>\n    <sitemap>\n        <loc>https://birzha-kanaliv.biz.ua/sitemap-blog.xml</loc>\n        <lastmod>${blogLastmod}</lastmod>\n    </sitemap>\n</sitemapindex>\n`;
+    await fs.writeFile(path.join(distDir, 'sitemap.xml'), xml, 'utf8');
+}
+
 for (const page of staticPages) {
     const htmlWithHead = injectHead(baseTemplate, { seo: page.seo, jsonLd: page.jsonLd });
     await writeRoute(page.route, withRootContent(htmlWithHead, page.render()));
@@ -436,3 +462,5 @@ if (blog404 !== null) {
 }
 
 await writeBlogSitemap();
+await writePagesSitemap();
+await writeSitemapIndex();

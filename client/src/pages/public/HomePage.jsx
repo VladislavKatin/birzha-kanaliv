@@ -16,8 +16,8 @@ import {
     UserRoundPlus,
 } from 'lucide-react';
 import PublicLayout from '../../components/layout/PublicLayout';
+import { HOME_FEATURED_BLOG_PREVIEWS } from '../../services/blogFeaturedPreviews';
 import { getLandingCtaPaths, getLandingMetricsSummary } from '../../services/homeLanding';
-import { getBlogArticlesPreview } from '../../services/blogArticles';
 import {
     applyPageSeo,
     applyJsonLd,
@@ -143,8 +143,7 @@ export default function HomePage() {
     const navigate = useNavigate();
     const location = useLocation();
     const { authPath, offersPath } = getLandingCtaPaths();
-    const articles = getBlogArticlesPreview();
-    const featuredArticles = articles.slice(0, 3);
+    const featuredArticles = HOME_FEATURED_BLOG_PREVIEWS;
 
     const metricsSummary = getLandingMetricsSummary({
         stats,
@@ -168,10 +167,10 @@ export default function HomePage() {
             type: 'website',
         });
 
-        applyJsonLd('home-blog-schema', buildBlogCollectionJsonLd(articles));
+        applyJsonLd('home-blog-schema', buildBlogCollectionJsonLd(featuredArticles));
         applyJsonLd('home-organization-schema', buildOrganizationJsonLd());
         applyJsonLd('home-website-schema', buildWebsiteJsonLd());
-    }, [articles]);
+    }, [featuredArticles]);
 
     useEffect(() => {
         if (!location.hash) {
