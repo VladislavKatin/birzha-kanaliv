@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "ViewExchange / Youtoobe - YouTube Creator Marketplace",
     "scripts": {
-        "start": "start.bat",
+        "start": "npm --prefix server start",
         "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
         "dev:full": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:admin\"",
         "dev:server": "cd server && npm run dev",
