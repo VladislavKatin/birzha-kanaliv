@@ -121,7 +121,6 @@ async function resolveOrCreateUser({ transaction, uid, email, name, picture }) {
  */
 router.post('/login', auth, async (req, res) => {
     try {
-        console.log('FIREBASE USER:', req.firebaseUser);
         const { uid, email, name, picture } = req.firebaseUser;
         if (!isNonEmptyString(uid) || !isNonEmptyString(email)) {
             return res.status(400).json({ error: 'Некоректні дані авторизації' });
@@ -141,13 +140,6 @@ router.post('/login', auth, async (req, res) => {
             });
             user = resolved.user;
             created = resolved.created;
-            console.log('DB USER:', {
-                id: user.id,
-                firebaseUid: user.firebaseUid,
-                email: user.email,
-                displayName: user.displayName,
-                created,
-            });
 
             await ActionLog.create({
                 userId: user.id,

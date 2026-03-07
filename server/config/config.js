@@ -1,6 +1,8 @@
 const { loadEnv } = require('./loadEnv');
 
-loadEnv();
+if (process.env.NODE_ENV !== 'production') {
+    loadEnv();
+}
 
 function buildDialectOptions() {
     const raw = String(process.env.DB_SSL || '').trim().toLowerCase();

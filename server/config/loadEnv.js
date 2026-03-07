@@ -2,6 +2,8 @@ const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
 
+let hasLoadedEnv = false;
+
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) {
     return;
@@ -11,6 +13,10 @@ function loadEnvFile(filePath) {
 }
 
 function loadEnv() {
+  if (hasLoadedEnv) {
+    return;
+  }
+
   // Never override environment variables already provided by Railway or CI.
   // Load local overrides first, then fill remaining keys from shared env files.
   const root = process.cwd();
@@ -22,6 +28,7 @@ function loadEnv() {
   ];
 
   candidates.forEach(loadEnvFile);
+  hasLoadedEnv = true;
 }
 
 module.exports = { loadEnv };

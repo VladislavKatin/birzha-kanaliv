@@ -37,6 +37,19 @@ const useAuthStore = create((set, get) => ({
     },
 
     initAuth: () => {
+        const configError = getFirebaseConfigError();
+        if (!auth) {
+            set({
+                user: null,
+                dbUser: null,
+                youtubeAccount: null,
+                youtubeConnected: false,
+                loading: false,
+                error: configError ? `Firebase не налаштований у frontend .env: ${configError}` : null,
+            });
+            return () => {};
+        }
+
         if (!redirectResultChecked) {
             redirectResultChecked = true;
             getRedirectResult(auth).catch((err) => {
@@ -70,10 +83,11 @@ const useAuthStore = create((set, get) => ({
         set({ error: null });
 
         const configError = getFirebaseConfigError();
-        if (configError) {
+        if (configError || !auth || !googleProvider) {
             const message = 'Firebase не налаштований у frontend .env';
-            set({ error: `${message}: ${configError}` });
-            throw new Error(`${message}: ${configError}`);
+            const details = configError || 'Missing Firebase auth initialization';
+            set({ error: `${message}: ${details}` });
+            throw new Error(`${message}: ${details}`);
         }
 
         try {

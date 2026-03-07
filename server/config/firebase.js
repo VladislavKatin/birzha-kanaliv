@@ -2,10 +2,6 @@ const admin = require('firebase-admin');
 
 let firebaseApp = null;
 
-console.log('PROJECT:', process.env.FIREBASE_PROJECT_ID);
-console.log('EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? 'OK' : 'MISSING');
-console.log('KEY:', process.env.FIREBASE_PRIVATE_KEY ? 'OK' : 'MISSING');
-
 // Initialize Firebase Admin
 // Option 1: Full service account credentials (production)
 if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {

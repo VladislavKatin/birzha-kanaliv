@@ -1,6 +1,8 @@
 const DEFAULT_CLIENT_ORIGINS = [
     'https://birzha-kanaliv.biz.ua',
     'https://admin.birzha-kanaliv.biz.ua',
+    'http://localhost:5173',
+    'http://localhost:5174',
 ];
 
 function getAllowedClientOrigins() {

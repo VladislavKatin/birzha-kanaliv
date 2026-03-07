@@ -43,6 +43,15 @@ export function AuthProvider({ children }) {
     }
 
     useEffect(() => {
+        const configError = getFirebaseConfigError();
+        if (!auth) {
+            setLoading(false);
+            if (configError) {
+                setError(`Firebase не налаштований: ${configError}`);
+            }
+            return () => {};
+        }
+
         if (!redirectResultChecked) {
             redirectResultChecked = true;
             getRedirectResult(auth).catch((err) => {
@@ -86,9 +95,10 @@ export function AuthProvider({ children }) {
         signInWithGoogle: async () => {
             setError('');
             const configError = getFirebaseConfigError();
-            if (configError) {
-                setError(`Firebase не налаштований: ${configError}`);
-                throw new Error(configError);
+            if (configError || !auth || !googleProvider) {
+                const details = configError || 'Missing Firebase auth initialization';
+                setError(`Firebase не налаштований: ${details}`);
+                throw new Error(details);
             }
 
             try {
@@ -109,8 +119,13 @@ export function AuthProvider({ children }) {
                 }
 
                 const backendError = err?.response?.data?.error;
+                const backendDetails = err?.response?.data?.details;
+                const backendStatus = err?.response?.status;
                 if (backendError) {
-                    setError(`Помилка backend: ${backendError}`);
+                    const details = backendDetails ? `: ${backendDetails}` : '';
+                    setError(`Помилка backend: ${backendError}${details}`);
+                } else if (backendStatus) {
+                    setError(`Помилка backend: HTTP ${backendStatus}`);
                 } else {
                     setError(getErrorMessage(code));
                 }

@@ -22,10 +22,14 @@ const missingConfigKeys = Object.entries(firebaseConfig)
     .filter(([, value]) => !value)
     .map(([key]) => key);
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
+const canInitializeFirebase = missingConfigKeys.length === 0;
+const app = canInitializeFirebase ? initializeApp(firebaseConfig) : null;
+const auth = app ? getAuth(app) : null;
+const googleProvider = auth ? new GoogleAuthProvider() : null;
+
+if (googleProvider) {
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+}
 
 function getFirebaseConfigError() {
     if (missingConfigKeys.length === 0) return null;
