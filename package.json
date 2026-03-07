@@ -34,8 +34,5 @@
     "devDependencies": {
         "concurrently": "^9.2.1",
         "lighthouse": "^13.0.3"
-    },
-    "dependencies": {
-        "@supabase/supabase-js": "^2.98.0"
     }
 }
