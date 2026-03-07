@@ -11,6 +11,7 @@ const setupSocket = require('./socketSetup');
 const { initQueues } = require('./queues');
 const { isRedisConnected } = require('./config/redis');
 const { startTelegramBotPolling } = require('./services/telegramService');
+const { ensureSchemaCompatibility } = require('./services/schemaCompatService');
 
 const PORT = process.env.PORT || 3001;
 
@@ -31,6 +32,8 @@ async function start() {
   try {
     await sequelize.authenticate();
     console.log('Database connected');
+
+    await ensureSchemaCompatibility(sequelize);
 
     const shouldSyncSchema =
       process.env.NODE_ENV !== 'production' &&
