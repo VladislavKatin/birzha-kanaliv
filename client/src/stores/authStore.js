@@ -125,6 +125,8 @@ const useAuthStore = create((set, get) => ({
                 'auth/popup-blocked',
                 'auth/cancelled-popup-request',
                 'auth/operation-not-supported-in-this-environment',
+                'auth/network-request-failed',
+                'auth/internal-error',
             ].includes(code);
 
             if (shouldFallbackToRedirect) {
