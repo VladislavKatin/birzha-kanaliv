@@ -68,6 +68,31 @@ async function ensureUsersCamelCaseCompatibility(sequelize) {
       definition: { type: DataTypes.STRING, allowNull: true },
     },
     {
+      target: 'bio',
+      legacy: 'bio',
+      definition: { type: DataTypes.TEXT, allowNull: true },
+    },
+    {
+      target: 'location',
+      legacy: 'location',
+      definition: { type: DataTypes.STRING, allowNull: true },
+    },
+    {
+      target: 'languages',
+      legacy: 'languages',
+      definition: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
+    },
+    {
+      target: 'birthYear',
+      legacy: 'birth_year',
+      definition: { type: DataTypes.INTEGER, allowNull: true },
+    },
+    {
+      target: 'gender',
+      legacy: 'gender',
+      definition: { type: DataTypes.STRING(30), allowNull: true },
+    },
+    {
       target: 'professionalRole',
       legacy: 'professional_role',
       definition: { type: DataTypes.STRING, allowNull: true },
@@ -75,6 +100,11 @@ async function ensureUsersCamelCaseCompatibility(sequelize) {
     {
       target: 'companyName',
       legacy: 'company_name',
+      definition: { type: DataTypes.STRING, allowNull: true },
+    },
+    {
+      target: 'website',
+      legacy: 'website',
       definition: { type: DataTypes.STRING, allowNull: true },
     },
     {
@@ -86,6 +116,11 @@ async function ensureUsersCamelCaseCompatibility(sequelize) {
       target: 'privacySettings',
       legacy: 'privacy_settings',
       definition: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
+    },
+    {
+      target: 'badges',
+      legacy: 'badges',
+      definition: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
     },
     {
       target: 'notificationPrefs',
@@ -138,6 +173,16 @@ async function ensureYouTubeAccountsCamelCaseCompatibility(sequelize) {
       definition: { type: DataTypes.STRING, allowNull: true },
     },
     {
+      target: 'description',
+      legacy: 'description',
+      definition: { type: DataTypes.TEXT, allowNull: true },
+    },
+    {
+      target: 'subscribers',
+      legacy: 'subscribers',
+      definition: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    },
+    {
       target: 'totalViews',
       legacy: 'total_views',
       definition: { type: DataTypes.BIGINT, allowNull: false, defaultValue: 0 },
@@ -161,6 +206,26 @@ async function ensureYouTubeAccountsCamelCaseCompatibility(sequelize) {
       target: 'averageWatchTime',
       legacy: 'average_watch_time',
       definition: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
+    },
+    {
+      target: 'ctr',
+      legacy: 'ctr',
+      definition: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
+    },
+    {
+      target: 'niche',
+      legacy: 'niche',
+      definition: { type: DataTypes.STRING, allowNull: true },
+    },
+    {
+      target: 'language',
+      legacy: 'language',
+      definition: { type: DataTypes.STRING(5), allowNull: true },
+    },
+    {
+      target: 'country',
+      legacy: 'country',
+      definition: { type: DataTypes.STRING(2), allowNull: true },
     },
     {
       target: 'recentVideos',
@@ -188,6 +253,11 @@ async function ensureYouTubeAccountsCamelCaseCompatibility(sequelize) {
       definition: { type: DataTypes.STRING, allowNull: true },
     },
     {
+      target: 'verified',
+      legacy: 'verified',
+      definition: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    },
+    {
       target: 'isActive',
       legacy: 'is_active',
       definition: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
@@ -201,6 +271,161 @@ async function ensureYouTubeAccountsCamelCaseCompatibility(sequelize) {
       target: 'connectedAt',
       legacy: 'connected_at',
       definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+    {
+      target: 'createdAt',
+      legacy: 'created_at',
+      definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+    {
+      target: 'updatedAt',
+      legacy: 'updated_at',
+      definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+  ]);
+}
+
+async function ensureTrafficOffersCamelCaseCompatibility(sequelize) {
+  return ensureCompatibilityColumns(sequelize, 'traffic_offers', [
+    {
+      target: 'channelId',
+      legacy: 'channel_id',
+      definition: { type: DataTypes.UUID, allowNull: true },
+    },
+    {
+      target: 'minSubscribers',
+      legacy: 'min_subscribers',
+      definition: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    },
+    {
+      target: 'maxSubscribers',
+      legacy: 'max_subscribers',
+      definition: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    },
+    {
+      target: 'createdAt',
+      legacy: 'created_at',
+      definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+    {
+      target: 'updatedAt',
+      legacy: 'updated_at',
+      definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+  ]);
+}
+
+async function ensureTrafficMatchesCamelCaseCompatibility(sequelize) {
+  return ensureCompatibilityColumns(sequelize, 'traffic_matches', [
+    {
+      target: 'offerId',
+      legacy: 'offer_id',
+      definition: { type: DataTypes.UUID, allowNull: true },
+    },
+    {
+      target: 'initiatorChannelId',
+      legacy: 'initiator_channel_id',
+      definition: { type: DataTypes.UUID, allowNull: true },
+    },
+    {
+      target: 'targetChannelId',
+      legacy: 'target_channel_id',
+      definition: { type: DataTypes.UUID, allowNull: true },
+    },
+    {
+      target: 'initiatorConfirmed',
+      legacy: 'initiator_confirmed',
+      definition: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    },
+    {
+      target: 'targetConfirmed',
+      legacy: 'target_confirmed',
+      definition: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    },
+    {
+      target: 'completedAt',
+      legacy: 'completed_at',
+      definition: { type: DataTypes.DATE, allowNull: true },
+    },
+    {
+      target: 'createdAt',
+      legacy: 'created_at',
+      definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+    {
+      target: 'updatedAt',
+      legacy: 'updated_at',
+      definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+  ]);
+}
+
+async function ensureReviewsCamelCaseCompatibility(sequelize) {
+  return ensureCompatibilityColumns(sequelize, 'reviews', [
+    {
+      target: 'matchId',
+      legacy: 'match_id',
+      definition: { type: DataTypes.UUID, allowNull: true },
+    },
+    {
+      target: 'fromChannelId',
+      legacy: 'from_channel_id',
+      definition: { type: DataTypes.UUID, allowNull: true },
+    },
+    {
+      target: 'toChannelId',
+      legacy: 'to_channel_id',
+      definition: { type: DataTypes.UUID, allowNull: true },
+    },
+    {
+      target: 'isPublished',
+      legacy: 'is_published',
+      definition: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    },
+    {
+      target: 'createdAt',
+      legacy: 'created_at',
+      definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+    {
+      target: 'updatedAt',
+      legacy: 'updated_at',
+      definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+  ]);
+}
+
+async function ensureChatRoomsCamelCaseCompatibility(sequelize) {
+  return ensureCompatibilityColumns(sequelize, 'chat_rooms', [
+    {
+      target: 'matchId',
+      legacy: 'match_id',
+      definition: { type: DataTypes.UUID, allowNull: true },
+    },
+    {
+      target: 'createdAt',
+      legacy: 'created_at',
+      definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+    {
+      target: 'updatedAt',
+      legacy: 'updated_at',
+      definition: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    },
+  ]);
+}
+
+async function ensureMessagesCamelCaseCompatibility(sequelize) {
+  return ensureCompatibilityColumns(sequelize, 'messages', [
+    {
+      target: 'chatRoomId',
+      legacy: 'chat_room_id',
+      definition: { type: DataTypes.UUID, allowNull: true },
+    },
+    {
+      target: 'senderUserId',
+      legacy: 'sender_user_id',
+      definition: { type: DataTypes.UUID, allowNull: true },
     },
     {
       target: 'createdAt',
@@ -240,10 +465,20 @@ async function ensureSchemaCompatibility(sequelize) {
     const addedUsersRole = await ensureUsersRoleColumn(sequelize);
     const usersCamelCaseColumns = await ensureUsersCamelCaseCompatibility(sequelize);
     const youtubeAccountsCamelCaseColumns = await ensureYouTubeAccountsCamelCaseCompatibility(sequelize);
+    const trafficOffersCamelCaseColumns = await ensureTrafficOffersCamelCaseCompatibility(sequelize);
+    const trafficMatchesCamelCaseColumns = await ensureTrafficMatchesCamelCaseCompatibility(sequelize);
+    const reviewsCamelCaseColumns = await ensureReviewsCamelCaseCompatibility(sequelize);
+    const chatRoomsCamelCaseColumns = await ensureChatRoomsCamelCaseCompatibility(sequelize);
+    const messagesCamelCaseColumns = await ensureMessagesCamelCaseCompatibility(sequelize);
     const actionLogsCamelCaseColumns = await ensureActionLogsCamelCaseCompatibility(sequelize);
     const addedColumns = [
       ...usersCamelCaseColumns,
       ...youtubeAccountsCamelCaseColumns,
+      ...trafficOffersCamelCaseColumns,
+      ...trafficMatchesCamelCaseColumns,
+      ...reviewsCamelCaseColumns,
+      ...chatRoomsCamelCaseColumns,
+      ...messagesCamelCaseColumns,
       ...actionLogsCamelCaseColumns,
     ];
 
