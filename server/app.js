@@ -12,12 +12,13 @@ const path = require('path');
 const app = express();
 app.set('trust proxy', 1);
 
-const allowedOrigins = getAllowedClientOrigins();
 const corsOptions = {
     origin: corsOriginValidator,
     credentials: true,
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 204,
+    preflightContinue: false,
 };
 
 function corsOriginValidator(origin, callback) {
@@ -26,8 +27,11 @@ function corsOriginValidator(origin, callback) {
         return callback(null, true);
     }
 
-    if (allowedOrigins.includes(normalizeOrigin(origin))) {
-        return callback(null, true);
+    const allowedOrigins = getAllowedClientOrigins();
+    const normalizedOrigin = normalizeOrigin(origin);
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
+        return callback(null, normalizedOrigin);
     }
 
     const error = new Error(`CORS origin not allowed: ${origin}`);
