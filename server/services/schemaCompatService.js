@@ -1,5 +1,26 @@
 const { DataTypes } = require('sequelize');
 
+function isMissingTableError(error) {
+  const message = String(error?.message || '').toLowerCase();
+  return (
+    message.includes('no description found for') ||
+    message.includes('does not exist')
+  );
+}
+
+async function describeTableIfExists(queryInterface, tableName, { required = true } = {}) {
+  try {
+    return await queryInterface.describeTable(tableName);
+  } catch (error) {
+    if (!required && isMissingTableError(error)) {
+      console.warn(`Schema compatibility: skipped optional table "${tableName}" because it does not exist`);
+      return null;
+    }
+
+    throw error;
+  }
+}
+
 async function addColumnIfMissing(queryInterface, tableName, table, columnName, definition) {
   if (table[columnName]) {
     return false;
@@ -17,7 +38,7 @@ async function backfillFromLegacyColumn(sequelize, tableName, targetColumn, lega
 
 async function ensureCompatibilityColumns(sequelize, tableName, compatibilityColumns) {
   const queryInterface = sequelize.getQueryInterface();
-  const table = await queryInterface.describeTable(tableName);
+  const table = await describeTableIfExists(queryInterface, tableName);
   const addedColumns = [];
 
   for (const column of compatibilityColumns) {
@@ -151,6 +172,13 @@ async function ensureUsersCamelCaseCompatibility(sequelize) {
 }
 
 async function ensureYouTubeAccountsCamelCaseCompatibility(sequelize) {
+  const queryInterface = sequelize.getQueryInterface();
+  const table = await describeTableIfExists(queryInterface, 'youtube_accounts', { required: false });
+
+  if (!table) {
+    return [];
+  }
+
   return ensureCompatibilityColumns(sequelize, 'youtube_accounts', [
     {
       target: 'userId',
