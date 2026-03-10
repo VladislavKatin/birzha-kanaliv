@@ -13,6 +13,7 @@ import api from '../services/api';
 
 let redirectResultChecked = false;
 let skipNextAuthStateSync = false;
+let googleRedirectSyncPromise = null;
 
 const useAuthStore = create((set, get) => ({
     user: null,
@@ -68,15 +69,36 @@ const useAuthStore = create((set, get) => ({
 
         if (!redirectResultChecked) {
             redirectResultChecked = true;
-            getRedirectResult(auth).catch((err) => {
-                console.error('Google redirect result error:', err);
-                set({ error: getErrorMessage(err) });
-            });
+            googleRedirectSyncPromise = getRedirectResult(auth)
+                .then(async (result) => {
+                    if (!result?.user) {
+                        return null;
+                    }
+
+                    const idToken = await result.user.getIdToken();
+                    skipNextAuthStateSync = true;
+                    return get()._syncGoogleWithBackend(idToken);
+                })
+                .catch((err) => {
+                    console.error('Google redirect result error:', err);
+                    set({ error: getErrorMessage(err) });
+                    return null;
+                });
         }
 
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             set({ user: firebaseUser });
             if (firebaseUser) {
+                if (googleRedirectSyncPromise) {
+                    try {
+                        await googleRedirectSyncPromise;
+                    } finally {
+                        googleRedirectSyncPromise = null;
+                        set({ loading: false });
+                    }
+                    return;
+                }
+
                 if (skipNextAuthStateSync) {
                     skipNextAuthStateSync = false;
                     set({ loading: false });
@@ -115,9 +137,10 @@ const useAuthStore = create((set, get) => ({
             const result = await signInWithPopup(auth, googleProvider);
             const idToken = await result.user.getIdToken();
             try {
-                await get()._syncGoogleWithBackend(idToken);
                 skipNextAuthStateSync = true;
+                await get()._syncGoogleWithBackend(idToken);
             } catch (syncError) {
+                skipNextAuthStateSync = false;
                 const backendError = syncError?.response?.data?.error;
                 const backendDetails = syncError?.response?.data?.details;
                 const status = syncError?.response?.status;
@@ -180,8 +203,11 @@ const useAuthStore = create((set, get) => ({
 
     signOut: async () => {
         try {
-            await firebaseSignOut(auth);
+            if (auth) {
+                await firebaseSignOut(auth);
+            }
             set({
+                user: null,
                 dbUser: null,
                 youtubeAccount: null,
                 youtubeConnected: false,

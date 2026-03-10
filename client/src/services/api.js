@@ -35,7 +35,7 @@ function parseRetryAfterMs(headerValue) {
 
 // Add auth token to requests
 api.interceptors.request.use(async (config) => {
-    const user = auth.currentUser;
+    const user = auth?.currentUser;
     if (user) {
         const token = await user.getIdToken();
         config.headers.Authorization = `Bearer ${token}`;
@@ -80,7 +80,7 @@ api.interceptors.response.use(
 
         if (error.response?.status === 401) {
             const isAuthPage = window.location.pathname === '/auth';
-            const isAuthSync = error.config?.url?.includes('/auth/login');
+            const isAuthSync = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/google');
 
             if (!isAuthPage && !isRedirecting && !isAuthSync) {
                 isRedirecting = true;

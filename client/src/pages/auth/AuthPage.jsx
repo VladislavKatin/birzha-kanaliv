@@ -8,7 +8,7 @@ import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
 import './AuthPage.css';
 
 export default function AuthPage() {
-    const { user, signInWithGoogle, loading, error } = useAuthStore();
+    const { user, dbUser, signInWithGoogle, loading, error } = useAuthStore();
     const navigate = useNavigate();
     const location = useLocation();
     const [isLoading, setIsLoading] = useState(false);
@@ -24,10 +24,10 @@ export default function AuthPage() {
     }, []);
 
     useEffect(() => {
-        if (!loading && user) {
+        if (!loading && dbUser) {
             navigate(nextPath, { replace: true });
         }
-    }, [loading, user, navigate, nextPath]);
+    }, [loading, dbUser, navigate, nextPath]);
 
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
