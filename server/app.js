@@ -12,11 +12,14 @@ const path = require('path');
 const app = express();
 app.set('trust proxy', 1);
 
+const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+const ALLOWED_HEADERS = ['Content-Type', 'Authorization'];
+
 const corsOptions = {
     origin: corsOriginValidator,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ALLOWED_METHODS,
+    allowedHeaders: ALLOWED_HEADERS,
     optionsSuccessStatus: 204,
     preflightContinue: false,
 };
@@ -44,6 +47,23 @@ app.use(helmet({
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
 }));
 app.use(requestId);
+app.use((req, res, next) => {
+    const normalizedOrigin = normalizeOrigin(req.headers.origin);
+
+    if (normalizedOrigin && getAllowedClientOrigins().includes(normalizedOrigin)) {
+        res.header('Access-Control-Allow-Origin', normalizedOrigin);
+        res.header('Vary', 'Origin');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.header('Access-Control-Allow-Methods', ALLOWED_METHODS.join(', '));
+        res.header('Access-Control-Allow-Headers', ALLOWED_HEADERS.join(', '));
+    }
+
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(204);
+    }
+
+    return next();
+});
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 app.use(morgan('dev'));
