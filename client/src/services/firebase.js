@@ -1,4 +1,4 @@
-﻿import { initializeApp } from 'firebase/app';
+import { initializeApp } from 'firebase/app';
 import {
     getAuth,
     GoogleAuthProvider,
@@ -9,22 +9,13 @@ import {
     onAuthStateChanged,
 } from 'firebase/auth';
 
-const defaultFirebaseConfig = {
-    apiKey: 'AIzaSyCvXQGtjivj3p9uC5X4LLffY7sKrjw50Kg',
-    authDomain: 'viewexchange-3a790.firebaseapp.com',
-    projectId: 'viewexchange-3a790',
-    storageBucket: 'viewexchange-3a790.firebasestorage.app',
-    messagingSenderId: '608740325704',
-    appId: '1:608740325704:web:307ea9a0940f4e0ca75b7d',
-};
-
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || defaultFirebaseConfig.apiKey,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || defaultFirebaseConfig.authDomain,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || defaultFirebaseConfig.projectId,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || defaultFirebaseConfig.storageBucket,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || defaultFirebaseConfig.messagingSenderId,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || defaultFirebaseConfig.appId,
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const missingConfigKeys = Object.entries(firebaseConfig)

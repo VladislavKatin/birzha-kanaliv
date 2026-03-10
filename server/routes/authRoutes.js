@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { sequelize, User, YouTubeAccount, ActionLog } = require('../models');
 const auth = require('../middleware/auth');
+const admin = require('../config/firebase');
 const { logInfo, logError } = require('../services/logger');
 const { isNonEmptyString } = require('../utils/validators');
 
@@ -113,73 +114,95 @@ async function resolveOrCreateUser({ transaction, uid, email, name, picture }) {
     return { user, created: true };
 }
 
-/**
- * @route POST /api/auth/login
- * @description Login or register user via Firebase token. Creates DB user on first login.
- * @access Private (Firebase token required)
- * @returns {Object} user - User data + YouTube account info
- */
+async function buildAuthResponse(user) {
+    const youtubeAccount = await YouTubeAccount.findOne({
+        where: { userId: user.id },
+    });
+
+    return {
+        user: {
+            id: user.id,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            notificationPrefs: user.notificationPrefs || {},
+            role: user.role,
+            createdAt: user.createdAt,
+        },
+        youtubeConnected: !!youtubeAccount,
+        youtubeAccount: youtubeAccount
+            ? {
+                channelId: youtubeAccount.channelId,
+                channelTitle: youtubeAccount.channelTitle,
+                channelAvatar: youtubeAccount.channelAvatar,
+                subscribers: youtubeAccount.subscribers,
+            }
+            : null,
+    };
+}
+
+async function syncFirebaseUser({ req, firebaseUser, logEvent }) {
+    const { uid, email, name, picture } = firebaseUser;
+
+    if (!isNonEmptyString(uid) || !isNonEmptyString(email)) {
+        return {
+            status: 400,
+            body: { error: 'Некоректні дані авторизації' },
+        };
+    }
+
+    logInfo(`${logEvent}.request`, { firebaseUid: uid });
+
+    let user;
+    let created = false;
+
+    await sequelize.transaction(async (transaction) => {
+        const resolved = await resolveOrCreateUser({
+            transaction,
+            uid,
+            email,
+            name,
+            picture,
+        });
+        user = resolved.user;
+        created = resolved.created;
+
+        await ActionLog.create({
+            userId: user.id,
+            action: created ? `${logEvent.replace(/\./g, '_')}_created_user` : logEvent.replace(/\./g, '_'),
+            details: { firebaseUid: uid },
+            ip: req.ip,
+        }, { transaction });
+    });
+
+    const payload = await buildAuthResponse(user);
+
+    logInfo(`${logEvent}.success`, {
+        firebaseUid: uid,
+        userId: user.id,
+        created,
+        youtubeConnected: payload.youtubeConnected,
+    });
+
+    return { status: 200, body: payload };
+}
+
+function getBearerToken(req) {
+    const authHeader = String(req.headers.authorization || '');
+    if (authHeader.startsWith('Bearer ')) {
+        return authHeader.slice('Bearer '.length).trim();
+    }
+    return null;
+}
+
 router.post('/login', auth, async (req, res) => {
     try {
-        const { uid, email, name, picture } = req.firebaseUser;
-        if (!isNonEmptyString(uid) || !isNonEmptyString(email)) {
-            return res.status(400).json({ error: 'Некоректні дані авторизації' });
-        }
-        logInfo('auth.login.request', { firebaseUid: uid });
-
-        let user;
-        let created = false;
-
-        await sequelize.transaction(async (transaction) => {
-            const resolved = await resolveOrCreateUser({
-                transaction,
-                uid,
-                email,
-                name,
-                picture,
-            });
-            user = resolved.user;
-            created = resolved.created;
-
-            await ActionLog.create({
-                userId: user.id,
-                action: created ? 'auth_login_created_user' : 'auth_login',
-                details: { firebaseUid: uid },
-                ip: req.ip,
-            }, { transaction });
+        const result = await syncFirebaseUser({
+            req,
+            firebaseUser: req.firebaseUser,
+            logEvent: 'auth.login',
         });
-
-        // Check if user has connected YouTube
-        const youtubeAccount = await YouTubeAccount.findOne({
-            where: { userId: user.id },
-        });
-
-        res.json({
-            user: {
-                id: user.id,
-                email: user.email,
-                displayName: user.displayName,
-                photoURL: user.photoURL,
-                notificationPrefs: user.notificationPrefs || {},
-                role: user.role,
-                createdAt: user.createdAt,
-            },
-            youtubeConnected: !!youtubeAccount,
-            youtubeAccount: youtubeAccount
-                ? {
-                    channelId: youtubeAccount.channelId,
-                    channelTitle: youtubeAccount.channelTitle,
-                    channelAvatar: youtubeAccount.channelAvatar,
-                    subscribers: youtubeAccount.subscribers,
-                }
-                : null,
-        });
-        logInfo('auth.login.success', {
-            firebaseUid: uid,
-            userId: user.id,
-            created,
-            youtubeConnected: !!youtubeAccount,
-        });
+        res.status(result.status).json(result.body);
     } catch (error) {
         logError('auth.login.failed', {
             firebaseUid: req.firebaseUser?.uid || null,
@@ -190,12 +213,41 @@ router.post('/login', auth, async (req, res) => {
     }
 });
 
-/**
- * @route GET /api/auth/me
- * @description Get current authenticated user info with YouTube account
- * @access Private
- * @returns {Object} user, youtubeConnected, youtubeAccount
- */
+router.post('/google', async (req, res) => {
+    try {
+        if (!admin.apps.length) {
+            return res.status(503).json({ error: 'Сервіс авторизації не налаштований' });
+        }
+
+        const idToken = String(req.body?.idToken || getBearerToken(req) || '').trim();
+        if (!idToken) {
+            return res.status(400).json({ error: 'Firebase idToken is required' });
+        }
+
+        const decoded = await admin.auth().verifyIdToken(idToken);
+        const result = await syncFirebaseUser({
+            req,
+            firebaseUser: decoded,
+            logEvent: 'auth.google',
+        });
+        res.status(result.status).json(result.body);
+    } catch (error) {
+        logError('auth.google.failed', {
+            error,
+        });
+
+        if (error?.code || /token/i.test(String(error?.message || ''))) {
+            return res.status(401).json({
+                error: 'invalid_token',
+                details: error.message,
+            });
+        }
+
+        const mappedError = mapAuthLoginError(error);
+        res.status(mappedError.status).json(mappedError.body);
+    }
+});
+
 router.get('/me', auth, async (req, res) => {
     try {
         logInfo('auth.me.request', { firebaseUid: req.firebaseUser.uid });
@@ -208,19 +260,8 @@ router.get('/me', auth, async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json({
-            user: {
-                id: user.id,
-                email: user.email,
-                displayName: user.displayName,
-                photoURL: user.photoURL,
-                notificationPrefs: user.notificationPrefs || {},
-                role: user.role,
-                createdAt: user.createdAt,
-            },
-            youtubeConnected: !!user.youtubeAccount,
-            youtubeAccount: user.youtubeAccount || null,
-        });
+        const payload = await buildAuthResponse(user);
+        res.json(payload);
         logInfo('auth.me.success', {
             firebaseUid: req.firebaseUser.uid,
             userId: user.id,

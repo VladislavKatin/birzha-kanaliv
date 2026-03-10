@@ -12,6 +12,7 @@ import {
 import api from '../services/api';
 
 let redirectResultChecked = false;
+let skipNextAuthStateSync = false;
 
 const useAuthStore = create((set, get) => ({
     user: null,
@@ -32,6 +33,21 @@ const useAuthStore = create((set, get) => ({
             return response.data;
         } catch (err) {
             console.error('Backend sync failed:', err);
+            throw err;
+        }
+    },
+
+    _syncGoogleWithBackend: async (idToken) => {
+        try {
+            const response = await api.post('/auth/google', { idToken });
+            set({
+                dbUser: response.data.user,
+                youtubeConnected: response.data.youtubeConnected,
+                youtubeAccount: response.data.youtubeAccount,
+            });
+            return response.data;
+        } catch (err) {
+            console.error('Google backend sync failed:', err);
             throw err;
         }
     },
@@ -61,6 +77,11 @@ const useAuthStore = create((set, get) => ({
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             set({ user: firebaseUser });
             if (firebaseUser) {
+                if (skipNextAuthStateSync) {
+                    skipNextAuthStateSync = false;
+                    set({ loading: false });
+                    return;
+                }
                 try {
                     await get()._syncWithBackend();
                 } catch (err) {
@@ -92,8 +113,10 @@ const useAuthStore = create((set, get) => ({
 
         try {
             const result = await signInWithPopup(auth, googleProvider);
+            const idToken = await result.user.getIdToken();
             try {
-                await get()._syncWithBackend();
+                await get()._syncGoogleWithBackend(idToken);
+                skipNextAuthStateSync = true;
             } catch (syncError) {
                 const backendError = syncError?.response?.data?.error;
                 const backendDetails = syncError?.response?.data?.details;

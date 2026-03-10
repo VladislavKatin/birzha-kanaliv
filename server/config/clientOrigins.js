@@ -10,7 +10,7 @@ function normalizeOrigin(origin) {
 }
 
 function getAllowedClientOrigins() {
-    const fromEnv = `${process.env.CLIENT_URLS || ''},${process.env.CLIENT_URL || ''}`
+    const fromEnv = `${process.env.CLIENT_URLS || ''},${process.env.CLIENT_URL || ''},${process.env.FRONTEND_URL || ''}`
         .split(',')
         .map(normalizeOrigin)
         .filter(Boolean);
@@ -19,7 +19,7 @@ function getAllowedClientOrigins() {
 }
 
 function getDefaultClientUrl() {
-    const fromEnv = process.env.CLIENT_URLS || process.env.CLIENT_URL;
+    const fromEnv = process.env.CLIENT_URLS || process.env.CLIENT_URL || process.env.FRONTEND_URL;
     if (fromEnv) {
         const first = fromEnv.split(',').map((entry) => entry.trim()).find(Boolean);
         if (first) return first;
